@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDialogueStore } from '@/lib/stores/useDialogueStore';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,10 @@ const CHARACTER_NAMES: Record<string, string> = {
 };
 
 export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps) {
-  const dialogues = useDialogueStore((state) => 
-    [...state.dialogues].sort((a, b) => a.order - b.order)
+  const rawDialogues = useDialogueStore((state) => state.dialogues);
+  const dialogues = useMemo(() => 
+    [...rawDialogues].sort((a, b) => a.order - b.order),
+    [rawDialogues]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
 
