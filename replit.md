@@ -1,12 +1,19 @@
-# Merge Story - Beach House Game
+# Beach House Story - Dialogue-Driven Decoration Game
 
 ## Overview
 
-Merge Story is a mobile-optimized merge puzzle game centered around a personal story about Soly, Maria, and their baby building their dream beach house. The application is a full-stack web game built with React, Express, and PostgreSQL, featuring a merge-3 mechanics gameplay loop with energy systems, currency management, and narrative progression through chapters.
+Beach House Story is a mobile-optimized narrative game centered around Soly, Maria, and their baby building their dream beach house. The application is a full-stack web game built with React, Express, and PostgreSQL, featuring a dialogue-driven story system with an admin panel for content management.
+
+**Recent Changes (November 2025)**
+- Removed merge board and energy/coin mechanics in favor of dialogue-driven gameplay
+- Implemented admin panel for dialogue management (accessible via settings button triple-tap)
+- Transitioned to icon-based UI using Lucide React instead of emojis
+- Simplified game flow: Loading → Dialogue → Game Screen
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Never use emojis in code, use icons from Lucide React instead.
 
 ## System Architecture
 
@@ -22,17 +29,19 @@ Preferred communication style: Simple, everyday language.
 
 **State Management Pattern**
 The application uses Zustand stores with middleware:
-- `useMergeGame` - Central game state including energy, coins, chapters, and save/load functionality
-- `useGame` - Generic game phase management (appears unused, likely legacy)
+- `useDialogueStore` - Manages all dialogues with CRUD operations and localStorage persistence
+- `useMergeGame` - Legacy game state (energy, coins) - retained for potential future use
 - `useAudio` - Sound effects and music management with mute controls
 
-Game state persists to browser localStorage using `getLocalStorage` and `setLocalStorage` utilities.
+Game state persists to browser localStorage.
 
 **Component Structure**
-- Phase-based rendering: `LoadingScreen` → `MenuScreen` → `GameScreen`
-- Loading screen preloads sprite images before transitioning to menu
-- Extensive shadcn/ui component library available (40+ components) but minimally utilized
+- Phase-based rendering: `LoadingScreen` → `NewDialogueScreen` → `NewGameScreen`
+- Loading screen preloads sprite images before transitioning to dialogue
+- Admin panel (`AdminPanel`) accessible via triple-tap on settings icon
+- Extensive shadcn/ui component library (40+ components) used for admin panel
 - Mobile-first design with touch optimization
+- All UI uses Lucide React icons instead of emojis
 
 **Build Configuration**
 - Client code served from `client/` directory
@@ -83,8 +92,18 @@ Zod validation schemas generated from Drizzle tables.
 - Currently using in-memory storage only - database connection configured but not utilized
 
 **Game Persistence**
-- Client-side: Browser localStorage for game saves
+- Client-side: Browser localStorage for dialogues and game state
+- Dialogue data includes: talker, content, icon URL, next action, display order
 - Server-side: No persistence implemented yet (would use PostgreSQL when added)
+
+**Admin Panel Features**
+- Add/Edit/Delete dialogues with full CRUD operations
+- Upload character icons or use image URLs
+- Define talker (Soly, Maria, Baby, Both)
+- Set dialogue content and next action (continue, end, custom)
+- Reorder dialogues with arrow buttons
+- Secret access via triple-tap on settings icon
+- Real-time updates to dialogue playback
 
 ### External Dependencies
 
