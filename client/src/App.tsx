@@ -1,48 +1,49 @@
 import { useEffect, useState } from "react";
 import "@fontsource/inter";
 import { useMergeGame } from "./lib/stores/useMergeGame";
+import { useDialogueStore } from "./lib/stores/useDialogueStore";
 import LoadingScreen from "./components/LoadingScreen";
-import MenuScreen from "./components/MenuScreen";
-import GameScreen from "./components/GameScreen";
-import DialogueScreen from "./components/DialogueScreen";
-import { Dialogue } from "./lib/dialogues";
+import NewGameScreen from "./components/NewGameScreen";
+import NewDialogueScreen from "./components/NewDialogueScreen";
+
+type AppPhase = 'loading' | 'game' | 'dialogue';
 
 function App() {
-  const { phase, setPhase, loadGame, nextChapter } = useMergeGame();
-  const [currentDialogues, setCurrentDialogues] = useState<Dialogue[] | null>(null);
-  const [shouldAdvanceChapter, setShouldAdvanceChapter] = useState(false);
+  const { loadGame } = useMergeGame();
+  const { loadDialogues } = useDialogueStore();
+  const [phase, setPhase] = useState<AppPhase>('loading');
 
   useEffect(() => {
     loadGame();
-  }, [loadGame]);
+    loadDialogues();
+  }, [loadGame, loadDialogues]);
 
   const handleLoadComplete = () => {
-    setPhase('menu');
-  };
-
-  const handleShowDialogue = (dialogues: Dialogue[], advanceChapter: boolean = false) => {
-    setCurrentDialogues(dialogues);
-    setShouldAdvanceChapter(advanceChapter);
     setPhase('dialogue');
   };
 
   const handleDialogueComplete = () => {
-    if (shouldAdvanceChapter) {
-      nextChapter();
-    }
-    setCurrentDialogues(null);
-    setShouldAdvanceChapter(false);
-    setPhase('playing');
+    setPhase('game');
+  };
+
+  const handleShowDialogue = () => {
+    setPhase('dialogue');
+  };
+
+  const handleBackToMenu = () => {
+    setPhase('dialogue');
   };
 
   return (
     <div className="w-full h-full fixed inset-0 overflow-hidden">
       {phase === 'loading' && <LoadingScreen onLoadComplete={handleLoadComplete} />}
-      {phase === 'menu' && <MenuScreen onShowDialogue={(d) => handleShowDialogue(d, true)} />}
-      {phase === 'playing' && <GameScreen onShowDialogue={(d) => handleShowDialogue(d, false)} />}
-      {phase === 'dialogue' && currentDialogues && (
-        <DialogueScreen dialogues={currentDialogues} onComplete={handleDialogueComplete} />
+      {phase === 'game' && (
+        <NewGameScreen
+          onBackToMenu={handleBackToMenu}
+          onShowDialogue={handleShowDialogue}
+        />
       )}
+      {phase === 'dialogue' && <NewDialogueScreen onComplete={handleDialogueComplete} />}
     </div>
   );
 }
