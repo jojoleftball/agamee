@@ -88,8 +88,36 @@ export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps
 
       {/* RPG-Style Dialogue Box */}
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end justify-center pointer-events-none">
-        <div className="w-full max-w-4xl pointer-events-auto">
-          {/* Dialogue Container with Character Portrait */}
+        <div className="w-full max-w-4xl pointer-events-auto relative">
+          {/* Character Portrait - Outside/On Top of Dialogue Box */}
+          {currentDialogue.talker === 'both' ? (
+            <div className="absolute -top-12 left-8 md:-top-16 md:left-12 flex gap-2 z-20">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden">
+                <img
+                  src={getPortraitUrl('soly', DEFAULT_PORTRAITS.soly)}
+                  alt="Soly"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden">
+                <img
+                  src={getPortraitUrl('maria', DEFAULT_PORTRAITS.maria)}
+                  alt="Maria"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="absolute -top-16 left-8 md:-top-20 md:left-12 w-28 h-28 md:w-36 md:h-36 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden z-20">
+              <img
+                src={getPortraitUrl(currentDialogue.talker, currentDialogue.iconUrl)}
+                alt={CHARACTER_NAMES[currentDialogue.talker]}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Dialogue Container */}
           <div className="relative bg-gradient-to-b from-amber-50 to-amber-100 rounded-2xl shadow-2xl border-4 border-amber-800 overflow-hidden">
             {/* Decorative Wood Texture Overlay */}
             <div 
@@ -100,36 +128,8 @@ export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps
               }}
             />
 
-            {/* Character Portrait - Top Left Corner */}
-            {currentDialogue.talker === 'both' ? (
-              <div className="absolute -top-2 -left-2 flex gap-1 z-10">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-amber-800 bg-white shadow-lg overflow-hidden">
-                  <img
-                    src={getPortraitUrl('soly', DEFAULT_PORTRAITS.soly)}
-                    alt="Soly"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-amber-800 bg-white shadow-lg overflow-hidden">
-                  <img
-                    src={getPortraitUrl('maria', DEFAULT_PORTRAITS.maria)}
-                    alt="Maria"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="absolute -top-2 -left-2 w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-amber-800 bg-white shadow-lg overflow-hidden z-10">
-                <img
-                  src={getPortraitUrl(currentDialogue.talker, currentDialogue.iconUrl)}
-                  alt={CHARACTER_NAMES[currentDialogue.talker]}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
             {/* Dialogue Content */}
-            <div className={`relative pt-6 pb-4 px-6 md:px-8 ${currentDialogue.talker === 'both' ? 'pl-36 md:pl-48' : 'pl-24 md:pl-32'}`}>
+            <div className="relative pt-6 pb-4 px-6 md:px-8 pl-6 md:pl-8">
               {/* Character Name */}
               <div className="mb-2 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-teal-500"></div>
