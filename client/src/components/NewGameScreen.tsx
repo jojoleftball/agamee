@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import { Settings, VolumeX, Volume2, Home } from 'lucide-react';
+import { Settings, VolumeX, Volume2, Home, Zap, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/lib/stores/useAudio';
+import { useMergeGame } from '@/lib/stores/useMergeGame';
+import { BeachHouseArea } from '@/lib/stores/useBeachHouseStore';
 import AdminPanel from './AdminPanel';
+import BeachHouseView from './BeachHouseView';
+import AreaTaskModal from './AreaTaskModal';
 
 interface NewGameScreenProps {
   onBackToMenu: () => void;
@@ -11,9 +15,12 @@ interface NewGameScreenProps {
 
 export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameScreenProps) {
   const { isMuted, toggleMute } = useAudio();
+  const { energy, maxEnergy, coins } = useMergeGame();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settingsClickCount, setSettingsClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [selectedArea, setSelectedArea] = useState<BeachHouseArea | null>(null);
+  const [showMergeGame, setShowMergeGame] = useState(false);
 
   const handleSettingsClick = () => {
     const now = Date.now();
@@ -32,6 +39,10 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
     }
   };
 
+  const handleAreaClick = (area: BeachHouseArea) => {
+    setSelectedArea(area);
+  };
+
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-sky-200 to-blue-100 flex flex-col overflow-hidden">
       <div className="bg-white/90 backdrop-blur-sm shadow-md p-4 flex justify-between items-center z-20">
@@ -47,6 +58,14 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
         <h1 className="text-xl font-bold text-gray-800">Beach House Story</h1>
         
         <div className="flex gap-2">
+          <div className="flex items-center gap-2 bg-blue-100 px-3 py-1 rounded-full">
+            <Zap className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-bold text-blue-800">{energy}/{maxEnergy}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-yellow-100 px-3 py-1 rounded-full">
+            <Coins className="w-4 h-4 text-yellow-600" />
+            <span className="text-sm font-bold text-yellow-800">{coins}</span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -66,41 +85,35 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
-        <div className="text-center space-y-6 max-w-md">
-          <img
-            src="/sprites/IMG_20251111_022306_1762821019727.png"
-            alt="Beach House"
-            className="w-full h-auto object-contain"
-            style={{ 
-              maxHeight: '40vh',
-              filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2))'
-            }}
-          />
-          
-          <h2 className="text-2xl font-bold text-gray-800">
-            Your Dream Beach House Awaits
-          </h2>
-          
-          <p className="text-gray-600 leading-relaxed">
-            Join Soly and Maria as they transform this beach house into their perfect home. 
-            Discover their story, complete tasks, and bring their dreams to life!
-          </p>
-
-          <div className="space-y-3">
-            <Button
-              onClick={onShowDialogue}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 rounded-lg shadow-lg"
-            >
-              Continue Story
-            </Button>
-            
-            <div className="text-sm text-gray-500">
-              Tip: Tap the <Settings className="w-4 h-4 inline" /> button 3 times to access admin panel
-            </div>
-          </div>
-        </div>
+      <div className="flex-1 relative overflow-hidden">
+        <BeachHouseView onAreaClick={handleAreaClick} />
       </div>
+
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+        <Button
+          onClick={onShowDialogue}
+          className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold shadow-lg"
+        >
+          📖 Story
+        </Button>
+        <Button
+          onClick={() => setShowMergeGame(true)}
+          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold shadow-lg"
+        >
+          🎮 Merge Game
+        </Button>
+      </div>
+
+      {selectedArea && (
+        <AreaTaskModal
+          area={selectedArea}
+          onClose={() => setSelectedArea(null)}
+          onStartMerge={() => {
+            setSelectedArea(null);
+            setShowMergeGame(true);
+          }}
+        />
+      )}
 
       {showAdminPanel && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
     </div>
