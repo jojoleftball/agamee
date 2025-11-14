@@ -30,53 +30,33 @@ interface BeachHouseState {
 
 const DEFAULT_AREAS: BeachHouseArea[] = [
   {
-    id: 'gate',
-    name: 'Front Gate',
+    id: 'entrance',
+    name: 'Entrance',
     state: 'dirty',
     unlockCost: 0,
     cleaningTasks: 3,
     completedTasks: 0,
-    position: { x: 50, y: 85 },
+    position: { x: 50, y: 50 },
     rewards: { coins: 50, xp: 10 }
-  },
-  {
-    id: 'garden',
-    name: 'Garden',
-    state: 'locked',
-    unlockCost: 100,
-    cleaningTasks: 5,
-    completedTasks: 0,
-    position: { x: 30, y: 60 },
-    rewards: { coins: 100, xp: 20 }
-  },
-  {
-    id: 'deck',
-    name: 'Beach Deck',
-    state: 'locked',
-    unlockCost: 150,
-    cleaningTasks: 4,
-    completedTasks: 0,
-    position: { x: 70, y: 60 },
-    rewards: { coins: 150, xp: 30 }
   },
   {
     id: 'livingroom',
     name: 'Living Room',
     state: 'locked',
-    unlockCost: 200,
+    unlockCost: 100,
     cleaningTasks: 6,
     completedTasks: 0,
-    position: { x: 50, y: 40 },
-    rewards: { coins: 200, xp: 40 }
+    position: { x: 50, y: 50 },
+    rewards: { coins: 150, xp: 30 }
   },
   {
     id: 'kitchen',
     name: 'Kitchen',
     state: 'locked',
-    unlockCost: 250,
+    unlockCost: 200,
     cleaningTasks: 7,
     completedTasks: 0,
-    position: { x: 30, y: 30 },
+    position: { x: 50, y: 50 },
     rewards: { coins: 250, xp: 50 }
   },
   {
@@ -86,17 +66,27 @@ const DEFAULT_AREAS: BeachHouseArea[] = [
     unlockCost: 300,
     cleaningTasks: 5,
     completedTasks: 0,
-    position: { x: 70, y: 30 },
+    position: { x: 50, y: 50 },
     rewards: { coins: 300, xp: 60 }
   },
   {
-    id: 'beach',
-    name: 'Beach Area',
+    id: 'bathroom',
+    name: 'Bathroom',
     state: 'locked',
     unlockCost: 350,
+    cleaningTasks: 4,
+    completedTasks: 0,
+    position: { x: 50, y: 50 },
+    rewards: { coins: 200, xp: 40 }
+  },
+  {
+    id: 'garden',
+    name: 'Garden',
+    state: 'locked',
+    unlockCost: 400,
     cleaningTasks: 8,
     completedTasks: 0,
-    position: { x: 50, y: 15 },
+    position: { x: 50, y: 50 },
     rewards: { coins: 400, xp: 80 }
   }
 ];

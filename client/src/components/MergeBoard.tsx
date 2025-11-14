@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useBoardStore } from '@/lib/stores/useBoardStore';
 import { MERGE_ITEMS } from '@/lib/mergeItems';
 import { useMergeGame } from '@/lib/stores/useMergeGame';
 import { useAudio } from '@/lib/stores/useAudio';
+import SpriteItem from './SpriteItem';
 
 interface DragState {
   itemId: string;
@@ -177,13 +178,10 @@ export default function MergeBoard() {
               onMouseDown={(e) => handleDragStart(e, item.id)}
               onTouchStart={(e) => handleDragStart(e, item.id)}
             >
-              <div className={`w-full h-full bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg flex flex-col items-center justify-center border-3 border-blue-200 ${
+              <div className={`w-full h-full bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-lg border-3 border-blue-200 overflow-hidden ${
                 isDragging ? 'shadow-2xl' : ''
               }`}>
-                <div className="text-3xl mb-1">{mergeItem.emoji}</div>
-                <div className="text-xs font-bold text-gray-700 text-center px-1">
-                  Lv.{mergeItem.level}
-                </div>
+                <SpriteItem itemType={item.itemType} size={CELL_SIZE} />
               </div>
             </div>
           );

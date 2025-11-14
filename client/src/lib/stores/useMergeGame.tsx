@@ -33,9 +33,9 @@ const ENERGY_REGEN_AMOUNT = 1;
 export const useMergeGame = create<MergeGameState>()(
   subscribeWithSelector((set, get) => ({
     phase: "loading",
-    energy: 50,
-    maxEnergy: 50,
-    coins: 100,
+    energy: 100,
+    maxEnergy: 100,
+    coins: 200,
     currentChapter: 1,
     lastEnergyUpdate: Date.now(),
     unlockedRooms: ['living_room'],

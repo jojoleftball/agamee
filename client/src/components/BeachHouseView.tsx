@@ -44,30 +44,11 @@ export default function BeachHouseView({ onAreaClick }: BeachHouseViewProps) {
     }
   };
 
-  const backgroundImage = progress > 50 ? cleanHouseImage : dirtyHouseImage;
-
   return (
-    <div className="relative w-full h-full">
-      <div 
-        className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
-        style={{ 
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: 'cover'
-        }}
-      >
-        <div 
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ 
-            backgroundImage: `url(${cleanHouseImage})`,
-            backgroundSize: 'cover',
-            opacity: progress / 100
-          }}
-        />
-      </div>
-
-      <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-y-auto bg-gradient-to-b from-sand-100 via-sand-50 to-sky-100 p-4">
+      <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
         {areas.map((area) => (
-          <AreaMarker
+          <RoomCard
             key={area.id}
             area={area}
             onClick={() => handleAreaClick(area)}
@@ -75,21 +56,10 @@ export default function BeachHouseView({ onAreaClick }: BeachHouseViewProps) {
         ))}
       </div>
 
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-yellow-500" />
-          <div>
-            <div className="text-xs text-gray-600">Beach House Progress</div>
-            <div className="flex items-center gap-2">
-              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-sm font-bold text-gray-800">{progress}%</span>
-            </div>
-          </div>
+      <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl px-4 py-2 shadow-lg border-2 border-amber-400">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          <div className="text-sm font-bold">Progress: {progress}%</div>
         </div>
       </div>
 
@@ -149,30 +119,30 @@ export default function BeachHouseView({ onAreaClick }: BeachHouseViewProps) {
   );
 }
 
-function AreaMarker({ area, onClick }: { area: BeachHouseArea; onClick: () => void }) {
+function RoomCard({ area, onClick }: { area: BeachHouseArea; onClick: () => void }) {
   const getIcon = () => {
     switch (area.state) {
       case 'locked':
-        return <Lock className="w-4 h-4" />;
+        return <Lock className="w-8 h-8" />;
       case 'dirty':
-        return <Hammer className="w-4 h-4" />;
+        return <Hammer className="w-8 h-8" />;
       case 'clean':
-        return <CheckCircle className="w-4 h-4" />;
+        return <CheckCircle className="w-8 h-8" />;
       default:
-        return <Sparkles className="w-4 h-4" />;
+        return <Sparkles className="w-8 h-8" />;
     }
   };
 
-  const getColor = () => {
+  const getBgColor = () => {
     switch (area.state) {
       case 'locked':
-        return 'bg-gray-500';
+        return 'from-gray-400 to-gray-600';
       case 'dirty':
-        return 'bg-orange-500 animate-pulse';
+        return 'from-orange-500 to-red-600';
       case 'clean':
-        return 'bg-green-500';
+        return 'from-green-500 to-emerald-600';
       default:
-        return 'bg-blue-500';
+        return 'from-blue-500 to-purple-600';
     }
   };
 
@@ -183,30 +153,54 @@ function AreaMarker({ area, onClick }: { area: BeachHouseArea; onClick: () => vo
   return (
     <button
       onClick={onClick}
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
-      style={{ 
-        left: `${area.position.x}%`, 
-        top: `${area.position.y}%` 
-      }}
+      className={`relative bg-gradient-to-br ${getBgColor()} rounded-2xl p-4 shadow-xl hover:scale-105 transition-all border-4 ${
+        area.state === 'clean' ? 'border-yellow-400' : 'border-white/30'
+      } min-h-[160px] flex flex-col`}
     >
-      <div className={`${getColor()} text-white rounded-full p-3 shadow-lg hover:scale-110 transition-transform relative`}>
-        {getIcon()}
+      <div className="flex items-center justify-between mb-3">
+        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 text-white">
+          {getIcon()}
+        </div>
         
-        {area.state === 'dirty' && progress > 0 && (
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center border-2 border-orange-500">
-            <span className="text-xs font-bold text-orange-500">{area.completedTasks}</span>
+        {area.state === 'locked' && (
+          <div className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            {area.unlockCost} coins
           </div>
         )}
+        
+        {area.state === 'clean' && (
+          <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+        )}
       </div>
+
+      <h3 className="text-white font-bold text-lg mb-2">{area.name}</h3>
       
-      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-        <div className="bg-black/80 text-white text-xs px-3 py-1 rounded-lg">
-          {area.name}
-          {area.state === 'dirty' && (
-            <div className="text-yellow-300">{area.completedTasks}/{area.cleaningTasks}</div>
-          )}
+      {area.state === 'dirty' && (
+        <div className="mt-auto">
+          <div className="flex justify-between text-xs text-white/80 mb-1">
+            <span>Tasks</span>
+            <span>{area.completedTasks}/{area.cleaningTasks}</span>
+          </div>
+          <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      </div>
+      )}
+      
+      {area.state === 'locked' && (
+        <div className="mt-auto text-white/80 text-xs">
+          Tap to unlock
+        </div>
+      )}
+      
+      {area.state === 'clean' && (
+        <div className="mt-auto text-yellow-200 text-xs font-bold">
+          ✓ Complete!
+        </div>
+      )}
     </button>
   );
 }
