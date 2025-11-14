@@ -91,30 +91,24 @@ export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps
         <div className="w-full max-w-4xl pointer-events-auto relative">
           {/* Character Portrait - Outside/On Top of Dialogue Box */}
           {currentDialogue.talker === 'both' ? (
-            <div className="absolute -top-12 left-8 md:-top-16 md:left-12 flex gap-2 z-20">
-              <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden">
-                <img
-                  src={getPortraitUrl('soly', DEFAULT_PORTRAITS.soly)}
-                  alt="Soly"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden">
-                <img
-                  src={getPortraitUrl('maria', DEFAULT_PORTRAITS.maria)}
-                  alt="Maria"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="absolute -top-16 left-8 md:-top-20 md:left-12 w-28 h-28 md:w-36 md:h-36 rounded-lg border-4 border-amber-800 bg-white shadow-2xl overflow-hidden z-20">
+            <div className="absolute -top-12 left-4 md:-top-16 md:left-6 flex gap-2 z-20">
               <img
-                src={getPortraitUrl(currentDialogue.talker, currentDialogue.iconUrl)}
-                alt={CHARACTER_NAMES[currentDialogue.talker]}
-                className="w-full h-full object-cover"
+                src={getPortraitUrl('soly', DEFAULT_PORTRAITS.soly)}
+                alt="Soly"
+                className="w-24 h-24 md:w-32 md:h-32 object-contain filter drop-shadow-xl"
+              />
+              <img
+                src={getPortraitUrl('maria', DEFAULT_PORTRAITS.maria)}
+                alt="Maria"
+                className="w-24 h-24 md:w-32 md:h-32 object-contain filter drop-shadow-xl"
               />
             </div>
+          ) : (
+            <img
+              src={getPortraitUrl(currentDialogue.talker, currentDialogue.iconUrl)}
+              alt={CHARACTER_NAMES[currentDialogue.talker]}
+              className="absolute -top-16 left-4 md:-top-20 md:left-6 w-28 h-28 md:w-36 md:h-36 object-contain filter drop-shadow-xl z-20"
+            />
           )}
 
           {/* Dialogue Container */}

@@ -48,18 +48,19 @@ export default function LoadingScreen({ onLoadComplete }: LoadingScreenProps) {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-sky-400 to-sky-200 flex flex-col items-center justify-center overflow-hidden">
-      <div className="relative w-full max-w-md px-4">
+      <div className="relative w-full max-w-2xl px-4 mb-32">
         <img
           src="/sprites/IMG_20251111_022306_1762821019727.png"
           alt="Merge Story"
           className="w-full h-auto object-contain animate-fade-in"
           style={{ 
-            maxHeight: '80vh',
             filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2))'
           }}
         />
-        
-        <div className="absolute bottom-4 left-8 right-8">
+      </div>
+      
+      <div className="fixed bottom-8 left-0 right-0 px-8">
+        <div className="max-w-2xl mx-auto">
           <div className="relative h-8 bg-gradient-to-r from-yellow-100 to-yellow-50 rounded-full overflow-hidden border-4 border-yellow-600 shadow-lg">
             <div 
               className="h-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-400 transition-all duration-300 ease-out relative"

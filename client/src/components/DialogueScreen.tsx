@@ -35,31 +35,29 @@ export default function DialogueScreen({ dialogues, onComplete }: DialogueScreen
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-sky-300 to-sky-100 flex flex-col items-center justify-end p-4 z-50">
-      <div className="mb-8 flex justify-center items-end gap-4">
+      <div className="w-full max-w-md relative">
         {currentDialogue.character === 'both' ? (
-          <>
+          <div className="absolute -top-20 left-4 flex gap-2 z-20">
             <img
               src={CHARACTER_SPRITES.soly}
               alt="Soly"
-              className="w-32 h-32 object-contain animate-bounce-slow filter drop-shadow-xl"
+              className="w-24 h-24 object-contain filter drop-shadow-xl"
             />
             <img
               src={CHARACTER_SPRITES.maria}
               alt="Maria"
-              className="w-32 h-32 object-contain animate-bounce-slow filter drop-shadow-xl"
-              style={{ animationDelay: '0.2s' }}
+              className="w-24 h-24 object-contain filter drop-shadow-xl"
             />
-          </>
+          </div>
         ) : (
           <img
             src={CHARACTER_SPRITES[currentDialogue.character]}
             alt={CHARACTER_NAMES[currentDialogue.character]}
-            className="w-40 h-40 object-contain animate-bounce-slow filter drop-shadow-xl"
+            className="absolute -top-24 left-4 w-28 h-28 object-contain filter drop-shadow-xl z-20"
           />
         )}
-      </div>
 
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border-4 border-blue-300">
+        <div className="w-full bg-white/95 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border-4 border-blue-300">
         <div className="mb-3 flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-500"></div>
           <h3 className="font-bold text-lg text-gray-800">
@@ -71,17 +69,18 @@ export default function DialogueScreen({ dialogues, onComplete }: DialogueScreen
           {currentDialogue.text}
         </p>
 
-        <div className="flex justify-between items-center">
-          <div className="text-xs text-gray-500">
-            {currentIndex + 1} / {dialogues.length}
+          <div className="flex justify-between items-center">
+            <div className="text-xs text-gray-500">
+              {currentIndex + 1} / {dialogues.length}
+            </div>
+            
+            <button
+              onClick={handleNext}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            >
+              {isLast ? 'Continue ✨' : 'Next →'}
+            </button>
           </div>
-          
-          <button
-            onClick={handleNext}
-            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-          >
-            {isLast ? 'Continue ✨' : 'Next →'}
-          </button>
         </div>
       </div>
 
