@@ -9,6 +9,7 @@ interface BoardState {
   gridSize: { rows: number; cols: number };
   selectedItem: string | null;
   draggedItem: string | null;
+  lastGeneratorUse: number;
   
   addItem: (itemType: string, x: number, y: number) => void;
   removeItem: (id: string) => void;
@@ -16,6 +17,7 @@ interface BoardState {
   selectItem: (id: string | null) => void;
   setDraggedItem: (id: string | null) => void;
   tryMerge: (item1Id: string, item2Id: string) => boolean;
+  generateItem: () => boolean;
   getItemAt: (x: number, y: number) => BoardItem | undefined;
   isPositionOccupied: (x: number, y: number, excludeId?: string) => boolean;
   initializeBoard: () => void;
@@ -24,11 +26,14 @@ interface BoardState {
   loadBoard: () => void;
 }
 
+const GENERATOR_COOLDOWN = 30000;
+
 export const useBoardStore = create<BoardState>((set, get) => ({
   items: [],
-  gridSize: { rows: 6, cols: 5 },
+  gridSize: { rows: 7, cols: 9 },
   selectedItem: null,
   draggedItem: null,
+  lastGeneratorUse: 0,
   
   addItem: (itemType, x, y) => {
     const newItem: BoardItem = {
@@ -100,6 +105,57 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
     
     return false;
+  },
+  
+  generateItem: () => {
+    const state = get();
+    const now = Date.now();
+    
+    if (now - state.lastGeneratorUse < GENERATOR_COOLDOWN) {
+      return false;
+    }
+    
+    const emptyPositions: {x: number; y: number}[] = [];
+    for (let y = 0; y < state.gridSize.rows; y++) {
+      for (let x = 0; x < state.gridSize.cols; x++) {
+        if (!state.isPositionOccupied(x, y)) {
+          emptyPositions.push({ x, y });
+        }
+      }
+    }
+    
+    if (emptyPositions.length === 0) {
+      return false;
+    }
+    
+    const randomPos = emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
+    
+    const tierRoll = Math.random();
+    let tier = 1;
+    if (tierRoll > 0.9) tier = 3;
+    else if (tierRoll > 0.7) tier = 2;
+    
+    const itemTypes = [
+      `cleaning_${tier}`,
+      `repair_${tier}`,
+      `decor_${tier}`
+    ];
+    const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+    
+    const newItem: BoardItem = {
+      id: crypto.randomUUID(),
+      itemType: randomType,
+      x: randomPos.x,
+      y: randomPos.y
+    };
+    
+    set((state) => ({
+      items: [...state.items, newItem],
+      lastGeneratorUse: now
+    }));
+    
+    get().saveBoard();
+    return true;
   },
   
   getItemAt: (x, y) => {

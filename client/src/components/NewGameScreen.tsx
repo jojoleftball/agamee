@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Settings, VolumeX, Volume2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, VolumeX, Volume2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/lib/stores/useAudio';
 import { useMergeGame } from '@/lib/stores/useMergeGame';
 import { BeachHouseArea } from '@/lib/stores/useBeachHouseStore';
+import { useBoardStore } from '@/lib/stores/useBoardStore';
 import AdminPanel from './AdminPanel';
 import BeachHouseView from './BeachHouseView';
 import AreaTaskModal from './AreaTaskModal';
@@ -18,11 +19,32 @@ interface NewGameScreenProps {
 export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameScreenProps) {
   const { isMuted, toggleMute } = useAudio();
   const { energy, maxEnergy, coins } = useMergeGame();
+  const { generateItem, lastGeneratorUse } = useBoardStore();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settingsClickCount, setSettingsClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [selectedArea, setSelectedArea] = useState<BeachHouseArea | null>(null);
   const [showMergeGame, setShowMergeGame] = useState(false);
+  const [generatorCooldown, setGeneratorCooldown] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const cooldownRemaining = Math.max(0, 30000 - (Date.now() - lastGeneratorUse));
+      setGeneratorCooldown(Math.ceil(cooldownRemaining / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lastGeneratorUse]);
+  
+  const handleGenerate = () => {
+    if (generatorCooldown > 0) return;
+    if (energy < 5) {
+      alert('Not enough energy! Need at least 5 energy to generate items.');
+      return;
+    }
+    if (generateItem()) {
+      useMergeGame.getState().spendEnergy(5);
+    }
+  };
 
   const handleSettingsClick = () => {
     const now = Date.now();
@@ -73,6 +95,14 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
           </div>
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+            <Button
+              onClick={handleGenerate}
+              disabled={generatorCooldown > 0}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold shadow-lg px-6 disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              {generatorCooldown > 0 ? `${generatorCooldown}s` : 'Generate Item'}
+            </Button>
             <Button
               onClick={() => setShowMergeGame(false)}
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold shadow-lg px-6"

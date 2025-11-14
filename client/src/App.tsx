@@ -9,7 +9,7 @@ import NewDialogueScreen from "./components/NewDialogueScreen";
 type AppPhase = 'loading' | 'game' | 'dialogue';
 
 function App() {
-  const { loadGame } = useMergeGame();
+  const { loadGame, updateEnergy } = useMergeGame();
   const { loadDialogues } = useDialogueStore();
   const [phase, setPhase] = useState<AppPhase>('loading');
 
@@ -17,6 +17,13 @@ function App() {
     loadGame();
     loadDialogues();
   }, [loadGame, loadDialogues]);
+  
+  useEffect(() => {
+    const energyTimer = setInterval(() => {
+      updateEnergy();
+    }, 5000);
+    return () => clearInterval(energyTimer);
+  }, [updateEnergy]);
 
   const handleLoadComplete = () => {
     setPhase('dialogue');
