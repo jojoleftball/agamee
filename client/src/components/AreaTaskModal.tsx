@@ -80,11 +80,11 @@ export default function AreaTaskModal({ area, onClose, onStartMerge }: AreaTaskM
             </div>
 
             {remainingTasks > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800 font-medium">
-                  ⚡ {remainingTasks} task{remainingTasks > 1 ? 's' : ''} remaining
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-3">
+                <p className="text-sm text-amber-900 font-bold">
+                  {remainingTasks} task{remainingTasks > 1 ? 's' : ''} remaining
                 </p>
-                <p className="text-xs text-yellow-700 mt-1">
+                <p className="text-xs text-amber-700 mt-1">
                   Each task costs 10 energy
                 </p>
               </div>
@@ -93,20 +93,20 @@ export default function AreaTaskModal({ area, onClose, onStartMerge }: AreaTaskM
 
           {remainingTasks === 0 ? (
             <div className="text-center py-6">
-              <div className="inline-block p-4 bg-green-100 rounded-full mb-3">
-                <Sparkles className="w-12 h-12 text-green-600" />
+              <div className="inline-block p-4 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full mb-3 shadow-lg">
+                <Sparkles className="w-12 h-12 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">
-                Area Complete! 🎉
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                Area Complete!
               </h3>
-              <p className="text-gray-600 mb-4">
-                You earned {area.rewards.coins} coins!
+              <p className="text-lg text-green-600 font-bold mb-4">
+                +{area.rewards.coins} Coins
               </p>
               <Button
                 onClick={onClose}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-8 py-3"
               >
-                Awesome!
+                Continue
               </Button>
             </div>
           ) : (
@@ -114,17 +114,17 @@ export default function AreaTaskModal({ area, onClose, onStartMerge }: AreaTaskM
               <Button
                 onClick={handleCompleteTask}
                 disabled={animating}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 py-6 text-lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-lg font-bold shadow-lg"
               >
                 {animating ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     <Sparkles className="w-5 h-5 animate-spin" />
                     Working...
                   </span>
                 ) : (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     <Hammer className="w-5 h-5" />
-                    Complete Task (10 ⚡)
+                    Complete Task (-10 Energy)
                   </span>
                 )}
               </Button>
@@ -132,14 +132,14 @@ export default function AreaTaskModal({ area, onClose, onStartMerge }: AreaTaskM
               <Button
                 onClick={onStartMerge}
                 variant="outline"
-                className="w-full border-2 border-purple-300 hover:bg-purple-50"
+                className="w-full border-2 border-purple-400 hover:bg-purple-50 py-4 font-semibold"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Merge Items to Get Tools
+                Go to Merge Board
               </Button>
 
-              <p className="text-xs text-gray-500 text-center">
-                Tip: Merge items to unlock special tools and speed up cleaning!
+              <p className="text-xs text-gray-600 text-center mt-2">
+                Merge items to unlock special tools!
               </p>
             </div>
           )}
