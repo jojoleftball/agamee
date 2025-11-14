@@ -2,182 +2,178 @@ export interface MergeItem {
   id: string;
   name: string;
   level: number;
-  emoji: string;
-  category: 'flower' | 'furniture' | 'tool' | 'decoration';
+  category: 'cleaning' | 'repair' | 'decor';
+  spriteSheet: string;
+  spriteIndex: number;
   mergesInto?: string;
   description: string;
   coinValue: number;
 }
 
 export const MERGE_ITEMS: Record<string, MergeItem> = {
-  'seed': {
-    id: 'seed',
-    name: 'Seed',
+  'cleaning_1': {
+    id: 'cleaning_1',
+    name: 'Dirty Rag',
     level: 1,
-    emoji: '🌱',
-    category: 'flower',
-    mergesInto: 'sprout',
-    description: 'A tiny seed full of potential',
+    category: 'cleaning',
+    spriteSheet: '/items-cleaning.png',
+    spriteIndex: 0,
+    mergesInto: 'cleaning_2',
+    description: 'A dirty cleaning rag',
     coinValue: 5
   },
-  'sprout': {
-    id: 'sprout',
-    name: 'Sprout',
+  'cleaning_2': {
+    id: 'cleaning_2',
+    name: 'Cleaning Cloth',
     level: 2,
-    emoji: '🌿',
-    category: 'flower',
-    mergesInto: 'flower',
-    description: 'A small green sprout',
+    category: 'cleaning',
+    spriteSheet: '/items-cleaning.png',
+    spriteIndex: 1,
+    mergesInto: 'cleaning_3',
+    description: 'Clean cloth for wiping',
     coinValue: 15
   },
-  'flower': {
-    id: 'flower',
-    name: 'Flower',
+  'cleaning_3': {
+    id: 'cleaning_3',
+    name: 'Spray Bottle',
     level: 3,
-    emoji: '🌸',
-    category: 'flower',
-    mergesInto: 'bouquet',
-    description: 'A beautiful pink flower',
+    category: 'cleaning',
+    spriteSheet: '/items-cleaning.png',
+    spriteIndex: 2,
+    mergesInto: 'cleaning_4',
+    description: 'Spray bottle with cleaner',
     coinValue: 50
   },
-  'bouquet': {
-    id: 'bouquet',
-    name: 'Bouquet',
+  'cleaning_4': {
+    id: 'cleaning_4',
+    name: 'Mop',
     level: 4,
-    emoji: '💐',
-    category: 'flower',
-    mergesInto: 'garden',
-    description: 'A lovely flower bouquet',
+    category: 'cleaning',
+    spriteSheet: '/items-cleaning.png',
+    spriteIndex: 3,
+    mergesInto: 'cleaning_5',
+    description: 'Professional mop',
     coinValue: 150
   },
-  'garden': {
-    id: 'garden',
-    name: 'Garden',
+  'cleaning_5': {
+    id: 'cleaning_5',
+    name: 'Cleaning Kit',
     level: 5,
-    emoji: '🌻',
-    category: 'flower',
-    description: 'A flourishing garden',
+    category: 'cleaning',
+    spriteSheet: '/items-cleaning.png',
+    spriteIndex: 4,
+    description: 'Complete cleaning kit',
     coinValue: 500
   },
   
-  'wood': {
-    id: 'wood',
-    name: 'Wood',
+  'repair_1': {
+    id: 'repair_1',
+    name: 'Nail',
     level: 1,
-    emoji: '🪵',
-    category: 'furniture',
-    mergesInto: 'plank',
-    description: 'Raw wood log',
-    coinValue: 10
-  },
-  'plank': {
-    id: 'plank',
-    name: 'Plank',
-    level: 2,
-    emoji: '🪚',
-    category: 'furniture',
-    mergesInto: 'chair',
-    description: 'Wooden plank',
-    coinValue: 30
-  },
-  'chair': {
-    id: 'chair',
-    name: 'Chair',
-    level: 3,
-    emoji: '🪑',
-    category: 'furniture',
-    mergesInto: 'table',
-    description: 'Comfortable wooden chair',
-    coinValue: 100
-  },
-  'table': {
-    id: 'table',
-    name: 'Table',
-    level: 4,
-    emoji: '🛋️',
-    category: 'furniture',
-    mergesInto: 'furniture_set',
-    description: 'Beautiful dining table',
-    coinValue: 300
-  },
-  'furniture_set': {
-    id: 'furniture_set',
-    name: 'Furniture Set',
-    level: 5,
-    emoji: '🏡',
-    category: 'furniture',
-    description: 'Complete furniture set',
-    coinValue: 1000
-  },
-  
-  'stone': {
-    id: 'stone',
-    name: 'Stone',
-    level: 1,
-    emoji: '🪨',
-    category: 'decoration',
-    mergesInto: 'brick',
-    description: 'A smooth stone',
+    category: 'repair',
+    spriteSheet: '/items-repair.png',
+    spriteIndex: 0,
+    mergesInto: 'repair_2',
+    description: 'Small nail',
     coinValue: 8
   },
-  'brick': {
-    id: 'brick',
-    name: 'Brick',
+  'repair_2': {
+    id: 'repair_2',
+    name: 'Small Hammer',
     level: 2,
-    emoji: '🧱',
-    category: 'decoration',
-    mergesInto: 'wall',
-    description: 'Clay brick',
+    category: 'repair',
+    spriteSheet: '/items-repair.png',
+    spriteIndex: 1,
+    mergesInto: 'repair_3',
+    description: 'Basic hammer',
     coinValue: 25
   },
-  'wall': {
-    id: 'wall',
-    name: 'Wall',
+  'repair_3': {
+    id: 'repair_3',
+    name: 'Wrench',
     level: 3,
-    emoji: '🏠',
-    category: 'decoration',
-    mergesInto: 'room',
-    description: 'Sturdy wall section',
+    category: 'repair',
+    spriteSheet: '/items-repair.png',
+    spriteIndex: 2,
+    mergesInto: 'repair_4',
+    description: 'Adjustable wrench',
     coinValue: 80
   },
-  'room': {
-    id: 'room',
-    name: 'Room',
+  'repair_4': {
+    id: 'repair_4',
+    name: 'Toolbox',
     level: 4,
-    emoji: '🏘️',
-    category: 'decoration',
-    description: 'A cozy room',
+    category: 'repair',
+    spriteSheet: '/items-repair.png',
+    spriteIndex: 3,
+    mergesInto: 'repair_5',
+    description: 'Complete toolbox',
     coinValue: 250
   },
+  'repair_5': {
+    id: 'repair_5',
+    name: 'Workshop Tools',
+    level: 5,
+    category: 'repair',
+    spriteSheet: '/items-repair.png',
+    spriteIndex: 4,
+    description: 'Professional workshop tools',
+    coinValue: 800
+  },
   
-  'hammer': {
-    id: 'hammer',
-    name: 'Hammer',
+  'decor_1': {
+    id: 'decor_1',
+    name: 'Flower Seed',
     level: 1,
-    emoji: '🔨',
-    category: 'tool',
-    mergesInto: 'toolbox',
-    description: 'Basic hammer',
-    coinValue: 12
+    category: 'decor',
+    spriteSheet: '/items-decor.png',
+    spriteIndex: 0,
+    mergesInto: 'decor_2',
+    description: 'Tiny flower seed',
+    coinValue: 10
   },
-  'toolbox': {
-    id: 'toolbox',
-    name: 'Toolbox',
+  'decor_2': {
+    id: 'decor_2',
+    name: 'Small Plant',
     level: 2,
-    emoji: '🧰',
-    category: 'tool',
-    mergesInto: 'workshop',
-    description: 'Complete toolbox',
-    coinValue: 40
+    category: 'decor',
+    spriteSheet: '/items-decor.png',
+    spriteIndex: 1,
+    mergesInto: 'decor_3',
+    description: 'Small potted plant',
+    coinValue: 30
   },
-  'workshop': {
-    id: 'workshop',
-    name: 'Workshop',
+  'decor_3': {
+    id: 'decor_3',
+    name: 'Potted Flower',
     level: 3,
-    emoji: '⚒️',
-    category: 'tool',
-    description: 'Fully equipped workshop',
-    coinValue: 120
+    category: 'decor',
+    spriteSheet: '/items-decor.png',
+    spriteIndex: 2,
+    mergesInto: 'decor_4',
+    description: 'Beautiful potted flower',
+    coinValue: 100
+  },
+  'decor_4': {
+    id: 'decor_4',
+    name: 'Flower Arrangement',
+    level: 4,
+    category: 'decor',
+    spriteSheet: '/items-decor.png',
+    spriteIndex: 3,
+    mergesInto: 'decor_5',
+    description: 'Lovely flower arrangement',
+    coinValue: 300
+  },
+  'decor_5': {
+    id: 'decor_5',
+    name: 'Garden Centerpiece',
+    level: 5,
+    category: 'decor',
+    spriteSheet: '/items-decor.png',
+    spriteIndex: 4,
+    description: 'Stunning garden centerpiece',
+    coinValue: 1000
   }
 };
 
@@ -202,10 +198,10 @@ export function getMergeResult(itemId: string): MergeItem | null {
 
 export function generateStarterItems(): BoardItem[] {
   return [
-    { id: crypto.randomUUID(), itemType: 'seed', x: 0, y: 0 },
-    { id: crypto.randomUUID(), itemType: 'seed', x: 1, y: 0 },
-    { id: crypto.randomUUID(), itemType: 'wood', x: 2, y: 0 },
-    { id: crypto.randomUUID(), itemType: 'stone', x: 0, y: 1 },
-    { id: crypto.randomUUID(), itemType: 'hammer', x: 1, y: 1 }
+    { id: crypto.randomUUID(), itemType: 'cleaning_1', x: 0, y: 0 },
+    { id: crypto.randomUUID(), itemType: 'cleaning_1', x: 1, y: 0 },
+    { id: crypto.randomUUID(), itemType: 'repair_1', x: 2, y: 0 },
+    { id: crypto.randomUUID(), itemType: 'repair_1', x: 3, y: 0 },
+    { id: crypto.randomUUID(), itemType: 'decor_1', x: 0, y: 1 }
   ];
 }
