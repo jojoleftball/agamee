@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useBeachHouseStore } from '@/lib/stores/useBeachHouseStore';
+import { useTaskStore } from '@/lib/stores/useTaskStore';
 import { Lock, CheckCircle, Hammer } from 'lucide-react';
 
 interface BeachHouse2DProps {
@@ -13,16 +14,26 @@ interface Position {
 
 export default function BeachHouse2D({ onAreaClick }: BeachHouse2DProps) {
   const { areas, initializeAreas } = useBeachHouseStore();
+  const unlockedAreaIds = useTaskStore(state => state.unlockedAreaIds);
+  const completedTaskIds = useTaskStore(state => state.completedTaskIds);
+  const getAreaProgress = useTaskStore(state => state.getAreaProgress);
   const [playerPos, setPlayerPos] = useState<Position>({ x: 50, y: 70 });
   const [targetPos, setTargetPos] = useState<Position | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     initializeAreas();
   }, [initializeAreas]);
 
   useEffect(() => {
-    if (!targetPos) return;
+    if (!targetPos) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      return;
+    }
 
     const movePlayer = () => {
       setPlayerPos(current => {
@@ -30,21 +41,27 @@ export default function BeachHouse2D({ onAreaClick }: BeachHouse2DProps) {
         const dy = targetPos.y - current.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < 2) {
+        if (distance < 0.5) {
           setTargetPos(null);
           return targetPos;
         }
 
-        const speed = 0.1;
+        const speed = 0.08;
         return {
           x: current.x + dx * speed,
           y: current.y + dy * speed
         };
       });
+      
+      animationRef.current = requestAnimationFrame(movePlayer);
     };
 
-    const interval = setInterval(movePlayer, 16);
-    return () => clearInterval(interval);
+    animationRef.current = requestAnimationFrame(movePlayer);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [targetPos]);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -59,7 +76,7 @@ export default function BeachHouse2D({ onAreaClick }: BeachHouse2DProps) {
 
   const areaPositions = [
     { id: 'entrance', x: 30, y: 65, label: 'Entrance' },
-    { id: 'living-room', x: 50, y: 50, label: 'Living Room' },
+    { id: 'living_room', x: 50, y: 50, label: 'Living Room' },
     { id: 'kitchen', x: 70, y: 65, label: 'Kitchen' },
     { id: 'bedroom', x: 35, y: 35, label: 'Bedroom' },
     { id: 'bathroom', x: 65, y: 35, label: 'Bathroom' },
@@ -84,9 +101,9 @@ export default function BeachHouse2D({ onAreaClick }: BeachHouse2DProps) {
 
       {/* Area Hotspots */}
       {areaPositions.map(pos => {
-        const area = areas.find(a => a.id === pos.id);
-        const isLocked = area?.state === 'locked';
-        const isComplete = area?.state === 'clean';
+        const isLocked = !unlockedAreaIds.includes(pos.id);
+        const progress = getAreaProgress(pos.id);
+        const isComplete = progress === 100;
         
         return (
           <div
