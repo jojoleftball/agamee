@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Grid3x3, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MergeBoard from './MergeBoard';
-import BeachHouseExplorer from './BeachHouseExplorer';
+import BeachHouse2D from './BeachHouse2D';
+import ResourceCounters from './ResourceCounters';
 import TaskPanel from './TaskPanel';
 import { useBeachHouseStore } from '@/lib/stores/useBeachHouseStore';
 import { useTaskStore } from '@/lib/stores/useTaskStore';
@@ -29,9 +30,12 @@ export default function GameViewSwitcher() {
             <MergeBoard />
           </div>
         ) : (
-          <BeachHouseExplorer onAreaClick={handleAreaClick} />
+          <BeachHouse2D onAreaClick={handleAreaClick} />
         )}
       </div>
+
+      {/* Resource Counters */}
+      <ResourceCounters />
 
       {/* View Switcher Buttons */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-2xl border-4 border-amber-600">
@@ -61,7 +65,7 @@ export default function GameViewSwitcher() {
       </div>
 
       {/* Tasks Button */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 left-4">
         <Button
           onClick={() => setShowTaskPanel(true)}
           className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-bold shadow-2xl"
