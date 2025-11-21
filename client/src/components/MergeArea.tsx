@@ -4,6 +4,8 @@ import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMergeStore } from '@/lib/stores/useMergeStore';
 import MergeItem3D from './MergeItem3D';
+import MergeParticles from './MergeParticles';
+import { soundManager } from '@/lib/sounds';
 
 interface MergeAreaProps {
   position: [number, number, number];
@@ -11,7 +13,7 @@ interface MergeAreaProps {
 }
 
 export default function MergeArea({ position, zone }: MergeAreaProps) {
-  const { items, gridSize, selectedItem, moveItem, tryMerge, selectItem } = useMergeStore();
+  const { items, gridSize, selectedItem, moveItem, tryMerge, selectItem, mergeParticles } = useMergeStore();
   const [hoveredCell, setHoveredCell] = useState<{x: number; y: number} | null>(null);
   const groupRef = useRef<THREE.Group>(null);
   
@@ -37,6 +39,7 @@ export default function MergeArea({ position, zone }: MergeAreaProps) {
       const itemToMove = items.find(item => item.id === selectedItem);
       if (itemToMove) {
         moveItem(selectedItem, x, y, 0);
+        soundManager.play('click', 0.5);
         selectItem(null);
       }
     }
@@ -54,6 +57,7 @@ export default function MergeArea({ position, zone }: MergeAreaProps) {
         const result = tryMerge(selectedItem, itemId);
         if (result.success) {
           console.log('Merge successful!', result);
+          soundManager.play('merge', 0.7);
           selectItem(null);
           return;
         }
@@ -63,6 +67,7 @@ export default function MergeArea({ position, zone }: MergeAreaProps) {
     if (selectedItem === itemId) {
       selectItem(null);
     } else {
+      soundManager.play('click', 0.3);
       selectItem(itemId);
     }
   };
@@ -124,6 +129,19 @@ export default function MergeArea({ position, zone }: MergeAreaProps) {
           />
         );
       })}
+      
+      {mergeParticles.map((particle) => (
+        <MergeParticles
+          key={particle.id}
+          position={[
+            particle.position[0] - position[0],
+            particle.position[1],
+            particle.position[2] - position[2]
+          ]}
+          color={particle.color}
+          onComplete={() => {}}
+        />
+      ))}
       
       <Text
         position={[0, 0.01, totalHeight / 2 + 1.5]}

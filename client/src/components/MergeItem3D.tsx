@@ -21,20 +21,41 @@ export default function MergeItem3D({ item, position, selected = false, onClick 
   
   useFrame((state) => {
     if (meshRef.current) {
-      if (item.isAnimating || selected) {
+      if (item.isMerging && item.mergeTargetPos) {
+        const targetPos = new THREE.Vector3(
+          item.mergeTargetPos[0] - position[0],
+          item.mergeTargetPos[1],
+          item.mergeTargetPos[2] - position[2]
+        );
+        meshRef.current.position.lerp(targetPos, 0.2);
+        meshRef.current.rotation.y += 0.3;
+        meshRef.current.rotation.x += 0.2;
+        
+        const shrinkScale = 0.3;
+        meshRef.current.scale.lerp(
+          new THREE.Vector3(shrinkScale, shrinkScale, shrinkScale),
+          0.15
+        );
+      } else if (item.isAnimating || selected) {
         meshRef.current.rotation.y += 0.05;
         const bounce = Math.sin(state.clock.elapsedTime * 5) * 0.15;
         meshRef.current.position.y = position[1] + 0.5 + bounce;
+        
+        const targetScale = (hovered || selected) ? 1.2 : 1;
+        meshRef.current.scale.lerp(
+          new THREE.Vector3(targetScale, targetScale, targetScale),
+          0.1
+        );
       } else {
         meshRef.current.rotation.y += hovered ? 0.02 : 0.005;
         meshRef.current.position.y = position[1];
+        
+        const targetScale = hovered ? 1.15 : 1;
+        meshRef.current.scale.lerp(
+          new THREE.Vector3(targetScale, targetScale, targetScale),
+          0.1
+        );
       }
-      
-      const targetScale = (hovered || selected) ? 1.2 : 1;
-      meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
-      );
     }
   });
 

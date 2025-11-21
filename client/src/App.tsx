@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import '@fontsource/inter';
 import { useGardenGame } from './lib/stores/useGardenGame';
-import { useMergeStore } from './lib/stores/useMergeStore';
+import { useMergeStore, validateMergeChains } from './lib/stores/useMergeStore';
 import SimpleLoadingScreen from './components/SimpleLoadingScreen';
 import GardenScene from './components/GardenScene';
 import GameUI from './components/GameUI';
+import { soundManager } from './lib/sounds';
 
 type AppPhase = 'loading' | 'game';
 
@@ -13,17 +14,25 @@ function App() {
   const [phase, setPhase] = useState<AppPhase>('loading');
 
   useEffect(() => {
-    if (phase === 'game' && !initialized) {
+    validateMergeChains();
+  }, []);
+
+  useEffect(() => {
+    const { items } = useMergeStore.getState();
+    if (phase === 'game' && items.length === 0) {
       addItem('flower_1', 0, 0, 0);
       addItem('flower_1', 1, 0, 0);
       addItem('flower_1', 2, 0, 0);
       addItem('veg_1', 0, 1, 0);
       addItem('veg_1', 1, 1, 0);
     }
-  }, [phase, initialized, addItem]);
+  }, [phase, addItem]);
 
   const handleLoadComplete = () => {
     setPhase('game');
+    setTimeout(() => {
+      soundManager.playBackground();
+    }, 500);
   };
 
   return (

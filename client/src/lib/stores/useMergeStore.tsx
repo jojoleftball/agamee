@@ -9,6 +9,8 @@ export interface MergeItem {
   y: number;
   z: number;
   isAnimating?: boolean;
+  isMerging?: boolean;
+  mergeTargetPos?: [number, number, number];
 }
 
 export interface MergeStore {
@@ -17,6 +19,7 @@ export interface MergeStore {
   draggedItem: string | null;
   gridSize: { rows: number; cols: number };
   initialized: boolean;
+  mergeParticles: Array<{ id: string; position: [number, number, number]; color: string }>;
   
   // Item management
   addItem: (itemType: string, x: number, y: number, z: number) => void;
@@ -42,6 +45,19 @@ export interface MergeStore {
 
 let itemIdCounter = 0;
 
+const cleanupDuplicates = (items: MergeItem[]): MergeItem[] => {
+  const seen = new Map<string, MergeItem>();
+  return items.filter(item => {
+    const key = `${item.x},${item.y}`;
+    if (seen.has(key)) {
+      console.warn(`Removing duplicate item at (${item.x}, ${item.y})`);
+      return false;
+    }
+    seen.set(key, item);
+    return true;
+  });
+};
+
 export const useMergeStore = create<MergeStore>()(
   persist(
     (set, get) => ({
@@ -50,6 +66,7 @@ export const useMergeStore = create<MergeStore>()(
       draggedItem: null,
       gridSize: { rows: 6, cols: 6 },
       initialized: false,
+      mergeParticles: [],
       
       addItem: (itemType, x, y, z) => {
         const { isPositionOccupied } = get();
@@ -122,11 +139,37 @@ export const useMergeStore = create<MergeStore>()(
         
         const position = { x: item1.x, y: item1.y, z: item1.z };
         
-        itemsToMerge.forEach(item => {
-          if (item) removeItem(item.id);
-        });
+        set((state) => ({
+          items: state.items.map(item => 
+            itemsToMerge.some(m => m?.id === item.id)
+              ? { ...item, isMerging: true, mergeTargetPos: [position.x, position.y, position.z] }
+              : item
+          )
+        }));
         
-        addItem(resultType, position.x, position.y, position.z);
+        setTimeout(() => {
+          const { items, mergeParticles, removeItem, addItem } = get();
+          
+          itemsToMerge.forEach(item => {
+            if (item) removeItem(item.id);
+          });
+          
+          addItem(resultType, position.x, position.y, position.z);
+          
+          const particleId = `particle_${Date.now()}`;
+          set({
+            mergeParticles: [
+              ...mergeParticles,
+              { id: particleId, position: [position.x, position.y + 0.5, position.z], color: '#FFD700' }
+            ]
+          });
+          
+          setTimeout(() => {
+            set((state) => ({
+              mergeParticles: state.mergeParticles.filter(p => p.id !== particleId)
+            }));
+          }, 1500);
+        }, 500);
         
         return { success: true, resultType, position };
       },
@@ -155,7 +198,7 @@ export const useMergeStore = create<MergeStore>()(
         return null;
       },
       
-      clearBoard: () => set({ items: [], selectedItem: null, draggedItem: null }),
+      clearBoard: () => set({ items: [], selectedItem: null, draggedItem: null, initialized: false }),
       
       setAnimating: (id, animating) =>
         set((state) => ({
@@ -165,7 +208,28 @@ export const useMergeStore = create<MergeStore>()(
         }))
     }),
     {
-      name: 'merge-storage'
+      name: 'merge-storage',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.items = cleanupDuplicates(state.items);
+          console.log('Store rehydrated, cleaned up duplicates');
+        }
+      }
     }
   )
 );
+
+export function validateMergeChains() {
+  const errors: string[] = [];
+  Object.entries(MERGE_ITEMS).forEach(([key, item]) => {
+    if (item.mergesInto && !MERGE_ITEMS[item.mergesInto]) {
+      errors.push(`${key} mergesInto '${item.mergesInto}' which doesn't exist`);
+    }
+  });
+  if (errors.length > 0) {
+    console.error('MERGE_ITEMS validation errors:', errors);
+  } else {
+    console.log('MERGE_ITEMS validation passed');
+  }
+  return errors;
+}
