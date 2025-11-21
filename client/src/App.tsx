@@ -1,56 +1,40 @@
-import { useEffect, useState } from "react";
-import "@fontsource/inter";
-import { useMergeGame } from "./lib/stores/useMergeGame";
-import { useDialogueStore } from "./lib/stores/useDialogueStore";
-import LoadingScreen from "./components/LoadingScreen";
-import NewGameScreen from "./components/NewGameScreen";
-import NewDialogueScreen from "./components/NewDialogueScreen";
+import { useEffect, useState } from 'react';
+import '@fontsource/inter';
+import { useGardenGame } from './lib/stores/useGardenGame';
+import { useMergeStore } from './lib/stores/useMergeStore';
+import SimpleLoadingScreen from './components/SimpleLoadingScreen';
+import GardenScene from './components/GardenScene';
+import GameUI from './components/GameUI';
 
-type AppPhase = 'loading' | 'game' | 'dialogue';
+type AppPhase = 'loading' | 'game';
 
 function App() {
-  const { loadGame, updateEnergy } = useMergeGame();
-  const { loadDialogues } = useDialogueStore();
+  const { addItem, initialized } = useMergeStore();
   const [phase, setPhase] = useState<AppPhase>('loading');
 
   useEffect(() => {
-    loadGame();
-    loadDialogues();
-  }, [loadGame, loadDialogues]);
-  
-  useEffect(() => {
-    const energyTimer = setInterval(() => {
-      updateEnergy();
-    }, 5000);
-    return () => clearInterval(energyTimer);
-  }, [updateEnergy]);
+    if (phase === 'game' && !initialized) {
+      addItem('flower_1', 0, 0, 0);
+      addItem('flower_1', 1, 0, 0);
+      addItem('flower_1', 2, 0, 0);
+      addItem('veg_1', 0, 1, 0);
+      addItem('veg_1', 1, 1, 0);
+    }
+  }, [phase, initialized, addItem]);
 
   const handleLoadComplete = () => {
-    setPhase('dialogue');
-  };
-
-  const handleDialogueComplete = () => {
     setPhase('game');
   };
 
-  const handleShowDialogue = () => {
-    setPhase('dialogue');
-  };
-
-  const handleBackToMenu = () => {
-    setPhase('dialogue');
-  };
-
   return (
-    <div className="w-full h-full fixed inset-0 overflow-hidden">
-      {phase === 'loading' && <LoadingScreen onLoadComplete={handleLoadComplete} />}
+    <div className="w-full h-full fixed inset-0 overflow-hidden bg-gradient-to-b from-sky-300 to-sky-100">
+      {phase === 'loading' && <SimpleLoadingScreen onLoadComplete={handleLoadComplete} />}
       {phase === 'game' && (
-        <NewGameScreen
-          onBackToMenu={handleBackToMenu}
-          onShowDialogue={handleShowDialogue}
-        />
+        <>
+          <GardenScene />
+          <GameUI />
+        </>
       )}
-      {phase === 'dialogue' && <NewDialogueScreen onComplete={handleDialogueComplete} />}
     </div>
   );
 }

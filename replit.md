@@ -2,16 +2,18 @@
 
 ## Overview
 
-Merge Garden is a mobile-optimized merge game where players restore a wrecked garden and garden house. Players merge items (flowers, trees, garden tools, decorations, water features, and animals) to create higher-tier items while expanding their garden. The application is a full-stack web game built with React, Express, and PostgreSQL, featuring merge mechanics, progressive area unlocking, and a cozy cartoony visual style.
+Merge Garden is a mobile-optimized 3D merge game where players restore a wrecked garden. Players merge items (flowers, trees, garden tools, decorations) to create higher-tier items while expanding their garden. Built with React, React Three Fiber, and Express.
 
-**Recent Changes (November 2025)**
-- Complete game redesign from beach house to garden restoration theme
-- Garden-themed merge items: flowers, vegetables, trees, garden tools, decorations, animals
-- Garden zones system replacing beach house rooms
-- Mobile-friendly touch controls with drag-and-drop merge mechanics
-- Progressive garden expansion with unlockable areas
-- Interactive NPCs and pets that react to player actions
-- Special events system with rare plants and seasonal content
+**Recent Changes (November 21, 2025)**
+- Complete rebuild with 3D garden environment using React Three Fiber
+- Professional 3D scene with terrain, garden house, merge area, and decorative props
+- Click-to-select/move/merge interaction system for mobile
+- Clean state management with useGardenGame and useMergeStore
+- Garden zones unlocking system with progression
+- Shop system for buying items with coins
+- HUD showing coins, gems, energy, and level/XP
+- Proper merge logic using MERGE_ITEMS data
+- Persistent storage using Zustand persist middleware
 
 ## User Preferences
 
