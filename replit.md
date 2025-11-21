@@ -1,14 +1,17 @@
-# Beach House Story - Dialogue-Driven Decoration Game
+# Merge Garden - Mobile-Friendly Garden Restoration Game
 
 ## Overview
 
-Beach House Story is a mobile-optimized narrative game centered around Soly, Maria, and their baby building their dream beach house. The application is a full-stack web game built with React, Express, and PostgreSQL, featuring a dialogue-driven story system with an admin panel for content management.
+Merge Garden is a mobile-optimized merge game where players restore a wrecked garden and garden house. Players merge items (flowers, trees, garden tools, decorations, water features, and animals) to create higher-tier items while expanding their garden. The application is a full-stack web game built with React, Express, and PostgreSQL, featuring merge mechanics, progressive area unlocking, and a cozy cartoony visual style.
 
 **Recent Changes (November 2025)**
-- Removed merge board and energy/coin mechanics in favor of dialogue-driven gameplay
-- Implemented admin panel for dialogue management (accessible via settings button triple-tap)
-- Transitioned to icon-based UI using Lucide React instead of emojis
-- Simplified game flow: Loading → Dialogue → Game Screen
+- Complete game redesign from beach house to garden restoration theme
+- Garden-themed merge items: flowers, vegetables, trees, garden tools, decorations, animals
+- Garden zones system replacing beach house rooms
+- Mobile-friendly touch controls with drag-and-drop merge mechanics
+- Progressive garden expansion with unlockable areas
+- Interactive NPCs and pets that react to player actions
+- Special events system with rare plants and seasonal content
 
 ## User Preferences
 

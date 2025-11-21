@@ -26,35 +26,43 @@ const STORAGE_KEY = "merge_story_admin_dialogues";
 const defaultDialogues: AdminDialogue[] = [
   {
     id: '1',
-    talker: 'soly',
-    content: 'Hey Maria! Can you believe it? We finally found our dream beach house!',
-    iconUrl: '/sprites/Picsart_25-11-11_02-25-24-524_1762821030742.png',
+    talker: 'maria',
+    content: 'Oh wow... look at this old garden! It must have been beautiful once.',
+    iconUrl: '/sprites/Picsart_25-11-11_02-29-52-444_1762821030715.png',
     nextAction: 'continue',
     order: 1
   },
   {
     id: '2',
-    talker: 'maria',
-    content: 'I know, Soly! It\'s perfect! Though... it needs a lot of work, doesn\'t it?',
-    iconUrl: '/sprites/Picsart_25-11-11_02-29-52-444_1762821030715.png',
+    talker: 'soly',
+    content: 'I can see the potential! With some love and care, we can restore it to its former glory!',
+    iconUrl: '/sprites/Picsart_25-11-11_02-25-24-524_1762821030742.png',
     nextAction: 'continue',
     order: 2
   },
   {
     id: '3',
-    talker: 'soly',
-    content: 'That\'s what makes it exciting! We can make it exactly how we want it. Plus, our little one will grow up here!',
-    iconUrl: '/sprites/Picsart_25-11-11_02-25-24-524_1762821030742.png',
+    talker: 'maria',
+    content: 'The garden house is still standing, at least. It\'ll be the perfect place to live while we work on the garden!',
+    iconUrl: '/sprites/Picsart_25-11-11_02-29-52-444_1762821030715.png',
     nextAction: 'continue',
     order: 3
   },
   {
     id: '4',
+    talker: 'soly',
+    content: 'Let\'s start by planting some seeds and clearing the weeds. Every beautiful garden starts with a single flower!',
+    iconUrl: '/sprites/Picsart_25-11-11_02-25-24-524_1762821030742.png',
+    nextAction: 'continue',
+    order: 4
+  },
+  {
+    id: '5',
     talker: 'maria',
-    content: 'You\'re right! Let\'s start by cleaning up and gathering some materials. I have a feeling this is going to be an amazing adventure!',
+    content: 'I found some old gardening tools in the shed! Let\'s get to work and create something magical together!',
     iconUrl: '/sprites/Picsart_25-11-11_02-29-52-444_1762821030715.png',
     nextAction: 'end',
-    order: 4
+    order: 5
   }
 ];
 

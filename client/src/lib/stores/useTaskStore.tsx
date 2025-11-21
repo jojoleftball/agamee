@@ -31,8 +31,8 @@ export const useTaskStore = create<TaskState>()(
   persist(
     (set, get) => ({
       completedTaskIds: [],
-      unlockedAreaIds: ['entrance'], // Start with entrance unlocked
-      currentAreaId: 'entrance',
+      unlockedAreaIds: ['flower_bed'], // Start with flower bed unlocked
+      currentAreaId: 'flower_bed',
       
       completeTask: (taskId) => {
         const state = get();
@@ -74,6 +74,10 @@ export const useTaskStore = create<TaskState>()(
           set((state) => ({
             unlockedAreaIds: [...state.unlockedAreaIds, unlockAreaId]
           }));
+          
+          // Also unlock in BeachHouseStore
+          const { useBeachHouseStore } = require('./useBeachHouseStore');
+          useBeachHouseStore.getState().unlockArea(unlockAreaId);
           
           return {
             success: true,

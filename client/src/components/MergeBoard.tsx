@@ -3,6 +3,7 @@ import { useBoardStore } from '@/lib/stores/useBoardStore';
 import { MERGE_ITEMS } from '@/lib/mergeItems';
 import { useMergeGame } from '@/lib/stores/useMergeGame';
 import { useAudio } from '@/lib/stores/useAudio';
+import { useNotificationStore } from '@/lib/stores/useNotificationStore';
 import SpriteItem from './SpriteItem';
 import { Sparkles, Trash2, Undo2, Info } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export default function MergeBoard() {
   
   const { energy } = useMergeGame();
   const { playSuccess, playHit } = useAudio();
+  const { addNotification } = useNotificationStore();
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -103,7 +105,14 @@ export default function MergeBoard() {
       const rewards = openChest(itemId);
       if (rewards) {
         playSuccess();
-        alert(`🎁 Chest opened!\n💰 ${rewards.coins} coins\n💎 ${rewards.gems} gems\n⚡ ${rewards.energy} energy\n📦 ${rewards.items.length} items`);
+        addNotification({
+          type: 'reward',
+          title: 'Chest Opened!',
+          message: `You received ${rewards.items.length} new items!`,
+          coins: rewards.coins,
+          gems: rewards.gems,
+          energy: rewards.energy
+        });
       }
       return;
     }
@@ -170,7 +179,17 @@ export default function MergeBoard() {
           setTimeout(() => setMergeEffect(null), 500);
           
           playSuccess();
-          console.log(`Merge success! +${result.xpGained} XP, +${result.coinsGained} coins`);
+          
+          // Show notification for successful merge
+          if (result.xpGained && result.xpGained >= 50) {
+            addNotification({
+              type: 'merge',
+              title: 'Great Merge!',
+              message: 'You created something amazing!',
+              coins: result.coinsGained,
+              xp: result.xpGained
+            });
+          }
         } else {
           playHit();
           moveItem(dragState.itemId, dragState.startX, dragState.startY);
@@ -237,7 +256,7 @@ export default function MergeBoard() {
       {/* Board */}
       <div
         ref={boardRef}
-        className="relative bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl shadow-2xl border-4 border-amber-600"
+        className="relative bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl shadow-2xl border-4 border-green-600"
         style={{
           width: gridSize.cols * (CELL_SIZE + GAP) + GAP,
           height: gridSize.rows * (CELL_SIZE + GAP) + GAP
@@ -253,7 +272,7 @@ export default function MergeBoard() {
             Array.from({ length: gridSize.cols }).map((_, x) => (
               <div
                 key={`${x}-${y}`}
-                className="absolute bg-white/30 rounded-lg border border-amber-300/50"
+                className="absolute bg-white/30 rounded-lg border border-green-300/50"
                 style={{
                   left: x * (CELL_SIZE + GAP) + GAP,
                   top: y * (CELL_SIZE + GAP) + GAP,

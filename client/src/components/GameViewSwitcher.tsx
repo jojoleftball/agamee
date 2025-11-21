@@ -26,7 +26,7 @@ export default function GameViewSwitcher() {
       {/* View Content */}
       <div className="absolute inset-0">
         {currentView === 'merge' ? (
-          <div className="w-full h-full bg-gradient-to-b from-amber-50 to-orange-50 flex items-center justify-center overflow-auto">
+          <div className="w-full h-full bg-gradient-to-b from-green-50 to-emerald-50 flex items-center justify-center overflow-auto">
             <MergeBoard />
           </div>
         ) : (
@@ -38,7 +38,7 @@ export default function GameViewSwitcher() {
       <ResourceCounters />
 
       {/* View Switcher Buttons */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-2xl border-4 border-amber-600">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-2xl border-4 border-green-600">
         <Button
           onClick={() => setCurrentView('merge')}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
@@ -55,12 +55,12 @@ export default function GameViewSwitcher() {
           onClick={() => setCurrentView('explore')}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
             currentView === 'explore'
-              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg scale-105'
+              ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg scale-105'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
           <Map className="w-5 h-5" />
-          Beach House
+          Garden Map
         </Button>
       </div>
 

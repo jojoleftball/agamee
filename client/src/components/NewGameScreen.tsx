@@ -3,9 +3,13 @@ import { Settings, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/lib/stores/useAudio';
 import { useBoardStore } from '@/lib/stores/useBoardStore';
+import { useNotificationStore } from '@/lib/stores/useNotificationStore';
 import AdminPanel from './AdminPanel';
 import GameHUD from './GameHUD';
 import GameViewSwitcher from './GameViewSwitcher';
+import GardenPet from './GardenPet';
+import NotificationToast from './NotificationToast';
+import SpecialEventBanner from './SpecialEventBanner';
 
 interface NewGameScreenProps {
   onBackToMenu: () => void;
@@ -15,6 +19,7 @@ interface NewGameScreenProps {
 export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameScreenProps) {
   const { isMuted, toggleMute } = useAudio();
   const { initializeBoard } = useBoardStore();
+  const { notifications, removeNotification } = useNotificationStore();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [settingsClickCount, setSettingsClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
@@ -59,7 +64,7 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
           variant="ghost"
           size="icon"
           onClick={toggleMute}
-          className="bg-amber-800/90 hover:bg-amber-700 text-white shadow-lg"
+          className="bg-green-800/90 hover:bg-green-700 text-white shadow-lg"
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </Button>
@@ -67,10 +72,27 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
           variant="ghost"
           size="icon"
           onClick={handleSettingsClick}
-          className="bg-amber-800/90 hover:bg-amber-700 text-white shadow-lg"
+          className="bg-green-800/90 hover:bg-green-700 text-white shadow-lg"
         >
           <Settings className="w-5 h-5" />
         </Button>
+      </div>
+
+      {/* Special Event Banner */}
+      <SpecialEventBanner />
+
+      {/* Garden Pet Helper */}
+      <GardenPet />
+
+      {/* Notifications */}
+      <div className="fixed top-0 right-0 z-50 p-4 space-y-2">
+        {notifications.map(notification => (
+          <NotificationToast
+            key={notification.id}
+            notification={notification}
+            onClose={() => removeNotification(notification.id)}
+          />
+        ))}
       </div>
 
       {/* Admin Panel */}

@@ -63,25 +63,25 @@ export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* Background - Beach House Top-Down View (Placeholder) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-300 via-sky-200 to-sand-100">
+      {/* Background - Garden View */}
+      <div className="absolute inset-0 bg-gradient-to-b from-green-300 via-green-200 to-green-100">
         <div 
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40"
           style={{
-            backgroundImage: 'url(/textures/sand.jpg)',
+            backgroundImage: 'url(/textures/grass.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
         />
-        {/* Placeholder Beach House Illustration */}
+        {/* Garden Illustration */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center space-y-4 opacity-20">
             <div className="w-64 h-64 mx-auto relative">
-              <div className="absolute inset-0 bg-amber-200 rounded-lg border-4 border-amber-600 transform rotate-45"></div>
-              <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-blue-300 rounded-lg"></div>
+              <div className="absolute inset-0 bg-green-200 rounded-lg border-4 border-green-600"></div>
+              <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-emerald-300 rounded-full"></div>
             </div>
-            <p className="text-6xl font-bold text-amber-800">Beach House</p>
-            <p className="text-2xl text-gray-600">(Top-Down View Placeholder)</p>
+            <p className="text-6xl font-bold text-green-800">Garden</p>
+            <p className="text-2xl text-gray-600">(Restoration in Progress)</p>
           </div>
         </div>
       </div>
@@ -112,12 +112,12 @@ export default function NewDialogueScreen({ onComplete }: NewDialogueScreenProps
           )}
 
           {/* Dialogue Container */}
-          <div className="relative bg-gradient-to-b from-amber-50 to-amber-100 rounded-2xl shadow-2xl border-4 border-amber-800 overflow-hidden">
-            {/* Decorative Wood Texture Overlay */}
+          <div className="relative bg-gradient-to-b from-green-50 to-emerald-100 rounded-2xl shadow-2xl border-4 border-green-800 overflow-hidden">
+            {/* Decorative Texture Overlay */}
             <div 
               className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
-                backgroundImage: 'url(/textures/wood.jpg)',
+                backgroundImage: 'url(/textures/grass.png)',
                 backgroundSize: '200px',
               }}
             />

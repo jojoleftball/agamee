@@ -30,64 +30,84 @@ interface BeachHouseState {
 
 const DEFAULT_AREAS: BeachHouseArea[] = [
   {
-    id: 'entrance',
-    name: 'Entrance',
+    id: 'flower_bed',
+    name: 'Flower Bed',
     state: 'dirty',
     unlockCost: 0,
     cleaningTasks: 3,
     completedTasks: 0,
-    position: { x: 50, y: 50 },
+    position: { x: 30, y: 65 },
     rewards: { coins: 50, xp: 10 }
   },
   {
-    id: 'livingroom',
-    name: 'Living Room',
+    id: 'vegetable_patch',
+    name: 'Vegetable Patch',
     state: 'locked',
     unlockCost: 100,
-    cleaningTasks: 6,
+    cleaningTasks: 5,
     completedTasks: 0,
-    position: { x: 50, y: 50 },
+    position: { x: 70, y: 65 },
     rewards: { coins: 150, xp: 30 }
   },
   {
-    id: 'kitchen',
-    name: 'Kitchen',
+    id: 'pond_area',
+    name: 'Pond Area',
     state: 'locked',
-    unlockCost: 200,
-    cleaningTasks: 7,
+    unlockCost: 250,
+    cleaningTasks: 6,
     completedTasks: 0,
-    position: { x: 50, y: 50 },
+    position: { x: 50, y: 80 },
     rewards: { coins: 250, xp: 50 }
   },
   {
-    id: 'bedroom',
-    name: 'Bedroom',
-    state: 'locked',
-    unlockCost: 300,
-    cleaningTasks: 5,
-    completedTasks: 0,
-    position: { x: 50, y: 50 },
-    rewards: { coins: 300, xp: 60 }
-  },
-  {
-    id: 'bathroom',
-    name: 'Bathroom',
-    state: 'locked',
-    unlockCost: 350,
-    cleaningTasks: 4,
-    completedTasks: 0,
-    position: { x: 50, y: 50 },
-    rewards: { coins: 200, xp: 40 }
-  },
-  {
-    id: 'garden',
-    name: 'Garden',
+    id: 'tree_grove',
+    name: 'Tree Grove',
     state: 'locked',
     unlockCost: 400,
+    cleaningTasks: 7,
+    completedTasks: 0,
+    position: { x: 35, y: 35 },
+    rewards: { coins: 400, xp: 80 }
+  },
+  {
+    id: 'greenhouse',
+    name: 'Greenhouse',
+    state: 'locked',
+    unlockCost: 600,
     cleaningTasks: 8,
     completedTasks: 0,
+    position: { x: 65, y: 35 },
+    rewards: { coins: 600, xp: 120 }
+  },
+  {
+    id: 'zen_garden',
+    name: 'Zen Garden',
+    state: 'locked',
+    unlockCost: 900,
+    cleaningTasks: 10,
+    completedTasks: 0,
     position: { x: 50, y: 50 },
-    rewards: { coins: 400, xp: 80 }
+    rewards: { coins: 900, xp: 180 }
+  },
+  {
+    id: 'animal_sanctuary',
+    name: 'Animal Sanctuary',
+    state: 'locked',
+    unlockCost: 1200,
+    cleaningTasks: 12,
+    completedTasks: 0,
+    position: { x: 20, y: 50 },
+    rewards: { coins: 1200, xp: 240 }
+  },
+  {
+    id: 'rose_garden',
+    name: 'Rose Garden',
+    state: 'locked',
+    unlockCost: 1500,
+    cleaningTasks: 15,
+    completedTasks: 0,
+    position: { x: 80, y: 50 },
+    rewards: { coins: 1500, xp: 300 }
   }
 ];
 
@@ -100,7 +120,12 @@ export const useBeachHouseStore = create<BeachHouseState>()(
       initializeAreas: () => {
         const state = get();
         if (state.areas.length === 0) {
-          set({ areas: DEFAULT_AREAS });
+          // Initialize with first area unlocked
+          const initialAreas = DEFAULT_AREAS.map((area, index) => ({
+            ...area,
+            state: index === 0 ? 'dirty' as AreaState : area.state
+          }));
+          set({ areas: initialAreas });
         }
       },
 

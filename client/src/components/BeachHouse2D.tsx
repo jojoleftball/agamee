@@ -75,27 +75,29 @@ export default function BeachHouse2D({ onAreaClick }: BeachHouse2DProps) {
   };
 
   const areaPositions = [
-    { id: 'entrance', x: 30, y: 65, label: 'Entrance' },
-    { id: 'living_room', x: 50, y: 50, label: 'Living Room' },
-    { id: 'kitchen', x: 70, y: 65, label: 'Kitchen' },
-    { id: 'bedroom', x: 35, y: 35, label: 'Bedroom' },
-    { id: 'bathroom', x: 65, y: 35, label: 'Bathroom' },
-    { id: 'garden', x: 50, y: 80, label: 'Garden' }
+    { id: 'flower_bed', x: 30, y: 65, label: 'Flower Bed' },
+    { id: 'vegetable_patch', x: 70, y: 65, label: 'Vegetable Patch' },
+    { id: 'pond_area', x: 50, y: 80, label: 'Pond Area' },
+    { id: 'tree_grove', x: 35, y: 35, label: 'Tree Grove' },
+    { id: 'greenhouse', x: 65, y: 35, label: 'Greenhouse' },
+    { id: 'zen_garden', x: 50, y: 50, label: 'Zen Garden' },
+    { id: 'animal_sanctuary', x: 20, y: 50, label: 'Animal Sanctuary' },
+    { id: 'rose_garden', x: 80, y: 50, label: 'Rose Garden' }
   ];
 
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-400 via-sky-300 to-sand-200 cursor-pointer"
+      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-green-400 via-green-300 to-emerald-200 cursor-pointer"
       onClick={handleClick}
     >
-      {/* Beach House Background */}
+      {/* Garden Background */}
       <div 
-        className="absolute inset-0 bg-center bg-contain bg-no-repeat opacity-90"
+        className="absolute inset-0 bg-center bg-contain bg-no-repeat opacity-60"
         style={{
-          backgroundImage: "url('/beachhouse-clean.png')",
-          backgroundSize: '80%',
-          backgroundPosition: 'center 40%'
+          backgroundImage: "url('/textures/grass.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
         }}
       />
 
