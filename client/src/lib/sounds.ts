@@ -63,6 +63,18 @@ class SoundManager {
       this.bgMusic.play().catch(() => {});
     }
   }
+
+  playMerge() {
+    this.play('merge', 0.5);
+  }
+
+  playClick() {
+    this.play('click', 0.3);
+  }
+
+  playSuccess() {
+    this.play('merge', 0.6);
+  }
 }
 
 export const soundManager = new SoundManager();

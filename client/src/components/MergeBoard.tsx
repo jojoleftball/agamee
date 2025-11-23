@@ -1,69 +1,42 @@
 import { useState, useRef } from 'react';
-import { useBoardStore } from '@/lib/stores/useBoardStore';
-import { MERGE_ITEMS } from '@/lib/mergeItems';
-import { useMergeGame } from '@/lib/stores/useMergeGame';
-import { useAudio } from '@/lib/stores/useAudio';
-import { useNotificationStore } from '@/lib/stores/useNotificationStore';
-import SpriteItem from './SpriteItem';
-import { Sparkles, Trash2, Undo2, Info } from 'lucide-react';
+import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
+import { MERGE_ITEMS } from '@/lib/mergeData';
+import MergeBoardItem from './MergeBoardItem';
+import MergeAnimation from './MergeAnimation';
 
-interface DragState {
-  itemId: string;
-  startX: number;
-  startY: number;
-  offsetX: number;
-  offsetY: number;
+interface MergeAnimationData {
+  id: string;
+  x: number;
+  y: number;
 }
 
 export default function MergeBoard() {
-  const { 
-    items, 
-    inventory,
-    moveItem, 
-    tryMerge, 
-    getItemAt, 
-    isPositionOccupied, 
-    gridSize,
-    tapGenerator,
-    canTapGenerator,
-    openChest,
-    moveToInventory,
-    moveFromInventory,
-    isInventoryFull,
-    sellItem,
-    undoSell,
-    lastSold
-  } = useBoardStore();
-  
-  const { energy } = useMergeGame();
-  const { playSuccess, playHit } = useAudio();
-  const { addNotification } = useNotificationStore();
-  const [dragState, setDragState] = useState<DragState | null>(null);
-  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [showInventory, setShowInventory] = useState(true);
-  const [mergeEffect, setMergeEffect] = useState<{ x: number; y: number } | null>(null);
+  const { items, gridSize, selectedItem, selectItem, tryMerge, moveItem, tapGenerator } = useMergeGameStore();
+  const [animations, setAnimations] = useState<MergeAnimationData[]>([]);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
 
   const CELL_SIZE = 70;
-  const GAP = 8;
+  const GAP = 4;
 
-  const getCellPosition = (gridX: number, gridY: number) => {
+  const getCellPosition = (x: number, y: number) => {
     return {
-      x: gridX * (CELL_SIZE + GAP),
-      y: gridY * (CELL_SIZE + GAP)
+      left: x * (CELL_SIZE + GAP),
+      top: y * (CELL_SIZE + GAP)
     };
   };
 
-  const getGridPosition = (clientX: number, clientY: number) => {
+  const screenToGrid = (screenX: number, screenY: number) => {
     if (!boardRef.current) return null;
     
     const rect = boardRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const relX = screenX - rect.left;
+    const relY = screenY - rect.top;
     
-    const gridX = Math.floor(x / (CELL_SIZE + GAP));
-    const gridY = Math.floor(y / (CELL_SIZE + GAP));
+    const gridX = Math.floor(relX / (CELL_SIZE + GAP));
+    const gridY = Math.floor(relY / (CELL_SIZE + GAP));
     
     if (gridX >= 0 && gridX < gridSize.cols && gridY >= 0 && gridY < gridSize.rows) {
       return { x: gridX, y: gridY };
@@ -72,402 +45,132 @@ export default function MergeBoard() {
     return null;
   };
 
-  const handleItemClick = (itemId: string, e: React.MouseEvent) => {
+  const handleItemPointerDown = (e: React.PointerEvent, itemId: string) => {
+    e.preventDefault();
     e.stopPropagation();
+    
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     
     const itemData = MERGE_ITEMS[item.itemType];
-    
-    // Handle generator tap
     if (itemData?.isGenerator) {
-      if (canTapGenerator(itemId)) {
-        const result = tapGenerator(itemId);
-        if (result.success) {
-          playSuccess();
-          console.log(`Generated: ${result.generatedItem}`);
-        } else {
-          playHit();
-        }
-      } else {
-        const charges = item.charges || 0;
-        if (charges <= 0) {
-          alert('Generator is empty! Merge it with another to recharge.');
-        } else {
-          alert(`Not enough energy! Need 5 energy. You have ${energy}.`);
-        }
-      }
       return;
     }
     
-    // Handle chest opening
-    if (itemData?.isChest) {
-      const rewards = openChest(itemId);
-      if (rewards) {
-        playSuccess();
-        addNotification({
-          type: 'reward',
-          title: 'Chest Opened!',
-          message: `You received ${rewards.items.length} new items!`,
-          coins: rewards.coins,
-          gems: rewards.gems,
-          energy: rewards.energy
-        });
-      }
-      return;
-    }
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
     
-    // Select item for info
-    setSelectedItemId(selectedItemId === itemId ? null : itemId);
+    setDraggedId(itemId);
+    setDragOffset({ x: offsetX, y: offsetY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
+    selectItem(itemId);
+    
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handleDragStart = (e: React.TouchEvent | React.MouseEvent, itemId: string) => {
-    e.preventDefault();
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!draggedId) return;
     
-    const item = items.find(i => i.id === itemId);
-    if (!item || item.isBlocked) return;
-    
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    const cellPos = getCellPosition(item.x, item.y);
-    
-    setDragState({
-      itemId,
-      startX: item.x,
-      startY: item.y,
-      offsetX: clientX - (boardRef.current?.getBoundingClientRect().left || 0) - cellPos.x,
-      offsetY: clientY - (boardRef.current?.getBoundingClientRect().top || 0) - cellPos.y
-    });
-    
-    setDragPosition({ x: cellPos.x, y: cellPos.y });
-    setSelectedItemId(null);
+    setDragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!dragState || !boardRef.current) return;
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!draggedId) return;
     
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const gridPos = screenToGrid(e.clientX, e.clientY);
+    const draggedItem = items.find(i => i.id === draggedId);
     
-    const rect = boardRef.current.getBoundingClientRect();
-    const x = clientX - rect.left - dragState.offsetX;
-    const y = clientY - rect.top - dragState.offsetY;
-    
-    setDragPosition({ x, y });
-  };
-
-  const handleDragEnd = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!dragState) return;
-    
-    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as React.MouseEvent).clientX;
-    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as React.MouseEvent).clientY;
-    
-    const gridPos = getGridPosition(clientX, clientY);
-    
-    if (gridPos) {
-      const targetItem = getItemAt(gridPos.x, gridPos.y);
+    if (gridPos && draggedItem) {
+      const targetItem = items.find(i => i.x === gridPos.x && i.y === gridPos.y && i.id !== draggedId);
       
-      if (targetItem && targetItem.id !== dragState.itemId) {
-        // Try to merge
-        const result = tryMerge(dragState.itemId, targetItem.id);
+      if (targetItem && draggedItem.itemType === targetItem.itemType) {
+        const success = tryMerge(draggedId, targetItem.id);
         
-        if (result.success) {
-          // Show merge effect
-          const cellPos = getCellPosition(gridPos.x, gridPos.y);
-          setMergeEffect(cellPos);
-          setTimeout(() => setMergeEffect(null), 500);
+        if (success) {
+          const pos = getCellPosition(gridPos.x, gridPos.y);
+          setAnimations([...animations, {
+            id: `anim_${Date.now()}`,
+            x: pos.left + CELL_SIZE / 2,
+            y: pos.top + CELL_SIZE / 2
+          }]);
           
-          playSuccess();
-          
-          // Show notification for successful merge
-          if (result.xpGained && result.xpGained >= 50) {
-            addNotification({
-              type: 'merge',
-              title: 'Great Merge!',
-              message: 'You created something amazing!',
-              coins: result.coinsGained,
-              xp: result.xpGained
-            });
-          }
-        } else {
-          playHit();
-          moveItem(dragState.itemId, dragState.startX, dragState.startY);
+          setTimeout(() => {
+            setAnimations(anims => anims.filter(a => a.id !== `anim_${Date.now()}`));
+          }, 1000);
         }
-      } else if (!isPositionOccupied(gridPos.x, gridPos.y, dragState.itemId)) {
-        moveItem(dragState.itemId, gridPos.x, gridPos.y);
-      } else {
-        moveItem(dragState.itemId, dragState.startX, dragState.startY);
-      }
-    } else {
-      // Check if dragging to inventory
-      const rect = boardRef.current?.getBoundingClientRect();
-      if (rect && clientY > rect.bottom + 10) {
-        if (!isInventoryFull()) {
-          moveToInventory(dragState.itemId);
-          playSuccess();
-        } else {
-          alert('Inventory is full!');
-          moveItem(dragState.itemId, dragState.startX, dragState.startY);
-        }
-      } else {
-        moveItem(dragState.itemId, dragState.startX, dragState.startY);
+      } else if (!targetItem) {
+        moveItem(draggedId, gridPos.x, gridPos.y);
       }
     }
     
-    setDragState(null);
-    setDragPosition(null);
+    setDraggedId(null);
+    selectItem(null);
   };
 
-  const handleInventoryItemClick = (itemId: string) => {
-    // Find empty spot on board
-    for (let y = 0; y < gridSize.rows; y++) {
-      for (let x = 0; x < gridSize.cols; x++) {
-        if (!isPositionOccupied(x, y)) {
-          moveFromInventory(itemId, x, y);
-          playSuccess();
-          return;
-        }
-      }
-    }
-    alert('Board is full! Clear some space first.');
-  };
-
-  const handleSellItem = (itemId: string) => {
-    const coinsGained = sellItem(itemId);
-    if (coinsGained > 0) {
-      playSuccess();
-      console.log(`Sold item for ${coinsGained} coins`);
+  const handleItemTap = (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const itemData = MERGE_ITEMS[item.itemType];
+    if (itemData?.isGenerator) {
+      tapGenerator(itemId);
     }
   };
-
-  const handleUndoSell = () => {
-    if (undoSell()) {
-      playSuccess();
-      console.log('Sell undone');
-    }
-  };
-
-  const selectedItem = selectedItemId ? items.find(i => i.id === selectedItemId) : null;
-  const selectedItemData = selectedItem ? MERGE_ITEMS[selectedItem.itemType] : null;
 
   return (
-    <div className="relative flex flex-col items-center justify-center p-4 gap-4">
-      {/* Board */}
+    <div className="w-full h-full flex items-center justify-center p-4">
       <div
         ref={boardRef}
-        className="relative bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl shadow-2xl border-4 border-green-600"
+        className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-4 touch-none"
         style={{
-          width: gridSize.cols * (CELL_SIZE + GAP) + GAP,
-          height: gridSize.rows * (CELL_SIZE + GAP) + GAP
+          width: gridSize.cols * (CELL_SIZE + GAP) + 8,
+          height: gridSize.rows * (CELL_SIZE + GAP) + 8
         }}
-        onMouseMove={handleDragMove}
-        onMouseUp={handleDragEnd}
-        onTouchMove={handleDragMove}
-        onTouchEnd={handleDragEnd}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
-        {/* Grid lines */}
-        <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: gridSize.rows }).map((_, y) =>
-            Array.from({ length: gridSize.cols }).map((_, x) => (
+        {Array.from({ length: gridSize.rows }).map((_, y) =>
+          Array.from({ length: gridSize.cols }).map((_, x) => {
+            const pos = getCellPosition(x, y);
+            return (
               <div
-                key={`${x}-${y}`}
-                className="absolute bg-white/30 rounded-lg border border-green-300/50"
+                key={`cell_${x}_${y}`}
+                className="absolute bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border-2 border-gray-300"
                 style={{
-                  left: x * (CELL_SIZE + GAP) + GAP,
-                  top: y * (CELL_SIZE + GAP) + GAP,
+                  left: pos.left,
+                  top: pos.top,
                   width: CELL_SIZE,
                   height: CELL_SIZE
                 }}
               />
-            ))
-          )}
-        </div>
-
-        {/* Items */}
-        {items.filter(item => item.id !== dragState?.itemId).map((item) => {
-          const itemData = MERGE_ITEMS[item.itemType];
-          const cellPos = getCellPosition(item.x, item.y);
-          const isSelected = selectedItemId === item.id;
-          const isGenerator = itemData?.isGenerator;
-          const isChest = itemData?.isChest;
-          const isBlocked = item.isBlocked;
+            );
+          })
+        )}
+        
+        {items.map((item) => {
+          const pos = getCellPosition(item.x, item.y);
+          const isDragging = draggedId === item.id;
           
           return (
-            <div
+            <MergeBoardItem
               key={item.id}
-              className={`absolute cursor-pointer transition-all ${
-                isSelected ? 'ring-4 ring-blue-500 scale-110' : ''
-              } ${isBlocked ? 'opacity-70' : ''}`}
-              style={{
-                left: cellPos.x,
-                top: cellPos.y,
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-                zIndex: isSelected ? 100 : dragState ? 1 : 10
-              }}
-              onMouseDown={(e) => !isBlocked && handleDragStart(e, item.id)}
-              onTouchStart={(e) => !isBlocked && handleDragStart(e, item.id)}
-              onClick={(e) => handleItemClick(item.id, e)}
-            >
-              <div className="relative w-full h-full">
-                <SpriteItem 
-                  itemType={item.itemType}
-                  size={CELL_SIZE}
-                />
-                
-                {/* Generator charges indicator */}
-                {isGenerator && item.charges !== undefined && (
-                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                    {item.charges}
-                  </div>
-                )}
-                
-                {/* Blocked indicator */}
-                {isBlocked && (
-                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">🔒</span>
-                  </div>
-                )}
-                
-                {/* Chest glow */}
-                {isChest && (
-                  <div className="absolute inset-0 bg-yellow-400/20 rounded-lg animate-pulse" />
-                )}
-              </div>
-            </div>
+              item={item}
+              position={isDragging ? dragPosition : { x: pos.left, y: pos.top }}
+              size={CELL_SIZE}
+              isDragging={isDragging}
+              dragOffset={dragOffset}
+              onPointerDown={(e) => handleItemPointerDown(e, item.id)}
+              onTap={() => handleItemTap(item.id)}
+            />
           );
         })}
-
-        {/* Dragging item */}
-        {dragState && dragPosition && (
-          <div
-            className="absolute pointer-events-none scale-110 opacity-90"
-            style={{
-              left: dragPosition.x,
-              top: dragPosition.y,
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              zIndex: 1000
-            }}
-          >
-            <SpriteItem 
-              itemType={items.find(i => i.id === dragState.itemId)?.itemType || 'tool_1'}
-              size={CELL_SIZE}
-            />
-          </div>
-        )}
-
-        {/* Merge effect */}
-        {mergeEffect && (
-          <div
-            className="absolute pointer-events-none animate-ping"
-            style={{
-              left: mergeEffect.x,
-              top: mergeEffect.y,
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              zIndex: 500
-            }}
-          >
-            <Sparkles className="w-full h-full text-yellow-400" fill="currentColor" />
-          </div>
-        )}
-      </div>
-
-      {/* Inventory */}
-      <div className="w-full max-w-3xl">
-        <button
-          onClick={() => setShowInventory(!showInventory)}
-          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-t-xl font-bold shadow-lg flex items-center justify-between"
-        >
-          <span>📦 Inventory ({inventory.length}/10)</span>
-          <span>{showInventory ? '▼' : '▲'}</span>
-        </button>
         
-        {showInventory && (
-          <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-b-xl border-4 border-indigo-600 p-4">
-            <div className="flex flex-wrap gap-2">
-              {inventory.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleInventoryItemClick(item.id)}
-                  className="relative cursor-pointer hover:scale-110 transition-transform"
-                >
-                  <SpriteItem itemType={item.itemType} size={60} />
-                  {MERGE_ITEMS[item.itemType]?.isGenerator && item.charges !== undefined && (
-                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {item.charges}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {inventory.length === 0 && (
-                <div className="w-full text-center text-gray-500 py-4">
-                  Drag items here to store them
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {animations.map((anim) => (
+          <MergeAnimation key={anim.id} x={anim.x} y={anim.y} />
+        ))}
       </div>
-
-      {/* Item Info Panel */}
-      {selectedItemData && (
-        <div className="fixed bottom-4 right-4 bg-white rounded-2xl shadow-2xl border-4 border-blue-500 p-4 max-w-sm z-50">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <h3 className="font-bold text-lg">{selectedItemData.name}</h3>
-              <p className="text-sm text-gray-600">Level {selectedItemData.level}</p>
-            </div>
-            <button onClick={() => setSelectedItemId(null)} className="text-gray-400 hover:text-gray-600">
-              ✕
-            </button>
-          </div>
-          
-          <p className="text-sm text-gray-700 mb-2">{selectedItemData.description}</p>
-          
-          <div className="flex gap-2 text-xs mb-2">
-            <span className="px-2 py-1 bg-yellow-100 rounded font-bold">💰 {selectedItemData.coinValue}</span>
-            <span className="px-2 py-1 bg-blue-100 rounded font-bold">⚡ {selectedItemData.xpValue} XP</span>
-          </div>
-          
-          {selectedItemData.isGenerator && selectedItem && (
-            <div className="text-xs text-blue-700 mb-2">
-              🔋 Charges: {selectedItem.charges || 0}/{selectedItemData.maxCharges}
-              <br />
-              ⚡ Cost: {selectedItemData.energyCost} energy
-            </div>
-          )}
-          
-          {selectedItemData.mergesInto && (
-            <div className="text-xs text-green-700">
-              ⬆️ Merges into: {MERGE_ITEMS[selectedItemData.mergesInto]?.name}
-            </div>
-          )}
-          
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => selectedItem && handleSellItem(selectedItem.id)}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-bold flex items-center justify-center gap-1"
-            >
-              <Trash2 className="w-3 h-3" />
-              Sell
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Undo Sell Button */}
-      {lastSold && (
-        <button
-          onClick={handleUndoSell}
-          className="fixed bottom-4 left-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 z-50"
-        >
-          <Undo2 className="w-4 h-4" />
-          Undo Sell
-        </button>
-      )}
     </div>
   );
 }

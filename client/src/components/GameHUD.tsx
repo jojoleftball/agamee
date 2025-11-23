@@ -1,26 +1,28 @@
-import { useMergeGame } from '@/lib/stores/useMergeGame';
-import { useTaskStore } from '@/lib/stores/useTaskStore';
-import { Zap, RefreshCw } from 'lucide-react';
+import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
+import { useAudio } from '@/lib/stores/useAudio';
+import { Menu, ShoppingBag, ListTodo, Map, Volume2, VolumeX, Zap, RefreshCw } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface GameHUDProps {
-  onMenuClick?: () => void;
-  onTasksClick?: () => void;
+  onOpenTasks: () => void;
+  onOpenShop: () => void;
+  onOpenBiomes: () => void;
 }
 
-export default function GameHUD({ onMenuClick, onTasksClick }: GameHUDProps) {
-  const { energy, maxEnergy, coins, gems, xp, level, getXPForNextLevel, getXPProgress, refillEnergy } = useMergeGame();
-  const { getProgress } = useTaskStore();
+export default function GameHUD({ onOpenTasks, onOpenShop, onOpenBiomes }: GameHUDProps) {
+  const { energy, maxEnergy, coins, gems, level, xp, refillEnergyWithGems } = useMergeGameStore();
+  const { isMuted, toggleMute } = useAudio();
   
   const energyPercent = (energy / maxEnergy) * 100;
-  const xpPercent = getXPProgress();
-  const overallProgress = getProgress();
+  const xpForNextLevel = level * 100;
+  const xpPercent = (xp / xpForNextLevel) * 100;
 
   const handleEnergyRefill = () => {
-    const success = refillEnergy();
-    if (!success) {
-      alert(`⚡ Need 20 gems to refill energy!\n\n💎 You have: ${gems} gems\n💎 Required: 20 gems`);
-    } else {
-      console.log('✅ Energy fully refilled!');
+    if (energy < maxEnergy) {
+      const success = refillEnergyWithGems();
+      if (!success) {
+        alert('Not enough gems! Need 10 gems to refill energy.');
+      }
     }
   };
 
@@ -58,14 +60,17 @@ export default function GameHUD({ onMenuClick, onTasksClick }: GameHUDProps) {
               <span className="text-white font-bold text-sm drop-shadow-md">{level}</span>
             </div>
             
-            {onMenuClick && (
-              <button
-                onClick={onMenuClick}
-                className="bg-gradient-to-r from-red-600 to-red-500 px-3 py-1.5 rounded-full shadow-lg border-2 border-red-400 text-white font-bold text-sm hover:scale-105 transition-transform"
-              >
-                ☰
-              </button>
-            )}
+            <Button
+              onClick={toggleMute}
+              size="icon"
+              className="bg-white/90 hover:bg-white shadow-lg rounded-xl w-8 h-8"
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-gray-700" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-gray-700" />
+              )}
+            </Button>
           </div>
         </div>
 
@@ -119,24 +124,30 @@ export default function GameHUD({ onMenuClick, onTasksClick }: GameHUDProps) {
             </div>
           </div>
 
-          {/* Overall Progress */}
-          {onTasksClick && (
-            <button
-              onClick={onTasksClick}
-              className="bg-gradient-to-r from-pink-600 to-pink-500 px-3 py-2 rounded-full shadow-lg border-2 border-pink-400 pointer-events-auto hover:scale-105 transition-transform"
+          {/* Buttons */}
+          <div className="flex gap-2 mt-2 pointer-events-auto">
+            <Button
+              onClick={onOpenTasks}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl shadow-lg"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-white text-xs font-bold drop-shadow-md">🏠 Beach House Progress</span>
-                <span className="text-white font-bold text-sm drop-shadow-md ml-2">{overallProgress}%</span>
-              </div>
-              <div className="h-1.5 bg-pink-900/50 rounded-full overflow-hidden mt-1">
-                <div 
-                  className="h-full bg-gradient-to-r from-rose-400 to-pink-300 transition-all duration-300"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
-            </button>
-          )}
+              <ListTodo className="w-4 h-4 mr-1" />
+              Tasks
+            </Button>
+            <Button
+              onClick={onOpenShop}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 rounded-xl shadow-lg"
+            >
+              <ShoppingBag className="w-4 h-4 mr-1" />
+              Shop
+            </Button>
+            <Button
+              onClick={onOpenBiomes}
+              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-xl shadow-lg"
+            >
+              <Map className="w-4 h-4 mr-1" />
+              Gardens
+            </Button>
+          </div>
         </div>
       </div>
     </div>
