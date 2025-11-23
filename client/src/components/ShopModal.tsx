@@ -86,8 +86,8 @@ export default function ShopModal({ onClose }: ShopModalProps) {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center border-2 border-green-300 flex-shrink-0">
-                    <div className="text-2xl">
-                      {itemData.category === 'generator' ? '⚡' : '🌱'}
+                    <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                      <span className="text-white font-bold text-xl">{itemData.name.charAt(0)}</span>
                     </div>
                   </div>
 

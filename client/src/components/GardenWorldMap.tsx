@@ -9,7 +9,7 @@ interface GardenWorldMapProps {
 }
 
 export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldMapProps) {
-  const { currentBiome, unlockedBiomes, level, coins } = useMergeGameStore();
+  const { currentBiome, unlockedBiomes, level, coins, unlockBiome } = useMergeGameStore();
   const [selectedGarden, setSelectedGarden] = useState<string | null>(null);
 
   const gardenPositions = [
@@ -21,16 +21,32 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
   ];
 
   const handleGardenClick = (gardenId: string) => {
-    const isUnlocked = unlockedBiomes.includes(gardenId);
-    if (isUnlocked) {
-      setSelectedGarden(gardenId);
-    }
+    setSelectedGarden(gardenId);
   };
 
   const handleEnterGarden = () => {
     if (selectedGarden) {
       onGardenSelect(selectedGarden);
       onClose();
+    }
+  };
+
+  const handleUnlockGarden = () => {
+    if (selectedGarden) {
+      const success = unlockBiome(selectedGarden);
+      if (success) {
+        onGardenSelect(selectedGarden);
+        onClose();
+      } else {
+        const biome = GARDEN_BIOMES.find(b => b.id === selectedGarden);
+        if (biome) {
+          if (level < biome.unlockLevel) {
+            alert(`Reach level ${biome.unlockLevel} to unlock this garden!`);
+          } else if (coins < biome.unlockCoins) {
+            alert(`Need ${biome.unlockCoins} coins to unlock this garden!`);
+          }
+        }
+      }
     }
   };
 
@@ -80,12 +96,7 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
             >
               <button
                 onClick={() => handleGardenClick(biome.id)}
-                disabled={!isUnlocked}
-                className={`relative w-28 h-28 rounded-full transition-all duration-300 ${
-                  isUnlocked
-                    ? 'cursor-pointer hover:scale-110 active:scale-95'
-                    : 'cursor-not-allowed opacity-60'
-                } ${
+                className={`relative w-28 h-28 rounded-full transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 ${
                   isSelected
                     ? 'ring-8 ring-yellow-400 scale-110'
                     : isCurrent
@@ -125,24 +136,56 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
         })}
       </div>
 
-      {selectedGarden && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-green-600 p-6">
-            <h2 className="text-2xl font-bold text-green-800 mb-2">
-              {GARDEN_BIOMES.find(b => b.id === selectedGarden)?.name}
-            </h2>
-            <p className="text-gray-700 mb-4">
-              {GARDEN_BIOMES.find(b => b.id === selectedGarden)?.description}
-            </p>
-            <button
-              onClick={handleEnterGarden}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-lg py-4 rounded-2xl shadow-lg transition-transform active:scale-95"
-            >
-              Enter Garden
-            </button>
+      {selectedGarden && (() => {
+        const selectedBiome = GARDEN_BIOMES.find(b => b.id === selectedGarden);
+        const isUnlocked = unlockedBiomes.includes(selectedGarden);
+        const canUnlock = level >= (selectedBiome?.unlockLevel || 0) && coins >= (selectedBiome?.unlockCoins || 0);
+        
+        return (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-green-600 p-6">
+              <h2 className="text-2xl font-bold text-green-800 mb-2">
+                {selectedBiome?.name}
+              </h2>
+              <p className="text-gray-700 mb-4">
+                {selectedBiome?.description}
+              </p>
+              
+              {isUnlocked ? (
+                <button
+                  onClick={handleEnterGarden}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-lg py-4 rounded-2xl shadow-lg transition-transform active:scale-95"
+                >
+                  Enter Garden
+                </button>
+              ) : (
+                <>
+                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg border-2 border-yellow-300">
+                    <p className="text-sm font-bold text-yellow-800 mb-1">Requirements:</p>
+                    <p className="text-sm text-yellow-700">
+                      Level {selectedBiome?.unlockLevel} | {selectedBiome?.unlockCoins} coins
+                    </p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      Your level: {level} | Your coins: {coins}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleUnlockGarden}
+                    disabled={!canUnlock}
+                    className={`w-full font-bold text-lg py-4 rounded-2xl shadow-lg transition-transform active:scale-95 ${
+                      canUnlock
+                        ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white'
+                        : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    {canUnlock ? `Unlock for ${selectedBiome?.unlockCoins} coins` : 'Requirements not met'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
