@@ -5,19 +5,45 @@ interface MergeAnimationProps {
   y: number;
 }
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rotation: number;
+  color: string;
+}
+
 export default function MergeAnimation({ x, y }: MergeAnimationProps) {
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; vx: number; vy: number }>>([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [showSuccess, setShowSuccess] = useState(true);
 
   useEffect(() => {
-    const newParticles = Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      x: 0,
-      y: 0,
-      vx: (Math.random() - 0.5) * 10,
-      vy: (Math.random() - 0.5) * 10 - 5
-    }));
+    const colors = ['#FFD700', '#FFA500', '#FF69B4', '#90EE90', '#87CEEB'];
+    const newParticles = Array.from({ length: 20 }, (_, i) => {
+      const angle = (i / 20) * Math.PI * 2;
+      const speed = 3 + Math.random() * 4;
+      return {
+        id: i,
+        x: 0,
+        y: 0,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 8 + Math.random() * 8,
+        rotation: Math.random() * 360,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      };
+    });
     
     setParticles(newParticles);
+
+    const successTimer = setTimeout(() => {
+      setShowSuccess(false);
+    }, 600);
+
+    return () => clearTimeout(successTimer);
   }, []);
 
   return (
@@ -25,32 +51,87 @@ export default function MergeAnimation({ x, y }: MergeAnimationProps) {
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="absolute w-4 h-4 rounded-full bg-yellow-400 animate-particle"
+          className="absolute rounded-full"
           style={{
-            left: particle.x,
-            top: particle.y,
+            left: 0,
+            top: 0,
+            width: particle.size,
+            height: particle.size,
+            backgroundColor: particle.color,
+            boxShadow: `0 0 ${particle.size}px ${particle.color}`,
             transform: 'translate(-50%, -50%)',
-            animation: `particleFade 1s ease-out forwards`,
-            animationDelay: `${particle.id * 0.05}s`
-          }}
+            animation: `mergeParticle 1.2s ease-out forwards`,
+            animationDelay: `${particle.id * 0.02}s`,
+            '--vx': `${particle.vx * 20}px`,
+            '--vy': `${particle.vy * 20}px`,
+            '--rotation': `${particle.rotation}deg`
+          } as React.CSSProperties}
         />
       ))}
       
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-4xl font-bold text-yellow-400 animate-bounce">
-          +
+      {showSuccess && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div 
+            className="relative"
+            style={{
+              animation: 'mergeSuccess 0.6s ease-out forwards'
+            }}
+          >
+            <div className="absolute inset-0 bg-yellow-400 rounded-full blur-xl opacity-60" style={{ width: 80, height: 80, transform: 'translate(-50%, -50%)' }} />
+            <div className="relative text-5xl font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]" style={{ textShadow: '0 0 20px rgba(255, 215, 0, 0.8)' }}>
+              ✨
+            </div>
+          </div>
         </div>
+      )}
+
+      <div 
+        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          animation: 'mergeGlow 1s ease-out forwards'
+        }}
+      >
+        <div className="w-24 h-24 rounded-full bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 opacity-40 blur-2xl" />
       </div>
 
       <style>{`
-        @keyframes particleFade {
+        @keyframes mergeParticle {
           0% {
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+          }
+          50% {
+            opacity: 0.8;
           }
           100% {
             opacity: 0;
-            transform: translate(calc(-50% + ${Math.random() * 100 - 50}px), calc(-50% - 100px)) scale(0);
+            transform: translate(calc(-50% + var(--vx)), calc(-50% + var(--vy))) scale(0.2) rotate(var(--rotation));
+          }
+        }
+
+        @keyframes mergeSuccess {
+          0% {
+            opacity: 0;
+            transform: scale(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.3);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.5);
+          }
+        }
+
+        @keyframes mergeGlow {
+          0% {
+            opacity: 0.6;
+            transform: translate(-50%, -50%) scale(0.5);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(2.5);
           }
         }
       `}</style>
