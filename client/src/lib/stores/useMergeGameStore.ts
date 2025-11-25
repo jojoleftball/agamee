@@ -286,8 +286,8 @@ export const useMergeGameStore = create<MergeGameState>()(
       
       tryMerge: (item1Id, item2Id) => {
         const state = get();
-        const item1 = [...state.items, ...state.inventory].find((i) => i.id === item1Id);
-        const item2 = [...state.items, ...state.inventory].find((i) => i.id === item2Id);
+        const item1 = state.items.find((i) => i.id === item1Id);
+        const item2 = state.items.find((i) => i.id === item2Id);
         
         if (!item1 || !item2) return false;
         if (item1.itemType !== item2.itemType) return false;
@@ -298,16 +298,37 @@ export const useMergeGameStore = create<MergeGameState>()(
         const mergedItemData = MERGE_ITEMS[itemData.mergesInto];
         if (!mergedItemData) return false;
         
-        const targetX = item1.x;
-        const targetY = item1.y;
+        const targetX = item2.x;
+        const targetY = item2.y;
         
-        get().removeItem(item1Id);
-        get().removeItem(item2Id);
+        const nearbyOthers = state.items.filter(item => {
+          if (item.id === item1Id || item.id === item2Id) return false;
+          if (item.itemType !== item1.itemType) return false;
+          const dx = Math.abs(item.x - targetX);
+          const dy = Math.abs(item.y - targetY);
+          return dx <= 1 && dy <= 1;
+        }).sort((a, b) => {
+          const distA = Math.abs(a.x - targetX) + Math.abs(a.y - targetY);
+          const distB = Math.abs(b.x - targetX) + Math.abs(b.y - targetY);
+          return distA - distB;
+        });
         
-        get().addItem(itemData.mergesInto, targetX, targetY);
+        const idsToRemove = [item1Id, item2Id];
+        if (nearbyOthers.length >= 1) {
+          idsToRemove.push(nearbyOthers[0].id);
+        }
+        
+        const newItems = state.items.filter(item => !idsToRemove.includes(item.id));
+        newItems.push({
+          id: `item_${Date.now()}_${Math.random()}`,
+          itemType: itemData.mergesInto,
+          x: targetX,
+          y: targetY
+        });
+        
+        set({ items: newItems });
         get().addCoins(mergedItemData.coinValue);
         get().addXP(mergedItemData.xpValue);
-        
         soundManager.playMerge();
         
         return true;
@@ -476,14 +497,21 @@ export const useMergeGameStore = create<MergeGameState>()(
       
       initializeGame: () => {
         const state = get();
+        
+        if (!state.lastEnergyUpdate) {
+          set({ lastEnergyUpdate: Date.now() });
+        }
+        
         if (state.items.length > 0) return;
         
         get().addItem('gen_flower_1', 1, 0);
         get().addItem('gen_tool_1', 3, 0);
         get().addItem('flower_1', 0, 1);
         get().addItem('flower_1', 1, 1);
+        get().addItem('flower_1', 2, 1);
         get().addItem('tool_1', 3, 1);
         get().addItem('tool_1', 4, 1);
+        get().addItem('tool_1', 0, 2);
         get().addItem('blocked_dirt_1', 2, 2);
         get().addItem('blocked_dirt_1', 3, 2);
         get().addItem('blocked_rock_1', 0, 3);

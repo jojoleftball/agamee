@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
 import { MERGE_ITEMS } from '@/lib/mergeData';
 import MergeBoardItem from './MergeBoardItem';
 import MergeAnimation from './MergeAnimation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MergeAnimationData {
   id: string;
@@ -16,7 +17,26 @@ export default function MergeBoard() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [mergeableItems, setMergeableItems] = useState<Set<string>>(new Set());
   const boardRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!draggedId) {
+      setMergeableItems(new Set());
+      return;
+    }
+    
+    const draggedItem = items.find(i => i.id === draggedId);
+    if (!draggedItem) return;
+    
+    const matching = items.filter(item => 
+      item.id !== draggedId && 
+      item.itemType === draggedItem.itemType &&
+      MERGE_ITEMS[item.itemType]?.mergesInto
+    );
+    
+    setMergeableItems(new Set(matching.map(i => i.id)));
+  }, [draggedId, items]);
 
   const CELL_SIZE = 70;
   const GAP = 4;
@@ -89,18 +109,49 @@ export default function MergeBoard() {
         
         if (success) {
           const pos = getCellPosition(gridPos.x, gridPos.y);
-          setAnimations([...animations, {
-            id: `anim_${Date.now()}`,
+          const animId = `anim_${Date.now()}_${Math.random()}`;
+          setAnimations(prev => [...prev, {
+            id: animId,
             x: pos.left + CELL_SIZE / 2,
             y: pos.top + CELL_SIZE / 2
           }]);
           
           setTimeout(() => {
-            setAnimations(anims => anims.filter(a => a.id !== `anim_${Date.now()}`));
-          }, 1000);
+            setAnimations(anims => anims.filter(a => a.id !== animId));
+          }, 1200);
         }
       } else if (!targetItem) {
         moveItem(draggedId, gridPos.x, gridPos.y);
+        
+        setTimeout(() => {
+          const currentItems = useMergeGameStore.getState().items;
+          const movedItem = currentItems.find(i => i.id === draggedId);
+          if (movedItem && movedItem.x === gridPos.x && movedItem.y === gridPos.y) {
+            const nearbyMatching = currentItems.filter(item => {
+              if (item.id === draggedId || item.itemType !== movedItem.itemType) return false;
+              const dx = Math.abs(item.x - gridPos.x);
+              const dy = Math.abs(item.y - gridPos.y);
+              return dx <= 1 && dy <= 1;
+            });
+            
+            if (nearbyMatching.length >= 1) {
+              const success = tryMerge(nearbyMatching[0].id, draggedId);
+              if (success) {
+                const pos = getCellPosition(gridPos.x, gridPos.y);
+                const animId = `anim_${Date.now()}_${Math.random()}`;
+                setAnimations(prev => [...prev, {
+                  id: animId,
+                  x: pos.left + CELL_SIZE / 2,
+                  y: pos.top + CELL_SIZE / 2
+                }]);
+                
+                setTimeout(() => {
+                  setAnimations(anims => anims.filter(a => a.id !== animId));
+                }, 1200);
+              }
+            }
+          }
+        }, 150);
       }
     }
     
@@ -120,8 +171,11 @@ export default function MergeBoard() {
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
-      <div
+      <motion.div
         ref={boardRef}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
         className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-4 touch-none"
         style={{
           width: gridSize.cols * (CELL_SIZE + GAP) + 8,
@@ -135,8 +189,11 @@ export default function MergeBoard() {
           Array.from({ length: gridSize.cols }).map((_, x) => {
             const pos = getCellPosition(x, y);
             return (
-              <div
+              <motion.div
                 key={`cell_${x}_${y}`}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: (y * gridSize.cols + x) * 0.01 }}
                 className="absolute bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border-2 border-gray-300"
                 style={{
                   left: pos.left,
@@ -152,25 +209,44 @@ export default function MergeBoard() {
         {items.map((item) => {
           const pos = getCellPosition(item.x, item.y);
           const isDragging = draggedId === item.id;
+          const isMergeable = mergeableItems.has(item.id);
           
           return (
-            <MergeBoardItem
-              key={item.id}
-              item={item}
-              position={isDragging ? dragPosition : { x: pos.left, y: pos.top }}
-              size={CELL_SIZE}
-              isDragging={isDragging}
-              dragOffset={dragOffset}
-              onPointerDown={(e) => handleItemPointerDown(e, item.id)}
-              onTap={() => handleItemTap(item.id)}
-            />
+            <div key={item.id} className="absolute" style={{ left: pos.left, top: pos.top, width: CELL_SIZE, height: CELL_SIZE }}>
+              {isMergeable && (
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [0.5, 1, 0.5]
+                  }}
+                  transition={{ 
+                    duration: 1, 
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute inset-0 bg-green-400 rounded-xl -m-1"
+                  style={{ filter: 'blur(8px)' }}
+                />
+              )}
+              <MergeBoardItem
+                item={item}
+                position={isDragging ? dragPosition : { x: pos.left, y: pos.top }}
+                size={CELL_SIZE}
+                isDragging={isDragging}
+                dragOffset={dragOffset}
+                onPointerDown={(e) => handleItemPointerDown(e, item.id)}
+                onTap={() => handleItemTap(item.id)}
+              />
+            </div>
           );
         })}
         
-        {animations.map((anim) => (
-          <MergeAnimation key={anim.id} x={anim.x} y={anim.y} />
-        ))}
-      </div>
+        <AnimatePresence>
+          {animations.map((anim) => (
+            <MergeAnimation key={anim.id} x={anim.x} y={anim.y} />
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
