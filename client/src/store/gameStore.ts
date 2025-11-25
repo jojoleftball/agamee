@@ -31,6 +31,7 @@ interface GameState {
   removeBoardItem: (id: string) => void;
   updateBoardItem: (id: string, updates: Partial<BoardItem>) => void;
   moveBoardItem: (id: string, x: number, y: number) => void;
+  mergePlants: (itemIds: string[]) => boolean;
   
   addToStorage: (item: BoardItem) => boolean;
   removeFromStorage: (id: string) => void;
@@ -267,6 +268,45 @@ export const useGameStore = create<GameState>()(
           )
         })),
       
+      mergePlants: (itemIds: string[]) => {
+        const { boardItems, addCoins, addXP } = get();
+        const items = boardItems.filter(item => itemIds.includes(item.id));
+        
+        if (items.length < 3) return false;
+        
+        const firstItem = items[0];
+        if (firstItem.maxRank && firstItem.rank >= firstItem.maxRank) return false;
+        
+        const allSame = items.every(
+          item => item.itemType === firstItem.itemType && 
+                  item.rank === firstItem.rank &&
+                  item.category === firstItem.category
+        );
+        
+        if (!allSame) return false;
+        
+        const targetX = items[0].x;
+        const targetY = items[0].y;
+        
+        items.slice(0, 3).forEach(item => get().removeBoardItem(item.id));
+        
+        const newItem: BoardItem = {
+          id: `merged-${Date.now()}-${Math.random()}`,
+          category: firstItem.category,
+          itemType: firstItem.itemType,
+          rank: firstItem.rank + 1,
+          maxRank: firstItem.maxRank,
+          x: targetX,
+          y: targetY,
+        };
+        
+        get().addBoardItem(newItem);
+        addCoins(10 * firstItem.rank);
+        addXP(5 * firstItem.rank);
+        
+        return true;
+      },
+      
       initializeGame: () => {
         const starterItems: BoardItem[] = [
           {
@@ -295,6 +335,34 @@ export const useGameStore = create<GameState>()(
             maxRank: 5,
             x: 3,
             y: 1,
+          },
+          {
+            id: 'gen-1',
+            category: 'generator',
+            itemType: 'gen_rose',
+            rank: 1,
+            x: 0,
+            y: 0,
+            charges: 3,
+            lastGenerated: 0,
+          },
+          {
+            id: 'tool-water-1',
+            category: 'tool',
+            itemType: 'water_bucket',
+            rank: 1,
+            maxRank: 3,
+            x: 4,
+            y: 0,
+          },
+          {
+            id: 'tool-seed-1',
+            category: 'tool',
+            itemType: 'seed_bag',
+            rank: 1,
+            maxRank: 3,
+            x: 5,
+            y: 0,
           },
         ];
         

@@ -1,10 +1,25 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { Droplet, Sprout, ChevronLeft } from 'lucide-react';
+import PlantCareModal from '../PlantCareModal';
+import TutorialOverlay from '../TutorialOverlay';
+import { PLANT_DEFINITIONS } from '../../data/plantData';
+import type { GardenSlot } from '../../types/game';
 
 export default function GardenScreen() {
   const setScreen = useGameStore((state) => state.setScreen);
   const gardenSlots = useGameStore((state) => state.gardenSlots);
   const resources = useGameStore((state) => state.resources);
+  const updateGardenSlots = useGameStore((state) => state.updateGardenSlots);
+  const [selectedSlot, setSelectedSlot] = useState<GardenSlot | null>(null);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateGardenSlots();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [updateGardenSlots]);
 
   const handleOpenMergeBoard = () => {
     setScreen('merge_board');
@@ -12,6 +27,12 @@ export default function GardenScreen() {
 
   const handleBackToMap = () => {
     setScreen('map');
+  };
+  
+  const handleSlotClick = (slot: GardenSlot) => {
+    if (slot.occupied) {
+      setSelectedSlot(slot);
+    }
   };
 
   return (
@@ -63,46 +84,50 @@ export default function GardenScreen() {
         </div>
 
         <div className="grid grid-cols-3 md:grid-cols-4 gap-4 max-w-3xl mb-8">
-          {gardenSlots.map((slot) => (
-            <div
-              key={slot.id}
-              className={`aspect-square rounded-xl border-4 shadow-lg transition-all ${
-                slot.occupied
-                  ? 'bg-green-500 border-green-700'
-                  : 'bg-white/80 border-green-400 border-dashed animate-pulse'
-              }`}
-            >
-              {slot.occupied ? (
-                <div className="w-full h-full p-2 flex flex-col items-center justify-center">
-                  <div className="text-3xl mb-2">🌸</div>
-                  <div className="flex gap-1 w-full">
-                    <div className="flex-1 bg-blue-300 rounded-full h-1">
-                      <div 
-                        className="bg-blue-600 h-full rounded-full"
-                        style={{ width: `${slot.waterMeter}%` }}
-                      />
+          {gardenSlots.map((slot) => {
+            const plantDef = slot.plantType ? PLANT_DEFINITIONS[slot.plantType] : null;
+            return (
+              <button
+                key={slot.id}
+                onClick={() => handleSlotClick(slot)}
+                className={`aspect-square rounded-xl border-4 shadow-lg transition-all ${
+                  slot.occupied
+                    ? 'bg-green-500 border-green-700 hover:scale-105 cursor-pointer'
+                    : 'bg-white/80 border-green-400 border-dashed animate-pulse'
+                }`}
+              >
+                {slot.occupied && plantDef ? (
+                  <div className="w-full h-full p-2 flex flex-col items-center justify-center">
+                    <div className="text-3xl mb-2">{plantDef.emoji}</div>
+                    <div className="flex gap-1 w-full">
+                      <div className="flex-1 bg-blue-300 rounded-full h-1">
+                        <div 
+                          className="bg-blue-600 h-full rounded-full"
+                          style={{ width: `${slot.waterMeter}%` }}
+                        />
+                      </div>
+                      <div className="flex-1 bg-amber-300 rounded-full h-1">
+                        <div 
+                          className="bg-amber-600 h-full rounded-full"
+                          style={{ width: `${slot.seedMeter}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1 bg-amber-300 rounded-full h-1">
-                      <div 
-                        className="bg-amber-600 h-full rounded-full"
-                        style={{ width: `${slot.seedMeter}%` }}
-                      />
-                    </div>
+                    {slot.waterMeter < 30 && (
+                      <Droplet className="w-4 h-4 text-blue-600 mt-1 animate-bounce" />
+                    )}
+                    {slot.seedMeter < 30 && (
+                      <Sprout className="w-4 h-4 text-amber-600 mt-1 animate-bounce" />
+                    )}
                   </div>
-                  {slot.waterMeter < 30 && (
-                    <Droplet className="w-4 h-4 text-blue-600 mt-1" />
-                  )}
-                  {slot.seedMeter < 30 && (
-                    <Sprout className="w-4 h-4 text-amber-600 mt-1" />
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-4xl text-green-400">✨</div>
-                </div>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-4xl text-green-400">✨</div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <button
@@ -112,6 +137,15 @@ export default function GardenScreen() {
           Open Merge Board
         </button>
       </div>
+
+      <TutorialOverlay />
+      
+      {selectedSlot && (
+        <PlantCareModal 
+          slot={selectedSlot} 
+          onClose={() => setSelectedSlot(null)} 
+        />
+      )}
     </div>
   );
 }

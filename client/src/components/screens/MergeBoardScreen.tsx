@@ -1,6 +1,9 @@
 import { useState, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { ChevronLeft, Package, ShoppingBag, ListTodo } from 'lucide-react';
+import ItemSprite from '../ItemSprite';
+import PlantingModal from '../PlantingModal';
+import TutorialOverlay from '../TutorialOverlay';
 import type { BoardItem } from '../../types/game';
 
 const GRID_COLS = 6;
@@ -21,6 +24,7 @@ export default function MergeBoardScreen() {
 
   const [draggedItem, setDraggedItem] = useState<BoardItem | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [plantingItem, setPlantingItem] = useState<BoardItem | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
   const handleBackToGarden = () => {
@@ -98,8 +102,24 @@ export default function MergeBoardScreen() {
     setDraggedItem(null);
   };
 
-  const getItemSprite = (item: BoardItem) => {
-    return `🌹`;
+  const handleGeneratorClick = (item: BoardItem) => {
+    if (item.category !== 'generator') return;
+    if (!item.charges || item.charges <= 0) return;
+    
+    const now = Date.now();
+    if (item.lastGenerated && (now - item.lastGenerated) < 10000) return;
+    
+    const newItem: BoardItem = {
+      id: `gen-${Date.now()}-${Math.random()}`,
+      category: 'plant',
+      itemType: 'rose',
+      rank: 1,
+      maxRank: 5,
+      x: Math.floor(Math.random() * GRID_COLS),
+      y: Math.floor(Math.random() * GRID_ROWS),
+    };
+    
+    addBoardItem(newItem);
   };
 
   return (
@@ -167,23 +187,23 @@ export default function MergeBoardScreen() {
               {boardItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`absolute bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-lg border-3 border-white flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform ${
-                    draggedItem?.id === item.id ? 'scale-110 z-50' : 'hover:scale-105'
+                  className={`absolute cursor-grab active:cursor-grabbing transition-transform ${
+                    draggedItem?.id === item.id ? 'scale-110 z-50' : 'z-10'
                   }`}
                   style={{
                     left: item.x * (CELL_SIZE + GAP) + GAP,
                     top: item.y * (CELL_SIZE + GAP) + GAP,
-                    width: CELL_SIZE,
-                    height: CELL_SIZE,
                   }}
                   onPointerDown={(e) => handlePointerDown(e, item)}
+                  onClick={() => {
+                    if (item.category === 'generator') {
+                      handleGeneratorClick(item);
+                    } else if (item.category === 'plant' && item.maxRank && item.rank >= item.maxRank) {
+                      setPlantingItem(item);
+                    }
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="text-4xl mb-1">{getItemSprite(item)}</div>
-                    <div className="text-xs font-bold text-white bg-black/30 rounded px-2 py-0.5">
-                      R{item.rank}
-                    </div>
-                  </div>
+                  <ItemSprite item={item} size={CELL_SIZE} />
                 </div>
               ))}
             </div>
@@ -215,6 +235,15 @@ export default function MergeBoardScreen() {
           </div>
         </div>
       </div>
+      
+      <TutorialOverlay />
+      
+      {plantingItem && (
+        <PlantingModal
+          plant={plantingItem}
+          onClose={() => setPlantingItem(null)}
+        />
+      )}
     </div>
   );
 }
