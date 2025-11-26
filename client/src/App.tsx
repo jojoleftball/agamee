@@ -1,6 +1,6 @@
 import '@fontsource/inter';
 import { useEffect } from 'react';
-import MobileGame from './components/MobileGame';
+import GameFlow from './components/game/GameFlow';
 import { useMergeGameStore } from './lib/stores/useMergeGameStore';
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
     return () => clearInterval(energyInterval);
   }, [initializeGame, updateEnergy]);
   
-  return <MobileGame />;
+  return <GameFlow />;
 }
 
 export default App;
