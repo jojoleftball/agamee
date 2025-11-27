@@ -4,6 +4,7 @@ import { Droplet, Sprout, ChevronLeft } from 'lucide-react';
 import PlantCareModal from '../PlantCareModal';
 import TutorialOverlay from '../TutorialOverlay';
 import { PLANT_DEFINITIONS } from '../../data/plantData';
+import { MergeBoardIcon } from '../icons/GardenIcons';
 import type { GardenSlot } from '../../types/game';
 
 export default function GardenScreen() {
@@ -130,13 +131,15 @@ export default function GardenScreen() {
           })}
         </div>
 
-        <button
-          onClick={handleOpenMergeBoard}
-          className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xl shadow-2xl transition-all active:scale-95 border-4 border-emerald-700"
-        >
-          Open Merge Board
-        </button>
       </div>
+
+      <button
+        onClick={handleOpenMergeBoard}
+        className="absolute bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 rounded-2xl shadow-2xl transition-all active:scale-95 border-4 border-emerald-700 flex items-center justify-center z-20"
+        title="Open Merge Board"
+      >
+        <MergeBoardIcon size={36} />
+      </button>
 
       <TutorialOverlay />
       

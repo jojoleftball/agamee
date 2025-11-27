@@ -1,15 +1,27 @@
 import { useState, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { ChevronLeft, Package, ShoppingBag, ListTodo } from 'lucide-react';
+import { 
+  BackArrowIcon, 
+  ShopBagIcon, 
+  InventoryChestIcon, 
+  TaskScrollIcon,
+  SellCoinIcon,
+  EnergyBoltIcon,
+  GemIcon
+} from '../icons/GardenIcons';
 import ItemSprite from '../ItemSprite';
 import PlantingModal from '../PlantingModal';
 import TutorialOverlay from '../TutorialOverlay';
+import ShopModal from './ShopModal';
+import InventoryModal from './InventoryModal';
+import TasksModal from './TasksModal';
+import ItemDetailsPanel from './ItemDetailsPanel';
 import type { BoardItem } from '../../types/game';
 
 const GRID_COLS = 6;
 const GRID_ROWS = 5;
-const CELL_SIZE = 80;
-const GAP = 8;
+const CELL_SIZE = 70;
+const GAP = 6;
 
 export default function MergeBoardScreen() {
   const setScreen = useGameStore((state) => state.setScreen);
@@ -26,6 +38,10 @@ export default function MergeBoardScreen() {
   const [draggedItem, setDraggedItem] = useState<BoardItem | null>(null);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [plantingItem, setPlantingItem] = useState<BoardItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<BoardItem | null>(null);
+  const [showShop, setShowShop] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [showTasks, setShowTasks] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
 
   const handleBackToGarden = () => {
@@ -104,6 +120,7 @@ export default function MergeBoardScreen() {
     
     e.stopPropagation();
     setDraggedItem(item);
+    setSelectedItem(null);
     
     if (boardRef.current) {
       const rect = boardRef.current.getBoundingClientRect();
@@ -204,6 +221,16 @@ export default function MergeBoardScreen() {
     console.log('Generator created new item');
   };
 
+  const handleItemClick = (item: BoardItem) => {
+    if (item.category === 'generator') {
+      handleGeneratorClick(item);
+    } else if (item.category === 'plant' && item.maxRank && item.rank >= item.maxRank) {
+      setPlantingItem(item);
+    } else {
+      setSelectedItem(item);
+    }
+  };
+
   const getDragStyle = (item: BoardItem) => {
     if (draggedItem?.id === item.id && boardRef.current) {
       return {
@@ -221,48 +248,60 @@ export default function MergeBoardScreen() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0"
+      style={{
+        backgroundImage: 'url(/game-assets/basic_garden_background_vertical.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/30 to-emerald-800/50" />
+      
       <div className="absolute inset-0 flex flex-col">
-        <div className="bg-gradient-to-b from-emerald-600 to-emerald-700 p-4 shadow-lg">
-          <div className="flex items-center justify-between max-w-6xl mx-auto">
-            <button
-              onClick={handleBackToGarden}
-              className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white rounded-lg shadow-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span className="font-medium">Back</span>
-            </button>
-
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="bg-yellow-500 px-2 md:px-4 py-2 rounded-lg shadow-lg flex items-center gap-1 md:gap-2 border-2 border-yellow-600">
-                <span className="text-xl md:text-2xl">💰</span>
-                <span className="font-bold text-white text-sm md:text-base">{resources.coins}</span>
-              </div>
-              <div className="bg-blue-500 px-2 md:px-4 py-2 rounded-lg shadow-lg flex items-center gap-1 md:gap-2 border-2 border-blue-600">
-                <span className="text-xl md:text-2xl">⚡</span>
-                <span className="font-bold text-white text-sm md:text-base">{resources.energy}/{resources.maxEnergy}</span>
-              </div>
-              <div className="bg-purple-500 px-2 md:px-4 py-2 rounded-lg shadow-lg flex items-center gap-1 md:gap-2 border-2 border-purple-600">
-                <span className="text-xl md:text-2xl">💎</span>
-                <span className="font-bold text-white text-sm md:text-base">{resources.gems}</span>
-              </div>
+        <div className="bg-gradient-to-b from-emerald-800/90 to-emerald-700/80 p-3 shadow-lg border-b-4 border-emerald-900/50">
+          <div className="flex items-center justify-center gap-2 md:gap-4">
+            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-yellow-600">
+              <SellCoinIcon size={20} />
+              <span className="font-bold text-yellow-900 text-sm md:text-base">{resources.coins}</span>
+            </div>
+            <div className="bg-gradient-to-r from-blue-400 to-blue-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-blue-600">
+              <EnergyBoltIcon size={20} />
+              <span className="font-bold text-white text-sm md:text-base">{resources.energy}/{resources.maxEnergy}</span>
+            </div>
+            <div className="bg-gradient-to-r from-purple-400 to-purple-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-purple-600">
+              <GemIcon size={20} />
+              <span className="font-bold text-white text-sm md:text-base">{resources.gems}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-auto">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-6 border-4 border-emerald-600">
-            <h2 className="text-xl md:text-2xl font-bold text-center text-emerald-700 mb-3 md:mb-4">
-              Merge Board
-            </h2>
+        <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-auto relative">
+          {selectedItem && (
+            <ItemDetailsPanel 
+              item={selectedItem} 
+              onClose={() => setSelectedItem(null)} 
+            />
+          )}
+          
+          <div className="bg-gradient-to-b from-emerald-100/95 to-green-100/95 backdrop-blur-sm rounded-3xl shadow-2xl p-3 md:p-5 border-4 border-emerald-600">
+            <div className="flex items-center justify-center mb-3">
+              <div className="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-full">
+                <div className="w-3 h-3 bg-pink-400 rounded-full" />
+                <span className="text-white font-bold text-sm">Merge Board</span>
+                <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+              </div>
+            </div>
 
             <div
               ref={boardRef}
-              className="relative bg-emerald-50 rounded-xl p-2 md:p-4 border-2 border-emerald-300 select-none"
+              className="relative rounded-2xl p-2 select-none"
               style={{
                 width: GRID_COLS * (CELL_SIZE + GAP) + GAP,
                 height: GRID_ROWS * (CELL_SIZE + GAP) + GAP,
                 touchAction: 'none',
+                background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
               }}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -271,12 +310,13 @@ export default function MergeBoardScreen() {
                 Array.from({ length: GRID_COLS }).map((_, colIndex) => (
                   <div
                     key={`cell-${rowIndex}-${colIndex}`}
-                    className="absolute bg-white/50 border-2 border-emerald-200 rounded-lg"
+                    className="absolute bg-white/60 border-2 border-emerald-300/50 rounded-xl"
                     style={{
                       left: colIndex * (CELL_SIZE + GAP) + GAP,
                       top: rowIndex * (CELL_SIZE + GAP) + GAP,
                       width: CELL_SIZE,
                       height: CELL_SIZE,
+                      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
                     }}
                   />
                 ))
@@ -292,45 +332,76 @@ export default function MergeBoardScreen() {
                     className={`absolute transition-all ${
                       isGenerator ? 'cursor-pointer hover:scale-110' : 'cursor-grab active:cursor-grabbing'
                     } ${draggedItem?.id === item.id ? 'scale-110' : ''}`}
-                    style={style}
-                    onPointerDown={(e) => handlePointerDown(e, item)}
-                    onClick={() => {
-                      if (isGenerator) {
-                        handleGeneratorClick(item);
-                      } else if (item.category === 'plant' && item.maxRank && item.rank >= item.maxRank) {
-                        setPlantingItem(item);
-                      }
+                    style={{
+                      ...style,
+                      width: CELL_SIZE,
+                      height: CELL_SIZE,
                     }}
+                    onPointerDown={(e) => handlePointerDown(e, item)}
+                    onClick={() => handleItemClick(item)}
                   >
                     <ItemSprite item={item} size={CELL_SIZE} />
+                    {isGenerator && item.charges !== undefined && (
+                      <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full border border-amber-600">
+                        {item.charges}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            <div className="mt-3 md:mt-4 text-center text-xs md:text-sm text-gray-600">
-              Drag 3 identical items together to merge! Tap generators to create items.
+            <div className="mt-3 text-center text-xs text-emerald-700 bg-emerald-200/50 py-2 px-4 rounded-full">
+              Drag 3 matching items together to merge! Tap items for details.
             </div>
           </div>
         </div>
 
-        <div className="bg-white border-t-4 border-emerald-600 p-3 md:p-4 shadow-lg">
-          <div className="flex items-center justify-around max-w-md mx-auto">
-            <button className="flex flex-col items-center gap-1 px-2 md:px-4 py-2 hover:bg-emerald-50 rounded-lg transition-colors">
-              <Package className="w-5 md:w-6 h-5 md:h-6 text-emerald-600" />
-              <span className="text-xs font-medium text-gray-700">
-                Storage ({storageItems.length}/10)
-              </span>
+        <div className="bg-gradient-to-t from-emerald-800/95 to-emerald-700/90 backdrop-blur-sm p-4 shadow-lg border-t-4 border-emerald-900/50">
+          <div className="flex items-center justify-around max-w-lg mx-auto">
+            <button 
+              onClick={handleBackToGarden}
+              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center border-2 border-sky-400 shadow-lg">
+                <BackArrowIcon size={28} />
+              </div>
+              <span className="text-xs font-medium text-white">Back</span>
             </button>
 
-            <button className="flex flex-col items-center gap-1 px-2 md:px-4 py-2 hover:bg-emerald-50 rounded-lg transition-colors">
-              <ShoppingBag className="w-5 md:w-6 h-5 md:h-6 text-emerald-600" />
-              <span className="text-xs font-medium text-gray-700">Store</span>
+            <button 
+              onClick={() => setShowShop(true)}
+              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-amber-400 shadow-lg">
+                <ShopBagIcon size={28} />
+              </div>
+              <span className="text-xs font-medium text-white">Shop</span>
             </button>
 
-            <button className="flex flex-col items-center gap-1 px-2 md:px-4 py-2 hover:bg-emerald-50 rounded-lg transition-colors">
-              <ListTodo className="w-5 md:w-6 h-5 md:h-6 text-emerald-600" />
-              <span className="text-xs font-medium text-gray-700">Tasks</span>
+            <button 
+              onClick={() => setShowInventory(true)}
+              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95 relative"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
+                <InventoryChestIcon size={28} />
+              </div>
+              <span className="text-xs font-medium text-white">Inventory</span>
+              {storageItems.length > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-red-600">
+                  {storageItems.length}
+                </div>
+              )}
+            </button>
+
+            <button 
+              onClick={() => setShowTasks(true)}
+              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center border-2 border-yellow-400 shadow-lg">
+                <TaskScrollIcon size={28} />
+              </div>
+              <span className="text-xs font-medium text-white">Tasks</span>
             </button>
           </div>
         </div>
@@ -343,6 +414,18 @@ export default function MergeBoardScreen() {
           plant={plantingItem}
           onClose={() => setPlantingItem(null)}
         />
+      )}
+
+      {showShop && (
+        <ShopModal onClose={() => setShowShop(false)} />
+      )}
+
+      {showInventory && (
+        <InventoryModal onClose={() => setShowInventory(false)} />
+      )}
+
+      {showTasks && (
+        <TasksModal onClose={() => setShowTasks(false)} />
       )}
     </div>
   );
