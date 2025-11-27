@@ -435,7 +435,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <input
                 type="range"
                 min="50"
-                max="150"
+                max="500"
                 value={hudPositions[key].scale * 100}
                 onChange={(e) => setHUDPosition(key, { scale: parseInt(e.target.value) / 100 })}
                 className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-green-500"
