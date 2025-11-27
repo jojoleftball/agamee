@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { Language, languageNames } from '@/lib/i18n/translations';
+import { Settings2 } from 'lucide-react';
+import AdminPanel from './AdminPanel';
 import {
   CloseFlowerIcon,
   SoundWaveIcon,

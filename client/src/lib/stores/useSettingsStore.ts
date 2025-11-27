@@ -8,6 +8,27 @@ interface AccountConnection {
   email?: string;
 }
 
+export interface HUDElementPosition {
+  x: number;
+  y: number;
+  textOffsetX: number;
+  textOffsetY: number;
+  scale: number;
+  fontSize: number;
+}
+
+export interface HUDPositions {
+  levelCircle: HUDElementPosition;
+  coinsBar: HUDElementPosition;
+  gemsBar: HUDElementPosition;
+}
+
+const DEFAULT_HUD_POSITIONS: HUDPositions = {
+  levelCircle: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 22 },
+  coinsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
+  gemsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
+};
+
 interface SettingsState {
   language: Language;
   soundVolume: number;
@@ -17,6 +38,7 @@ interface SettingsState {
   hasSeenIntro: boolean;
   connectedAccounts: AccountConnection[];
   appVersion: string;
+  hudPositions: HUDPositions;
   
   setLanguage: (lang: Language) => void;
   setSoundVolume: (volume: number) => void;
@@ -28,6 +50,8 @@ interface SettingsState {
   disconnectAccount: (type: 'google' | 'apple' | 'email') => void;
   getTranslations: () => Translations;
   t: (key: string) => string;
+  setHUDPosition: (element: keyof HUDPositions, position: Partial<HUDElementPosition>) => void;
+  resetHUDPositions: () => void;
 }
 
 const STORAGE_KEY = 'merge-garden-settings';
@@ -48,6 +72,7 @@ export const useSettingsStore = create<SettingsState>()(
         { type: 'email', connected: false },
       ],
       appVersion: APP_VERSION,
+      hudPositions: DEFAULT_HUD_POSITIONS,
 
       setLanguage: (lang) => set({ language: lang }),
       
@@ -93,6 +118,18 @@ export const useSettingsStore = create<SettingsState>()(
         
         return typeof result === 'string' ? result : key;
       },
+
+      setHUDPosition: (element, position) => set((state) => ({
+        hudPositions: {
+          ...state.hudPositions,
+          [element]: {
+            ...state.hudPositions[element],
+            ...position,
+          },
+        },
+      })),
+
+      resetHUDPositions: () => set({ hudPositions: DEFAULT_HUD_POSITIONS }),
     }),
     {
       name: STORAGE_KEY,
@@ -104,6 +141,7 @@ export const useSettingsStore = create<SettingsState>()(
         musicMuted: state.musicMuted,
         hasSeenIntro: state.hasSeenIntro,
         connectedAccounts: state.connectedAccounts,
+        hudPositions: state.hudPositions,
       }),
     }
   )
