@@ -23,7 +23,11 @@ const GRID_ROWS = 5;
 const CELL_SIZE = 70;
 const GAP = 6;
 
-export default function MergeBoardScreen() {
+interface MergeBoardScreenProps {
+  onBack?: () => void;
+}
+
+export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   const setScreen = useGameStore((state) => state.setScreen);
   const boardItems = useGameStore((state) => state.boardItems);
   const storageItems = useGameStore((state) => state.storageItems);
@@ -45,7 +49,11 @@ export default function MergeBoardScreen() {
   const boardRef = useRef<HTMLDivElement>(null);
 
   const handleBackToGarden = () => {
-    setScreen('garden');
+    if (onBack) {
+      onBack();
+    } else {
+      setScreen('garden');
+    }
   };
 
   const findAdjacentMatching = (centerX: number, centerY: number, itemType: string, rank: number, category: string): BoardItem[] => {

@@ -6,9 +6,10 @@ import IntroDialogueScreen from './IntroDialogueScreen';
 import WorldMapScreen from './WorldMapScreen';
 import SettingsModal from './SettingsModal';
 import GardenHUD from './GardenHUD';
-import { SettingsFlowerIcon, BackArrowIcon } from '../icons/GardenIcons';
+import MergeBoardScreen from '../screens/MergeBoardScreen';
+import { SettingsFlowerIcon, BackArrowIcon, MergeBoardIcon } from '../icons/GardenIcons';
 
-type GamePhase = 'loading' | 'intro' | 'map' | 'playing';
+type GamePhase = 'loading' | 'intro' | 'map' | 'playing' | 'merge_board';
 
 const BACKGROUND_MAP: Record<string, string> = {
   main: '/game-assets/middle-garden-view.jpg',
@@ -44,6 +45,14 @@ export default function GameFlow() {
 
   const handleBackToMap = () => {
     setPhase('map');
+  };
+
+  const handleOpenMergeBoard = () => {
+    setPhase('merge_board');
+  };
+
+  const handleCloseMergeBoard = () => {
+    setPhase('playing');
   };
 
   const backgroundImage = BACKGROUND_MAP[currentGarden] || BACKGROUND_MAP.basic;
@@ -153,6 +162,18 @@ export default function GameFlow() {
                   <SettingsFlowerIcon size={24} color="#fff" />
                 </motion.button>
               </div>
+
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4, type: 'spring', stiffness: 300 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleOpenMergeBoard}
+                className="absolute bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl border-4 border-emerald-700 z-40"
+              >
+                <MergeBoardIcon size={36} />
+              </motion.button>
             </div>
 
             <AnimatePresence>
@@ -160,6 +181,19 @@ export default function GameFlow() {
                 <SettingsModal onClose={() => setShowSettings(false)} />
               )}
             </AnimatePresence>
+          </motion.div>
+        )}
+
+        {phase === 'merge_board' && (
+          <motion.div
+            key="merge_board"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0"
+          >
+            <MergeBoardScreen onBack={handleCloseMergeBoard} />
           </motion.div>
         )}
       </AnimatePresence>
