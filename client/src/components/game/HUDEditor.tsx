@@ -24,6 +24,9 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
   const [selectedElement, setSelectedElement] = useState<keyof HUDPositions | null>(null);
   const [dragState, setDragState] = useState<DragState>({ element: null, type: null, startX: 0, startY: 0, startValue: { x: 0, y: 0 } });
   const [editingText, setEditingText] = useState(false);
+  const [levelText, setLevelText] = useState(String(level));
+  const [coinsText, setCoinsText] = useState(String(coins));
+  const [gemsText, setGemsText] = useState(String(gems));
   const containerRef = useRef<HTMLDivElement>(null);
 
   const levelPos = hudPositions.levelCircle;
@@ -147,12 +150,15 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
     baseHeight: number,
     pos: typeof levelPos,
     displayValue: string | number,
+    textValue: string,
+    setTextValue: (val: string) => void,
     textColor: string,
     baseTop: number,
     baseLeft: number
   ) => {
     const isSelected = selectedElement === key;
     const isDragging = dragState.element === key;
+    const isTextEditing = editingText && isSelected;
     const width = baseWidth * pos.scale;
     const height = baseHeight * pos.scale;
 
@@ -171,14 +177,18 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
           className={`relative transition-shadow ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 rounded-lg shadow-xl' : ''} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{ width, height }}
           onPointerDown={(e) => {
-            setSelectedElement(key);
-            setEditingText(false);
-            startDrag(e, key, 'position');
+            if (!isTextEditing) {
+              setSelectedElement(key);
+              setEditingText(false);
+              startDrag(e, key, 'position');
+            }
           }}
           onTouchStart={(e) => {
-            setSelectedElement(key);
-            setEditingText(false);
-            startDrag(e, key, 'position');
+            if (!isTextEditing) {
+              setSelectedElement(key);
+              setEditingText(false);
+              startDrag(e, key, 'position');
+            }
           }}
         >
           <img
@@ -189,34 +199,50 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
           />
           
           <div
-            className={`absolute inset-0 flex items-center justify-center ${editingText && isSelected ? 'ring-2 ring-purple-500 ring-offset-1 rounded' : ''}`}
+            className={`absolute inset-0 flex items-center justify-center ${isTextEditing ? 'ring-2 ring-purple-500 ring-offset-1 rounded' : ''}`}
             style={{
               paddingLeft: key !== 'levelCircle' ? '25%' : 0,
               transform: `translate(${pos.textOffsetX}px, ${pos.textOffsetY}px)`,
             }}
             onPointerDown={(e) => {
-              if (isSelected && editingText) {
+              if (isTextEditing) {
                 e.stopPropagation();
                 startDrag(e, key, 'text');
               }
             }}
             onTouchStart={(e) => {
-              if (isSelected && editingText) {
+              if (isTextEditing) {
                 e.stopPropagation();
                 startDrag(e, key, 'text');
               }
             }}
           >
-            <span
-              className={`font-bold ${textColor} pointer-events-none select-none`}
-              style={{
-                fontSize: pos.fontSize,
-                textShadow: '0 1px 0 rgba(255,255,255,0.6)',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}
-            >
-              {displayValue}
-            </span>
+            {isTextEditing ? (
+              <input
+                type="text"
+                value={textValue}
+                onChange={(e) => setTextValue(e.target.value)}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                className="w-full text-center font-bold bg-purple-100 border-2 border-purple-500 rounded px-1"
+                style={{
+                  fontSize: pos.fontSize,
+                  color: textColor.includes('amber') ? '#92400e' : '#047857',
+                }}
+                autoFocus
+              />
+            ) : (
+              <span
+                className={`font-bold ${textColor} pointer-events-none select-none`}
+                style={{
+                  fontSize: pos.fontSize,
+                  textShadow: '0 1px 0 rgba(255,255,255,0.6)',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+              >
+                {displayValue}
+              </span>
+            )}
           </div>
 
           {isSelected && (
@@ -299,7 +325,9 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
                 52,
                 52,
                 levelPos,
-                level,
+                levelText,
+                levelText,
+                setLevelText,
                 'text-amber-900',
                 0,
                 0
@@ -310,7 +338,9 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
                 110,
                 36,
                 coinsPos,
-                coins.toLocaleString(),
+                coinsText,
+                coinsText,
+                setCoinsText,
                 'text-amber-800',
                 8,
                 44
@@ -321,7 +351,9 @@ export default function HUDEditor({ isOpen, onClose, level = 5, coins = 1250, ge
                 110,
                 36,
                 gemsPos,
-                gems.toLocaleString(),
+                gemsText,
+                gemsText,
+                setGemsText,
                 'text-emerald-800',
                 8,
                 146
