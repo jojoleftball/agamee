@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore, HUDPositions } from '@/lib/stores/useSettingsStore';
 import { Language, languageNames } from '@/lib/i18n/translations';
-import { Settings2, RotateCcw } from 'lucide-react';
+import { Settings2, RotateCcw, Move } from 'lucide-react';
 import AdminPanel from './AdminPanel';
+import HUDEditor from './HUDEditor';
 import {
   CloseFlowerIcon,
   SoundWaveIcon,
@@ -28,6 +29,7 @@ type SettingsView = 'main' | 'language' | 'account' | 'admin';
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [currentView, setCurrentView] = useState<SettingsView>('main');
+  const [showHUDEditor, setShowHUDEditor] = useState(false);
   const {
     language,
     soundVolume,
@@ -182,6 +184,24 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        onClick={() => setShowHUDEditor(true)}
+        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 shadow-lg flex items-center gap-4"
+      >
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          <Move size={28} color="#fff" />
+        </div>
+        <div className="text-left">
+          <span className="font-bold text-white block">Edit HUD</span>
+          <span className="text-blue-200 text-sm">Drag and resize like stickers</span>
+        </div>
+        <svg className="ml-auto" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </motion.button>
+
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={() => setCurrentView('admin')}
         className="w-full bg-gradient-to-r from-slate-600 to-gray-700 rounded-2xl p-4 shadow-lg flex items-center gap-4"
       >
@@ -189,8 +209,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <AdminLayoutIcon size={28} color="#fff" />
         </div>
         <div className="text-left">
-          <span className="font-bold text-white block">Admin</span>
-          <span className="text-gray-300 text-sm">Manage HUD positions</span>
+          <span className="font-bold text-white block">Advanced</span>
+          <span className="text-gray-300 text-sm">Use sliders for precise control</span>
         </div>
         <svg className="ml-auto" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
           <path d="M9 18l6-6-6-6" />
@@ -461,42 +481,49 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={handleBackdropClick}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    >
+    <>
       <motion.div
-        initial={{ scale: 0.9, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 50 }}
-        className="w-full max-w-md bg-gradient-to-b from-green-100 via-emerald-50 to-white rounded-3xl shadow-2xl overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleBackdropClick}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       >
-        <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white drop-shadow-lg">
-            {t('settings.title')}
-          </h2>
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center"
-          >
-            <CloseFlowerIcon size={36} />
-          </motion.button>
-        </div>
+        <motion.div
+          initial={{ scale: 0.9, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 50 }}
+          className="w-full max-w-md bg-gradient-to-b from-green-100 via-emerald-50 to-white rounded-3xl shadow-2xl overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg">
+              {t('settings.title')}
+            </h2>
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center"
+            >
+              <CloseFlowerIcon size={36} />
+            </motion.button>
+          </div>
 
-        <div className="p-4 max-h-[70vh] overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {currentView === 'main' && renderMainView()}
-            {currentView === 'language' && renderLanguageView()}
-            {currentView === 'account' && renderAccountView()}
-            {currentView === 'admin' && renderAdminView()}
-          </AnimatePresence>
-        </div>
+          <div className="p-4 max-h-[70vh] overflow-y-auto">
+            <AnimatePresence mode="wait">
+              {currentView === 'main' && renderMainView()}
+              {currentView === 'language' && renderLanguageView()}
+              {currentView === 'account' && renderAccountView()}
+              {currentView === 'admin' && renderAdminView()}
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+
+      <HUDEditor 
+        isOpen={showHUDEditor} 
+        onClose={() => setShowHUDEditor(false)} 
+      />
+    </>
   );
 }
