@@ -386,8 +386,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <label className="text-xs text-gray-500 block mb-1">X Position</label>
               <input
                 type="range"
-                min="-50"
-                max="50"
+                min="-300"
+                max="300"
                 value={hudPositions[key].x}
                 onChange={(e) => setHUDPosition(key, { x: parseInt(e.target.value) })}
                 className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
@@ -398,8 +398,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <label className="text-xs text-gray-500 block mb-1">Y Position</label>
               <input
                 type="range"
-                min="-50"
-                max="50"
+                min="-300"
+                max="300"
                 value={hudPositions[key].y}
                 onChange={(e) => setHUDPosition(key, { y: parseInt(e.target.value) })}
                 className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
