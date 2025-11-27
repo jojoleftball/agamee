@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSettingsStore } from '@/lib/stores/useSettingsStore';
+import { useSettingsStore, HUDPositions } from '@/lib/stores/useSettingsStore';
 import { Language, languageNames } from '@/lib/i18n/translations';
-import { Settings2 } from 'lucide-react';
+import { Settings2, RotateCcw } from 'lucide-react';
 import AdminPanel from './AdminPanel';
 import {
   CloseFlowerIcon,
@@ -17,13 +17,14 @@ import {
   VersionLeafIcon,
   CheckmarkIcon,
   BackArrowIcon,
+  AdminLayoutIcon,
 } from '../icons/GardenIcons';
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsView = 'main' | 'language' | 'account';
+type SettingsView = 'main' | 'language' | 'account' | 'admin';
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [currentView, setCurrentView] = useState<SettingsView>('main');
@@ -35,11 +36,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     musicMuted,
     connectedAccounts,
     appVersion,
+    hudPositions,
     setLanguage,
     setSoundVolume,
     setMusicVolume,
     toggleSoundMute,
     toggleMusicMute,
+    setHUDPosition,
+    resetHUDPositions,
     t,
   } = useSettingsStore();
 
@@ -174,6 +178,24 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           <span className="text-emerald-600 font-mono">{appVersion}</span>
         </div>
       </div>
+
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setCurrentView('admin')}
+        className="w-full bg-gradient-to-r from-slate-600 to-gray-700 rounded-2xl p-4 shadow-lg flex items-center gap-4"
+      >
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          <AdminLayoutIcon size={28} color="#fff" />
+        </div>
+        <div className="text-left">
+          <span className="font-bold text-white block">Admin</span>
+          <span className="text-gray-300 text-sm">Manage HUD positions</span>
+        </div>
+        <svg className="ml-auto" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </motion.button>
     </motion.div>
   );
 
@@ -313,6 +335,131 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     </motion.div>
   );
 
+  const hudElements: { key: keyof HUDPositions; label: string; color: string }[] = [
+    { key: 'levelCircle', label: 'Level', color: 'from-amber-400 to-yellow-500' },
+    { key: 'coinsBar', label: 'Coins', color: 'from-yellow-400 to-amber-600' },
+    { key: 'gemsBar', label: 'Gems', color: 'from-emerald-400 to-green-600' },
+  ];
+
+  const renderAdminView = () => (
+    <motion.div
+      key="admin"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-3"
+    >
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setCurrentView('main')}
+        className="flex items-center gap-2 text-gray-600 mb-4"
+      >
+        <BackArrowIcon size={32} />
+        <span className="font-medium">{t('common.back')}</span>
+      </motion.button>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-800">HUD Positions</h3>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={resetHUDPositions}
+          className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium"
+        >
+          <RotateCcw size={16} />
+          Reset All
+        </motion.button>
+      </div>
+
+      <p className="text-gray-500 text-sm mb-4">
+        Adjust the position and appearance of your game HUD elements
+      </p>
+
+      {hudElements.map(({ key, label, color }) => (
+        <div key={key} className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+          <div className={`flex items-center gap-3 mb-3 px-3 py-2 rounded-xl bg-gradient-to-r ${color}`}>
+            <span className="font-bold text-white text-sm">{label}</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">X Position</label>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                value={hudPositions[key].x}
+                onChange={(e) => setHUDPosition(key, { x: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
+              />
+              <span className="text-xs text-gray-600">{hudPositions[key].x}px</span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Y Position</label>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                value={hudPositions[key].y}
+                onChange={(e) => setHUDPosition(key, { y: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
+              />
+              <span className="text-xs text-gray-600">{hudPositions[key].y}px</span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Text X Offset</label>
+              <input
+                type="range"
+                min="-30"
+                max="30"
+                value={hudPositions[key].textOffsetX}
+                onChange={(e) => setHUDPosition(key, { textOffsetX: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-purple-500"
+              />
+              <span className="text-xs text-gray-600">{hudPositions[key].textOffsetX}px</span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Text Y Offset</label>
+              <input
+                type="range"
+                min="-30"
+                max="30"
+                value={hudPositions[key].textOffsetY}
+                onChange={(e) => setHUDPosition(key, { textOffsetY: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-purple-500"
+              />
+              <span className="text-xs text-gray-600">{hudPositions[key].textOffsetY}px</span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Scale</label>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value={hudPositions[key].scale * 100}
+                onChange={(e) => setHUDPosition(key, { scale: parseInt(e.target.value) / 100 })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-green-500"
+              />
+              <span className="text-xs text-gray-600">{Math.round(hudPositions[key].scale * 100)}%</span>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Font Size</label>
+              <input
+                type="range"
+                min="8"
+                max="28"
+                value={hudPositions[key].fontSize}
+                onChange={(e) => setHUDPosition(key, { fontSize: parseInt(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-500"
+              />
+              <span className="text-xs text-gray-600">{hudPositions[key].fontSize}px</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </motion.div>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -346,6 +493,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             {currentView === 'main' && renderMainView()}
             {currentView === 'language' && renderLanguageView()}
             {currentView === 'account' && renderAccountView()}
+            {currentView === 'admin' && renderAdminView()}
           </AnimatePresence>
         </div>
       </motion.div>

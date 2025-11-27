@@ -23,11 +23,11 @@ export interface HUDPositions {
   gemsBar: HUDElementPosition;
 }
 
-const DEFAULT_HUD_POSITIONS: HUDPositions = {
+const getDefaultHUDPositions = (): HUDPositions => ({
   levelCircle: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 22 },
   coinsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
   gemsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
-};
+});
 
 interface SettingsState {
   language: Language;
@@ -72,7 +72,7 @@ export const useSettingsStore = create<SettingsState>()(
         { type: 'email', connected: false },
       ],
       appVersion: APP_VERSION,
-      hudPositions: DEFAULT_HUD_POSITIONS,
+      hudPositions: getDefaultHUDPositions(),
 
       setLanguage: (lang) => set({ language: lang }),
       
@@ -129,7 +129,7 @@ export const useSettingsStore = create<SettingsState>()(
         },
       })),
 
-      resetHUDPositions: () => set({ hudPositions: DEFAULT_HUD_POSITIONS }),
+      resetHUDPositions: () => set({ hudPositions: getDefaultHUDPositions() }),
     }),
     {
       name: STORAGE_KEY,

@@ -191,3 +191,17 @@ export const FogCloudIcon: React.FC<IconProps> = ({ size = 24, className = '', c
     <ellipse cx="30" cy="34" rx="10" ry="6" fill={color} opacity="0.5" />
   </svg>
 );
+
+export const AdminLayoutIcon: React.FC<IconProps> = ({ size = 24, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <rect x="4" y="4" width="16" height="16" rx="3" fill={color} opacity="0.8" />
+    <rect x="24" y="4" width="20" height="10" rx="3" fill={color} opacity="0.6" />
+    <rect x="24" y="18" width="20" height="6" rx="2" fill={color} opacity="0.4" />
+    <rect x="4" y="24" width="16" height="20" rx="3" fill={color} opacity="0.5" />
+    <rect x="24" y="28" width="20" height="16" rx="3" fill={color} opacity="0.7" />
+    <circle cx="12" cy="12" r="3" fill="#fff" />
+    <path d="M8 10h8M8 14h6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+    <circle cx="40" cy="40" r="4" fill="#4ade80" />
+    <path d="M38 38l4 4M42 38l-4 4" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
