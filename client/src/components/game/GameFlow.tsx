@@ -5,6 +5,7 @@ import LoadingScreen from './LoadingScreen';
 import IntroDialogueScreen from './IntroDialogueScreen';
 import WorldMapScreen from './WorldMapScreen';
 import SettingsModal from './SettingsModal';
+import GardenHUD from './GardenHUD';
 import { SettingsFlowerIcon, BackArrowIcon } from '../icons/GardenIcons';
 
 type GamePhase = 'loading' | 'intro' | 'map' | 'playing';
@@ -19,6 +20,10 @@ export default function GameFlow() {
   const [phase, setPhase] = useState<GamePhase>('loading');
   const [currentGarden, setCurrentGarden] = useState('main');
   const [showSettings, setShowSettings] = useState(false);
+  
+  const [level] = useState(1);
+  const [coins] = useState(800);
+  const [gems] = useState(50);
 
   const handleLoadComplete = () => {
     if (hasSeenIntro) {
@@ -121,26 +126,31 @@ export default function GameFlow() {
               <div className="absolute inset-0 bg-black/10" />
             </motion.div>
 
-            <div className="relative h-full flex flex-col">
-              <div className="absolute top-4 left-4 z-40">
+            <div className="relative h-full">
+              <GardenHUD level={level} coins={coins} gems={gems} />
+
+              <div className="absolute top-3 right-3 flex gap-2 z-40">
                 <motion.button
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={handleBackToMap}
-                  className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center shadow-xl border-2 border-slate-500"
+                  className="w-11 h-11 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center shadow-xl border-2 border-slate-500"
                 >
-                  <BackArrowIcon size={24} color="#fff" />
+                  <BackArrowIcon size={22} color="#fff" />
                 </motion.button>
-              </div>
-
-              <div className="absolute top-4 right-4 z-40">
                 <motion.button
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
                   whileHover={{ scale: 1.1, rotate: 15 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowSettings(true)}
-                  className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl border-2 border-amber-300"
+                  className="w-11 h-11 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl border-2 border-amber-300"
                 >
-                  <SettingsFlowerIcon size={28} color="#fff" />
+                  <SettingsFlowerIcon size={24} color="#fff" />
                 </motion.button>
               </div>
             </div>
