@@ -4,14 +4,10 @@ import {
   BackArrowIcon, 
   ShopBagIcon, 
   InventoryChestIcon, 
-  TaskScrollIcon,
-  SellCoinIcon,
-  EnergyBoltIcon,
-  GemIcon
+  TaskScrollIcon
 } from '../icons/GardenIcons';
 import ItemSprite from '../ItemSprite';
 import PlantingModal from '../PlantingModal';
-import TutorialOverlay from '../TutorialOverlay';
 import ShopModal from './ShopModal';
 import InventoryModal from './InventoryModal';
 import TasksModal from './TasksModal';
@@ -267,22 +263,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/30 to-emerald-800/50" />
       
       <div className="absolute inset-0 flex flex-col">
-        <div className="bg-gradient-to-b from-emerald-800/90 to-emerald-700/80 p-3 shadow-lg border-b-4 border-emerald-900/50">
-          <div className="flex items-center justify-center gap-2 md:gap-4">
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-yellow-600">
-              <SellCoinIcon size={20} />
-              <span className="font-bold text-yellow-900 text-sm md:text-base">{resources.coins}</span>
-            </div>
-            <div className="bg-gradient-to-r from-blue-400 to-blue-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-blue-600">
-              <EnergyBoltIcon size={20} />
-              <span className="font-bold text-white text-sm md:text-base">{resources.energy}/{resources.maxEnergy}</span>
-            </div>
-            <div className="bg-gradient-to-r from-purple-400 to-purple-500 px-3 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1 md:gap-2 border-2 border-purple-600">
-              <GemIcon size={20} />
-              <span className="font-bold text-white text-sm md:text-base">{resources.gems}</span>
-            </div>
-          </div>
-        </div>
 
         <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-auto relative">
           {selectedItem && (
@@ -414,8 +394,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
           </div>
         </div>
       </div>
-      
-      <TutorialOverlay />
       
       {plantingItem && (
         <PlantingModal
