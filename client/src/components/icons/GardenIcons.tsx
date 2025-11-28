@@ -322,3 +322,183 @@ export const EnergyBoltIcon: React.FC<IconProps> = ({ size = 24, className = '',
     <path d="M26 10l-8 12h8l-2 10 8-12h-8l2-10z" fill="#60a5fa" />
   </svg>
 );
+
+export const CherryBlossomIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <ellipse cx="24" cy="12" rx="6" ry="8" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1.5" />
+    <ellipse cx="36" cy="20" rx="6" ry="8" transform="rotate(72 36 20)" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1.5" />
+    <ellipse cx="32" cy="34" rx="6" ry="8" transform="rotate(144 32 34)" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1.5" />
+    <ellipse cx="16" cy="34" rx="6" ry="8" transform="rotate(-144 16 34)" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1.5" />
+    <ellipse cx="12" cy="20" rx="6" ry="8" transform="rotate(-72 12 20)" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1.5" />
+    <circle cx="24" cy="24" r="5" fill="#fbbf24" />
+    <circle cx="24" cy="24" r="2" fill="#f59e0b" />
+  </svg>
+);
+
+export const TulipIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <path d="M24 44V24" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
+    <path d="M18 32c-4-2-6 0-8 2" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" fill="none" />
+    <ellipse cx="24" cy="18" rx="8" ry="14" fill="#ef4444" />
+    <ellipse cx="18" cy="16" rx="4" ry="10" fill="#dc2626" />
+    <ellipse cx="30" cy="16" rx="4" ry="10" fill="#dc2626" />
+    <ellipse cx="24" cy="14" rx="3" ry="6" fill="#fca5a5" />
+  </svg>
+);
+
+export const SunflowerIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <path d="M24 44V28" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+    <path d="M18 36c-4-2-6 0-8 2" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" fill="none" />
+    {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
+      <ellipse 
+        key={i}
+        cx="24" 
+        cy="8" 
+        rx="4" 
+        ry="8" 
+        fill="#fbbf24" 
+        transform={`rotate(${angle} 24 18)`}
+      />
+    ))}
+    <circle cx="24" cy="18" r="8" fill="#92400e" />
+    <circle cx="22" cy="16" r="1.5" fill="#78350f" />
+    <circle cx="26" cy="16" r="1.5" fill="#78350f" />
+    <circle cx="24" cy="20" r="1.5" fill="#78350f" />
+  </svg>
+);
+
+export const RoseIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <path d="M24 44V26" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
+    <path d="M28 34c4-2 6 0 8 2" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" fill="none" />
+    <circle cx="24" cy="18" r="12" fill="#f43f5e" />
+    <path d="M24 10c-4 4-6 8-4 12s6 4 8 0-2-8-4-12z" fill="#fb7185" />
+    <path d="M20 14c2 3 4 6 2 8s-4 1-4-2 0-5 2-6z" fill="#fda4af" />
+    <path d="M28 14c-2 3-4 6-2 8s4 1 4-2 0-5-2-6z" fill="#fda4af" />
+    <circle cx="24" cy="18" r="4" fill="#be123c" />
+  </svg>
+);
+
+export const GardenHomeIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <path d="M6 22L24 6l18 16" stroke="#8b5a2b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <rect x="10" y="22" width="28" height="22" fill="#fef3c7" stroke="#d97706" strokeWidth="2" />
+    <rect x="18" y="30" width="12" height="14" fill="#92400e" stroke="#78350f" strokeWidth="1" />
+    <circle cx="27" cy="38" r="1.5" fill="#fbbf24" />
+    <rect x="14" y="26" width="6" height="6" fill="#bae6fd" stroke="#0284c7" strokeWidth="1" />
+    <rect x="28" y="26" width="6" height="6" fill="#bae6fd" stroke="#0284c7" strokeWidth="1" />
+    <path d="M24 6l-6 8h12l-6-8z" fill="#ef4444" stroke="#dc2626" strokeWidth="1" />
+    <circle cx="8" cy="38" r="4" fill="#4ade80" />
+    <circle cx="40" cy="40" r="3" fill="#f472b6" />
+  </svg>
+);
+
+export const ShopStoreIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <rect x="6" y="18" width="36" height="26" rx="2" fill="#fef3c7" stroke="#d97706" strokeWidth="2" />
+    <path d="M2 18l6-12h32l6 12H2z" fill="#fb923c" stroke="#ea580c" strokeWidth="2" />
+    <path d="M14 18v-4a4 4 0 018 0v4" fill="none" stroke="#ea580c" strokeWidth="2" />
+    <path d="M26 18v-4a4 4 0 018 0v4" fill="none" stroke="#ea580c" strokeWidth="2" />
+    <rect x="18" y="28" width="12" height="16" fill="#92400e" stroke="#78350f" strokeWidth="1" />
+    <circle cx="27" cy="36" r="1.5" fill="#fbbf24" />
+    <circle cx="10" cy="26" r="3" fill="#f472b6" />
+    <circle cx="38" cy="26" r="3" fill="#4ade80" />
+    <circle cx="10" cy="38" r="2" fill="#fbbf24" />
+    <circle cx="38" cy="38" r="2" fill="#fbbf24" />
+  </svg>
+);
+
+export const StorageBoxIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <rect x="6" y="16" width="36" height="28" rx="3" fill="#d4a574" stroke="#8b5a2b" strokeWidth="2" />
+    <rect x="6" y="16" width="36" height="10" fill="#c09660" stroke="#8b5a2b" strokeWidth="2" />
+    <rect x="19" y="19" width="10" height="6" rx="1" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+    <circle cx="24" cy="22" r="2" fill="#8b5a2b" />
+    <path d="M12 30h10M26 30h10" stroke="#a07553" strokeWidth="2" strokeLinecap="round" />
+    <path d="M12 36h10M26 36h10" stroke="#a07553" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="10" cy="40" r="3" fill="#4ade80" />
+    <circle cx="38" cy="40" r="3" fill="#f472b6" />
+  </svg>
+);
+
+export const TaskListIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <rect x="8" y="6" width="32" height="38" rx="3" fill="#fef9c3" stroke="#eab308" strokeWidth="2" />
+    <path d="M18 6V4a2 2 0 014 0v2M26 6V4a2 2 0 014 0v2" stroke="#d97706" strokeWidth="2" />
+    <circle cx="14" cy="16" r="2" fill="#22c55e" />
+    <path d="M12 16l2 2 4-4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M22 16h12" stroke="#a3a3a3" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="14" cy="26" r="2" fill="#22c55e" />
+    <path d="M12 26l2 2 4-4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M22 26h12" stroke="#a3a3a3" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="14" cy="36" r="2" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1" />
+    <path d="M22 36h12" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+export const SproutIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <ellipse cx="24" cy="42" rx="10" ry="4" fill="#92400e" />
+    <path d="M24 42V28" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" />
+    <path d="M24 28c-6-2-10-6-8-12 6 2 10 6 8 12z" fill="#4ade80" stroke="#22c55e" strokeWidth="2" />
+    <path d="M24 28c6-2 10-6 8-12-6 2-10 6-8 12z" fill="#86efac" stroke="#22c55e" strokeWidth="2" />
+    <path d="M18 22c0-2 2-4 6-4" stroke="#22c55e" strokeWidth="1.5" fill="none" />
+    <path d="M30 22c0-2-2-4-6-4" stroke="#22c55e" strokeWidth="1.5" fill="none" />
+  </svg>
+);
+
+export const WateringCanIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <ellipse cx="20" cy="36" rx="14" ry="8" fill="#64748b" stroke="#475569" strokeWidth="2" />
+    <path d="M10 30a6 6 0 0112 0v6H10v-6z" fill="#94a3b8" stroke="#64748b" strokeWidth="2" />
+    <path d="M22 30l12-10h6v4l-12 14" fill="#94a3b8" stroke="#64748b" strokeWidth="2" />
+    <path d="M34 22l6 1m-4 3l4 2m-2 4l4 2" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+    <path d="M8 24a10 10 0 0120 0" stroke="#64748b" strokeWidth="2" fill="none" />
+  </svg>
+);
+
+export const CoinStackIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <ellipse cx="24" cy="36" rx="14" ry="6" fill="#d97706" />
+    <ellipse cx="24" cy="34" rx="14" ry="6" fill="#fbbf24" />
+    <ellipse cx="24" cy="28" rx="14" ry="6" fill="#d97706" />
+    <ellipse cx="24" cy="26" rx="14" ry="6" fill="#fbbf24" />
+    <ellipse cx="24" cy="20" rx="14" ry="6" fill="#d97706" />
+    <ellipse cx="24" cy="18" rx="14" ry="6" fill="#fbbf24" />
+    <ellipse cx="24" cy="12" rx="14" ry="6" fill="#d97706" />
+    <ellipse cx="24" cy="10" rx="14" ry="6" fill="#fde047" />
+    <path d="M24 6v4m-4 1v3m8-3v3" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+export const GardenerIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <circle cx="24" cy="16" r="10" fill="#fef3c7" stroke="#92400e" strokeWidth="2" />
+    <path d="M24 6c-4 0-6 3-6 6 0 3 2 4 6 4s6-1 6-4c0-3-2-6-6-6z" fill="#22c55e" stroke="#166534" strokeWidth="2" />
+    <circle cx="21" cy="14" r="2" fill="#1f2937" />
+    <circle cx="27" cy="14" r="2" fill="#1f2937" />
+    <path d="M22 19c1 1 3 1 4 0" stroke="#92400e" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M14 28c-4 2-6 6-6 10v6h32v-6c0-4-2-8-6-10" fill="#4ade80" stroke="#22c55e" strokeWidth="2" />
+    <path d="M18 32h12" stroke="#166534" strokeWidth="2" strokeLinecap="round" />
+    <path d="M20 36h8" stroke="#166534" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="36" cy="8" r="4" fill="#f472b6" />
+    <path d="M36 6l2-2M36 6l-2-2" stroke="#f472b6" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+export const GardenGateEnterIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
+    <path d="M8 44V16c0-4 2-8 6-10l10-4 10 4c4 2 6 6 6 10v28" stroke="#92400e" strokeWidth="3" fill="none" />
+    <path d="M12 44V20a8 8 0 018-8h8a8 8 0 018 8v24" fill="#fef3c7" stroke="#92400e" strokeWidth="2" />
+    <rect x="16" y="24" width="16" height="20" fill="#22c55e" stroke="#166534" strokeWidth="2" rx="2" />
+    <circle cx="28" cy="34" r="2" fill="#166534" />
+    <path d="M24 8v4" stroke="#92400e" strokeWidth="2" strokeLinecap="round" />
+    <path d="M20 16l4-4 4 4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 44h40" stroke="#92400e" strokeWidth="3" strokeLinecap="round" />
+    <circle cx="10" cy="40" r="3" fill="#f472b6" />
+    <circle cx="38" cy="40" r="3" fill="#f472b6" />
+    <path d="M8 38c2-1 4 1 6 0" stroke="#fb7185" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M34 38c2-1 4 1 6 0" stroke="#fb7185" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);

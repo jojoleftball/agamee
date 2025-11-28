@@ -7,6 +7,7 @@ import WorldMapScreen from './WorldMapScreen';
 import SettingsModal from './SettingsModal';
 import GardenHUD from './GardenHUD';
 import MergeBoardScreen from '../screens/MergeBoardScreen';
+import AudioInitializer from '../AudioInitializer';
 import { SettingsFlowerIcon, BackArrowIcon, MergeBoardIcon } from '../icons/GardenIcons';
 
 type GamePhase = 'loading' | 'intro' | 'map' | 'playing' | 'merge_board';
@@ -58,6 +59,7 @@ export default function GameFlow() {
   const backgroundImage = BACKGROUND_MAP[currentGarden] || BACKGROUND_MAP.basic;
 
   return (
+    <AudioInitializer>
     <div 
       className="fixed inset-0 w-full h-full overflow-hidden touch-none"
       style={{
@@ -198,5 +200,6 @@ export default function GameFlow() {
         )}
       </AnimatePresence>
     </div>
+    </AudioInitializer>
   );
 }

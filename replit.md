@@ -4,7 +4,15 @@
 
 Merge Garden is a mobile-optimized 3D merge game where players restore a wrecked garden. Players merge items (flowers, trees, garden tools, decorations) to create higher-tier items while expanding their garden. Built with React, React Three Fiber, and Express.
 
-**Recent Changes (November 27, 2025)**
+**Recent Changes (November 28, 2025)**
+- Complete emoji-to-icon replacement across all screens (MergeBoardScreen, ShopModal, InventoryModal, TasksModal)
+- Implemented audio system with background music and sound effects for merging/clicking
+- AudioInitializer component handles music on first user interaction with mute toggle button
+- Added Replit Auth integration with LoginButton component and useReplitAuth hook
+- Login button added to WorldMapScreen header for user authentication
+- Sound effects play on merge success and item interactions
+
+**Previous Changes (November 27, 2025)**
 - New garden-themed merge board with proper layout and navigation
 - Bottom navigation bar with Back, Shop, Inventory (10 slots), and Tasks buttons
 - Custom garden-themed SVG icons (MergeBoardIcon, ShopBagIcon, InventoryChestIcon, TaskScrollIcon, etc.)
@@ -146,9 +154,18 @@ Zod validation schemas generated from Drizzle tables.
 - Replit-specific runtime error modal plugin
 
 **Authentication**
-- No authentication system currently implemented
-- User schema exists but not connected to any auth flow
+- Replit Auth (legacy Repl Auth 2.0) implemented for user login
+- `useReplitAuth` hook provides user state, login/logout functions
+- `LoginButton` component displays in WorldMapScreen header
+- Fetches user info from `/__replauthuser` endpoint
 - Session management prepared (connect-pg-simple available) but not configured
+
+**Audio System**
+- `SoundManager` class in `client/src/lib/sounds.ts` handles all audio
+- Background music plays on first user interaction (auto-play policy)
+- Sound effects: merge, click, success (stored in `client/public/sounds/`)
+- `AudioInitializer` component wraps game flow with mute toggle button
+- Mute/unmute control in bottom-right corner of screen
 
 **Asset Management**
 - Custom sprite images stored in `client/public/sprites/`

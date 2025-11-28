@@ -1,10 +1,16 @@
 import { useState, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
+import { soundManager } from '../../lib/sounds';
 import { 
-  BackArrowIcon, 
-  ShopBagIcon, 
-  InventoryChestIcon, 
-  TaskScrollIcon
+  GardenHomeIcon, 
+  ShopStoreIcon, 
+  StorageBoxIcon, 
+  TaskListIcon,
+  CherryBlossomIcon,
+  TulipIcon,
+  SunflowerIcon,
+  RoseIcon,
+  SproutIcon
 } from '../icons/GardenIcons';
 import ItemSprite from '../ItemSprite';
 import PlantingModal from '../PlantingModal';
@@ -108,6 +114,8 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
       console.log('Adding new merged item:', newItem);
       addBoardItem(newItem);
       
+      soundManager.playMerge();
+      
       const coinReward = 10 * draggedItem.rank;
       const xpReward = 5 * draggedItem.rank;
       addCoins(coinReward);
@@ -123,6 +131,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     if (item.category === 'generator') return;
     
     e.stopPropagation();
+    soundManager.playClick();
     setDraggedItem(item);
     setSelectedItem(null);
     
@@ -274,14 +283,14 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
           
           <div className="bg-gradient-to-b from-green-50/95 via-emerald-50/95 to-green-100/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-4 border-4 border-green-500 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 via-yellow-300 to-pink-400" />
-            <div className="absolute -top-1 left-4 text-lg opacity-60">🌸</div>
-            <div className="absolute -top-1 right-4 text-lg opacity-60">🌷</div>
+            <div className="absolute -top-1 left-4 opacity-60"><CherryBlossomIcon size={20} /></div>
+            <div className="absolute -top-1 right-4 opacity-60"><TulipIcon size={20} /></div>
             
             <div className="flex items-center justify-center mb-2 sm:mb-3">
               <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-green-400">
-                <span className="text-lg">🌻</span>
+                <SunflowerIcon size={20} />
                 <span className="text-white font-bold text-xs sm:text-sm drop-shadow">Garden Merge</span>
-                <span className="text-lg">🌻</span>
+                <SunflowerIcon size={20} />
               </div>
             </div>
 
@@ -345,19 +354,19 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
             </div>
 
             <div className="mt-2 sm:mt-3 text-center text-[10px] sm:text-xs text-green-700 bg-gradient-to-r from-green-100 via-emerald-100 to-green-100 py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-green-300 flex items-center justify-center gap-1 sm:gap-2">
-              <span>🌱</span>
+              <SproutIcon size={16} />
               <span>Drag 3 matching items to merge!</span>
-              <span>🌱</span>
+              <SproutIcon size={16} />
             </div>
           </div>
         </div>
 
         <div className="bg-gradient-to-t from-green-800/95 via-emerald-700/90 to-green-600/80 backdrop-blur-sm p-3 sm:p-4 shadow-lg border-t-4 border-green-900/50 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-1 left-8 text-lg">🌸</div>
-            <div className="absolute top-2 right-16 text-lg">🌷</div>
-            <div className="absolute bottom-1 left-1/4 text-lg">🌻</div>
-            <div className="absolute bottom-2 right-8 text-lg">🌺</div>
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-1 left-8"><CherryBlossomIcon size={20} /></div>
+            <div className="absolute top-2 right-16"><TulipIcon size={20} /></div>
+            <div className="absolute bottom-1 left-1/4"><SunflowerIcon size={18} /></div>
+            <div className="absolute bottom-2 right-8"><RoseIcon size={18} /></div>
           </div>
           
           <div className="flex items-end justify-around max-w-lg mx-auto relative z-10">
@@ -366,7 +375,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
               className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
             >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-xl flex items-center justify-center border-2 border-green-400 shadow-lg">
-                <span className="text-xl sm:text-2xl">🏡</span>
+                <GardenHomeIcon size={28} />
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-white">Garden</span>
             </button>
@@ -377,9 +386,9 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
             >
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-200 via-yellow-200 to-amber-300 rounded-2xl flex items-center justify-center border-4 border-amber-500 shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-amber-400/30 to-transparent" />
-                <span className="text-3xl sm:text-4xl relative z-10">🏪</span>
-                <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-[8px] sm:text-xs font-bold border-2 border-pink-300 animate-pulse">
-                  🌸
+                <ShopStoreIcon size={40} className="relative z-10" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-pink-500 rounded-full flex items-center justify-center border-2 border-pink-300 animate-pulse">
+                  <CherryBlossomIcon size={14} />
                 </div>
               </div>
               <span className="text-xs sm:text-sm font-bold text-white bg-green-600/80 px-2 py-0.5 rounded-full">Shop</span>
@@ -390,7 +399,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
               className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95 relative"
             >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
-                <span className="text-xl sm:text-2xl">📦</span>
+                <StorageBoxIcon size={28} />
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-white">Storage</span>
               {storageItems.length > 0 && (
@@ -405,7 +414,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
               className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
             >
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-yellow-400 shadow-lg">
-                <span className="text-xl sm:text-2xl">📜</span>
+                <TaskListIcon size={28} />
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-white">Tasks</span>
             </button>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { ShopBagIcon, SellCoinIcon, PlantSeedlingIcon, GardenToolIcon } from '../icons/GardenIcons';
+import { ShopStoreIcon, SellCoinIcon, PlantSeedlingIcon, GardenToolIcon, CherryBlossomIcon, TulipIcon, SunflowerIcon, RoseIcon, SproutIcon } from '../icons/GardenIcons';
 import { useGameStore } from '../../store/gameStore';
 
 interface ShopItem {
@@ -113,14 +113,14 @@ export default function ShopModal({ onClose }: ShopModalProps) {
         
         <div className="bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 p-4 sm:p-6 flex items-center justify-between relative overflow-hidden">
           <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-2 left-4 text-2xl">🌸</div>
-            <div className="absolute top-1 right-12 text-xl">🌷</div>
-            <div className="absolute bottom-1 left-16 text-lg">🌻</div>
-            <div className="absolute bottom-2 right-4 text-2xl">🌺</div>
+            <div className="absolute top-2 left-4"><CherryBlossomIcon size={28} /></div>
+            <div className="absolute top-1 right-12"><TulipIcon size={24} /></div>
+            <div className="absolute bottom-1 left-16"><SunflowerIcon size={20} /></div>
+            <div className="absolute bottom-2 right-4"><RoseIcon size={28} /></div>
           </div>
           <div className="flex items-center gap-3 relative z-10">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full flex items-center justify-center border-4 border-amber-400 shadow-lg">
-              <span className="text-2xl sm:text-3xl">🏪</span>
+              <ShopStoreIcon size={36} />
             </div>
             <div>
               <h2 className="text-xl sm:text-3xl font-bold text-white drop-shadow-lg">Garden Shop</h2>
@@ -147,16 +147,14 @@ export default function ShopModal({ onClose }: ShopModalProps) {
                     : 'bg-white border-green-200 hover:border-green-400 hover:shadow-md'
                 }`}
               >
-                <div className="absolute top-1 right-1 text-xs opacity-60">🌿</div>
+                <div className="absolute top-1 right-1 opacity-60"><SproutIcon size={14} /></div>
                 <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-3 bg-gradient-to-br from-green-100 via-emerald-50 to-green-100 rounded-xl sm:rounded-2xl flex items-center justify-center border-2 border-green-300 shadow-inner">
-                  <span className="text-3xl sm:text-4xl">
-                    {item.category === 'plant' ? '🌱' : '🧰'}
-                  </span>
+                  {item.category === 'plant' ? <PlantSeedlingIcon size={40} /> : <GardenToolIcon size={40} />}
                 </div>
                 <div className="text-sm sm:text-base font-bold text-green-800 truncate">{item.name}</div>
                 <div className="text-xs text-green-600 mb-2 line-clamp-1 hidden sm:block">{item.description}</div>
                 <div className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 py-1.5 sm:py-2 rounded-full border border-amber-300">
-                  <span className="text-lg">💰</span>
+                  <SellCoinIcon size={20} />
                   <span className="text-sm sm:text-base font-bold text-amber-700">{item.price}</span>
                 </div>
               </button>
@@ -168,13 +166,11 @@ export default function ShopModal({ onClose }: ShopModalProps) {
           <div className="p-3 sm:p-5 bg-gradient-to-r from-green-100 via-emerald-50 to-green-100 border-t-4 border-green-300">
             <div className="flex items-start gap-3 sm:gap-4">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center border-3 border-green-400 shadow-lg flex-shrink-0">
-                <span className="text-3xl sm:text-4xl">
-                  {selectedItem.category === 'plant' ? '🌱' : '🧰'}
-                </span>
+                {selectedItem.category === 'plant' ? <PlantSeedlingIcon size={48} /> : <GardenToolIcon size={48} />}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-green-800 text-base sm:text-lg flex items-center gap-2">
-                  {selectedItem.name} <span className="text-lg">✨</span>
+                  {selectedItem.name} <CherryBlossomIcon size={18} />
                 </h3>
                 <p className="text-xs sm:text-sm text-green-600">{selectedItem.description}</p>
               </div>
@@ -188,10 +184,11 @@ export default function ShopModal({ onClose }: ShopModalProps) {
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >
-              <span>🌸 Buy for</span>
-              <span className="text-xl">💰</span>
+              <CherryBlossomIcon size={20} />
+              <span>Buy for</span>
+              <SellCoinIcon size={22} />
               <span>{selectedItem.price}</span>
-              <span>🌸</span>
+              <CherryBlossomIcon size={20} />
             </button>
           </div>
         )}

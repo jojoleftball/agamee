@@ -1,8 +1,8 @@
 import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
 import { GARDEN_BIOMES } from '@/lib/mergeData';
-import { Lock, Check } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LockIcon, CheckmarkIcon, CloseFlowerIcon, GardenFlowerIcon, MapPinIcon } from './icons/GardenIcons';
 
 interface GardenWorldMapProps {
   onGardenSelect: (gardenId: string) => void;
@@ -78,20 +78,10 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center font-bold text-xl"
+        className="absolute top-4 right-4 z-10 w-14 h-14 bg-gradient-to-br from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 rounded-full shadow-lg flex items-center justify-center border-4 border-red-300"
       >
-        X
+        <CloseFlowerIcon size={32} color="#fff" />
       </motion.button>
-
-      <motion.div 
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-xl border-4 border-green-600"
-      >
-        <h1 className="text-2xl font-bold text-green-800 drop-shadow-md">Garden World</h1>
-        <p className="text-sm text-green-700">Touch a garden to select it</p>
-      </motion.div>
 
       <div className="relative w-full h-full">
         {gardenPositions.map((pos, index) => {
@@ -139,7 +129,7 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                     transition={{ delay: index * 0.1 + 0.3 }}
                     className="absolute inset-0 flex items-center justify-center rounded-full"
                   >
-                    <Lock className="w-12 h-12 text-white drop-shadow-lg" />
+                    <LockIcon size={48} color="#fff" />
                   </motion.div>
                 )}
                 {isCurrent && isUnlocked && (
@@ -147,9 +137,9 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                     initial={{ scale: 0 }}
                     animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                     transition={{ delay: index * 0.1 + 0.3, rotate: { repeat: Infinity, duration: 2 } }}
-                    className="absolute -top-2 -right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg"
+                    className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center border-2 border-white shadow-lg"
                   >
-                    <Check className="w-6 h-6 text-white" />
+                    <CheckmarkIcon size={24} />
                   </motion.div>
                 )}
                 {isUnlocked && (
@@ -158,9 +148,7 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                     transition={{ duration: 2, repeat: Infinity }}
                     className="absolute inset-0 flex items-center justify-center"
                   >
-                    <div className="w-16 h-16 rounded-full bg-green-400/30 backdrop-blur-sm border-2 border-green-600 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-green-600" />
-                    </div>
+                    <GardenFlowerIcon size={64} />
                   </motion.div>
                 )}
               </motion.button>
@@ -197,50 +185,63 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
               transition={{ type: 'spring', stiffness: 200, damping: 25 }}
               className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4"
             >
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-green-600 p-6">
-                <h2 className="text-2xl font-bold text-green-800 mb-2">
-                  {selectedBiome?.name}
-                </h2>
-                <p className="text-gray-700 mb-4">
+              <div className="bg-gradient-to-b from-green-50 via-emerald-50 to-green-100 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-green-600 p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 via-yellow-300 to-pink-400" />
+                <div className="absolute -top-1 left-4 opacity-60"><GardenFlowerIcon size={24} /></div>
+                <div className="absolute -top-1 right-4 opacity-60"><GardenFlowerIcon size={24} /></div>
+                
+                <div className="flex items-center gap-3 mb-3">
+                  <MapPinIcon size={32} color="#16a34a" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-green-800">
+                    {selectedBiome?.name}
+                  </h2>
+                </div>
+                <p className="text-green-700 mb-4 text-sm sm:text-base">
                   {selectedBiome?.description}
                 </p>
                 
                 {isUnlocked ? (
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={handleEnterGarden}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-lg py-4 rounded-2xl shadow-lg"
+                    className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 hover:from-green-600 hover:via-emerald-600 hover:to-green-700 text-white font-bold text-base sm:text-lg py-3 sm:py-4 rounded-2xl shadow-lg border-2 border-green-400 flex items-center justify-center gap-2"
                   >
-                    Enter Garden
+                    <GardenFlowerIcon size={24} />
+                    <span>Enter Garden</span>
+                    <GardenFlowerIcon size={24} />
                   </motion.button>
                 ) : (
                   <>
                     <motion.div 
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
-                      className="mb-4 p-3 bg-yellow-50 rounded-lg border-2 border-yellow-300"
+                      className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-2 border-amber-300"
                     >
-                      <p className="text-sm font-bold text-yellow-800 mb-1">Requirements:</p>
-                      <p className="text-sm text-yellow-700">
+                      <p className="text-sm font-bold text-amber-800 mb-1 flex items-center gap-2">
+                        <LockIcon size={16} color="#92400e" />
+                        Requirements:
+                      </p>
+                      <p className="text-sm text-amber-700">
                         Level {selectedBiome?.unlockLevel} | {selectedBiome?.unlockCoins} coins
                       </p>
-                      <p className="text-xs text-yellow-600 mt-1">
+                      <p className="text-xs text-amber-600 mt-1">
                         Your level: {level} | Your coins: {coins}
                       </p>
                     </motion.div>
                     <motion.button
-                      whileHover={canUnlock ? { scale: 1.05 } : {}}
-                      whileTap={canUnlock ? { scale: 0.95 } : {}}
+                      whileHover={canUnlock ? { scale: 1.03 } : {}}
+                      whileTap={canUnlock ? { scale: 0.97 } : {}}
                       onClick={handleUnlockGarden}
                       disabled={!canUnlock}
-                      className={`w-full font-bold text-lg py-4 rounded-2xl shadow-lg ${
+                      className={`w-full font-bold text-base sm:text-lg py-3 sm:py-4 rounded-2xl shadow-lg border-2 flex items-center justify-center gap-2 ${
                         canUnlock
-                          ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white'
-                          : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-500 hover:via-yellow-500 hover:to-amber-600 text-amber-900 border-amber-400'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400'
                       }`}
                     >
-                      {canUnlock ? `Unlock for ${selectedBiome?.unlockCoins} coins` : 'Requirements not met'}
+                      <LockIcon size={20} color={canUnlock ? '#78350f' : '#6b7280'} />
+                      <span>{canUnlock ? `Unlock for ${selectedBiome?.unlockCoins} coins` : 'Requirements not met'}</span>
                     </motion.button>
                   </>
                 )}

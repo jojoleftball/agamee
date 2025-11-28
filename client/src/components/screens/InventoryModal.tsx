@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { InventoryChestIcon } from '../icons/GardenIcons';
+import { StorageBoxIcon, SunflowerIcon, SproutIcon, CherryBlossomIcon, TulipIcon } from '../icons/GardenIcons';
 import { useGameStore } from '../../store/gameStore';
 import ItemSprite from '../ItemSprite';
 import type { BoardItem } from '../../types/game';
@@ -59,12 +59,12 @@ export default function InventoryModal({ onClose, onSelectItem }: InventoryModal
         
         <div className="bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 p-3 sm:p-4 flex items-center justify-between relative overflow-hidden">
           <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-1 left-4 text-lg">🌸</div>
-            <div className="absolute top-2 right-12 text-lg">🌷</div>
+            <div className="absolute top-1 left-4"><CherryBlossomIcon size={20} /></div>
+            <div className="absolute top-2 right-12"><TulipIcon size={20} /></div>
           </div>
           <div className="flex items-center gap-3 relative z-10">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
-              <span className="text-xl sm:text-2xl">📦</span>
+              <StorageBoxIcon size={28} />
             </div>
             <div>
               <h2 className="text-lg sm:text-2xl font-bold text-white drop-shadow-lg">Garden Storage</h2>
@@ -98,7 +98,7 @@ export default function InventoryModal({ onClose, onSelectItem }: InventoryModal
                       <ItemSprite item={item} size={48} />
                     </div>
                   ) : (
-                    <div className="text-green-400 text-xl sm:text-2xl">🌱</div>
+                    <div className="text-green-400"><SproutIcon size={24} /></div>
                   )}
                 </button>
               );
@@ -107,9 +107,9 @@ export default function InventoryModal({ onClose, onSelectItem }: InventoryModal
 
           <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gradient-to-r from-green-100 via-emerald-100 to-green-100 rounded-xl border border-green-300">
             <p className="text-xs sm:text-sm text-green-700 text-center flex items-center justify-center gap-2">
-              <span>🌻</span>
+              <SunflowerIcon size={18} />
               <span>Tap an item to move it back to your garden!</span>
-              <span>🌻</span>
+              <SunflowerIcon size={18} />
             </p>
           </div>
         </div>
