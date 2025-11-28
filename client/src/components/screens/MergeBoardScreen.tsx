@@ -272,24 +272,29 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
             />
           )}
           
-          <div className="bg-gradient-to-b from-emerald-100/95 to-green-100/95 backdrop-blur-sm rounded-3xl shadow-2xl p-3 md:p-5 border-4 border-emerald-600">
-            <div className="flex items-center justify-center mb-3">
-              <div className="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-full">
-                <div className="w-3 h-3 bg-pink-400 rounded-full" />
-                <span className="text-white font-bold text-sm">Merge Board</span>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full" />
+          <div className="bg-gradient-to-b from-green-50/95 via-emerald-50/95 to-green-100/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-4 border-4 border-green-500 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 via-yellow-300 to-pink-400" />
+            <div className="absolute -top-1 left-4 text-lg opacity-60">🌸</div>
+            <div className="absolute -top-1 right-4 text-lg opacity-60">🌷</div>
+            
+            <div className="flex items-center justify-center mb-2 sm:mb-3">
+              <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-green-400">
+                <span className="text-lg">🌻</span>
+                <span className="text-white font-bold text-xs sm:text-sm drop-shadow">Garden Merge</span>
+                <span className="text-lg">🌻</span>
               </div>
             </div>
 
             <div
               ref={boardRef}
-              className="relative rounded-2xl p-2 select-none"
+              className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-2 select-none"
               style={{
                 width: GRID_COLS * (CELL_SIZE + GAP) + GAP,
                 height: GRID_ROWS * (CELL_SIZE + GAP) + GAP,
                 touchAction: 'none',
-                background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%)',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%)',
+                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.1)',
+                border: '3px solid #86efac',
               }}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -298,13 +303,13 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
                 Array.from({ length: GRID_COLS }).map((_, colIndex) => (
                   <div
                     key={`cell-${rowIndex}-${colIndex}`}
-                    className="absolute bg-white/60 border-2 border-emerald-300/50 rounded-xl"
+                    className="absolute bg-white/70 border-2 border-green-300/60 rounded-lg sm:rounded-xl"
                     style={{
                       left: colIndex * (CELL_SIZE + GAP) + GAP,
                       top: rowIndex * (CELL_SIZE + GAP) + GAP,
                       width: CELL_SIZE,
                       height: CELL_SIZE,
-                      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
+                      boxShadow: 'inset 0 1px 3px rgba(34,197,94,0.1)',
                     }}
                   />
                 ))
@@ -330,7 +335,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
                   >
                     <ItemSprite item={item} size={CELL_SIZE} />
                     {isGenerator && item.charges !== undefined && (
-                      <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full border border-amber-600">
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-900 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full border-2 border-amber-500 shadow">
                         {item.charges}
                       </div>
                     )}
@@ -339,44 +344,57 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
               })}
             </div>
 
-            <div className="mt-3 text-center text-xs text-emerald-700 bg-emerald-200/50 py-2 px-4 rounded-full">
-              Drag 3 matching items together to merge! Tap items for details.
+            <div className="mt-2 sm:mt-3 text-center text-[10px] sm:text-xs text-green-700 bg-gradient-to-r from-green-100 via-emerald-100 to-green-100 py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-green-300 flex items-center justify-center gap-1 sm:gap-2">
+              <span>🌱</span>
+              <span>Drag 3 matching items to merge!</span>
+              <span>🌱</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-t from-emerald-800/95 to-emerald-700/90 backdrop-blur-sm p-4 shadow-lg border-t-4 border-emerald-900/50">
-          <div className="flex items-center justify-around max-w-lg mx-auto">
+        <div className="bg-gradient-to-t from-green-800/95 via-emerald-700/90 to-green-600/80 backdrop-blur-sm p-3 sm:p-4 shadow-lg border-t-4 border-green-900/50 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-1 left-8 text-lg">🌸</div>
+            <div className="absolute top-2 right-16 text-lg">🌷</div>
+            <div className="absolute bottom-1 left-1/4 text-lg">🌻</div>
+            <div className="absolute bottom-2 right-8 text-lg">🌺</div>
+          </div>
+          
+          <div className="flex items-end justify-around max-w-lg mx-auto relative z-10">
             <button 
               onClick={handleBackToGarden}
-              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center border-2 border-sky-400 shadow-lg">
-                <BackArrowIcon size={28} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-xl flex items-center justify-center border-2 border-green-400 shadow-lg">
+                <span className="text-xl sm:text-2xl">🏡</span>
               </div>
-              <span className="text-xs font-medium text-white">Back</span>
+              <span className="text-[10px] sm:text-xs font-medium text-white">Garden</span>
             </button>
 
             <button 
               onClick={() => setShowShop(true)}
-              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+              className="flex flex-col items-center gap-1 px-3 sm:px-4 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95 -mt-4 sm:-mt-6"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-amber-400 shadow-lg">
-                <ShopBagIcon size={28} />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-200 via-yellow-200 to-amber-300 rounded-2xl flex items-center justify-center border-4 border-amber-500 shadow-2xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/30 to-transparent" />
+                <span className="text-3xl sm:text-4xl relative z-10">🏪</span>
+                <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-[8px] sm:text-xs font-bold border-2 border-pink-300 animate-pulse">
+                  🌸
+                </div>
               </div>
-              <span className="text-xs font-medium text-white">Shop</span>
+              <span className="text-xs sm:text-sm font-bold text-white bg-green-600/80 px-2 py-0.5 rounded-full">Shop</span>
             </button>
 
             <button 
               onClick={() => setShowInventory(true)}
-              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95 relative"
+              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95 relative"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
-                <InventoryChestIcon size={28} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
+                <span className="text-xl sm:text-2xl">📦</span>
               </div>
-              <span className="text-xs font-medium text-white">Inventory</span>
+              <span className="text-[10px] sm:text-xs font-medium text-white">Storage</span>
               {storageItems.length > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-red-600">
+                <div className="absolute -top-1 right-0 bg-pink-500 text-white text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-pink-300">
                   {storageItems.length}
                 </div>
               )}
@@ -384,12 +402,12 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
 
             <button 
               onClick={() => setShowTasks(true)}
-              className="flex flex-col items-center gap-1 px-4 py-2 hover:bg-emerald-600/50 rounded-xl transition-all active:scale-95"
+              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center border-2 border-yellow-400 shadow-lg">
-                <TaskScrollIcon size={28} />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-yellow-400 shadow-lg">
+                <span className="text-xl sm:text-2xl">📜</span>
               </div>
-              <span className="text-xs font-medium text-white">Tasks</span>
+              <span className="text-[10px] sm:text-xs font-medium text-white">Tasks</span>
             </button>
           </div>
         </div>
