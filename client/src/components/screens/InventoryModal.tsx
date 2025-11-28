@@ -53,53 +53,63 @@ export default function InventoryModal({ onClose, onSelectItem }: InventoryModal
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-b from-amber-100 to-orange-100 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-4 border-amber-700">
-        <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <InventoryChestIcon size={32} />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-gradient-to-b from-green-50 via-emerald-50 to-green-100 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-4 border-green-600 relative">
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 via-yellow-300 to-pink-400" />
+        
+        <div className="bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 p-3 sm:p-4 flex items-center justify-between relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-1 left-4 text-lg">🌸</div>
+            <div className="absolute top-2 right-12 text-lg">🌷</div>
+          </div>
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
+              <span className="text-xl sm:text-2xl">📦</span>
+            </div>
             <div>
-              <h2 className="text-2xl font-bold text-white drop-shadow">Inventory</h2>
-              <p className="text-amber-200 text-sm">{storageItems.length}/{maxStorage} items</p>
+              <h2 className="text-lg sm:text-2xl font-bold text-white drop-shadow-lg">Garden Storage</h2>
+              <p className="text-green-100 text-xs sm:text-sm">{storageItems.length}/{maxStorage} items stored</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all hover:rotate-90 duration-300 relative z-10"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </button>
         </div>
 
-        <div className="p-4">
-          <div className="grid grid-cols-5 gap-2">
+        <div className="p-3 sm:p-4">
+          <div className="grid grid-cols-5 gap-2 sm:gap-3">
             {Array.from({ length: INVENTORY_SLOTS }).map((_, index) => {
               const item = storageItems[index];
               return (
                 <button
                   key={index}
                   onClick={() => item && handleItemClick(item)}
-                  className={`aspect-square rounded-xl border-2 transition-all flex items-center justify-center ${
+                  className={`aspect-square rounded-xl sm:rounded-2xl border-2 transition-all flex items-center justify-center ${
                     item
-                      ? 'bg-gradient-to-br from-green-100 to-green-200 border-green-400 hover:scale-105 hover:border-green-500 cursor-pointer'
-                      : 'bg-amber-200/50 border-amber-300 border-dashed'
+                      ? 'bg-gradient-to-br from-green-100 via-emerald-50 to-green-100 border-green-400 hover:scale-105 hover:border-green-500 cursor-pointer shadow-md'
+                      : 'bg-green-100/50 border-green-300 border-dashed'
                   }`}
                 >
                   {item ? (
-                    <div className="w-full h-full p-1">
+                    <div className="w-full h-full p-0.5 sm:p-1">
                       <ItemSprite item={item} size={48} />
                     </div>
                   ) : (
-                    <div className="text-amber-400 text-2xl">+</div>
+                    <div className="text-green-400 text-xl sm:text-2xl">🌱</div>
                   )}
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-4 p-3 bg-amber-200/50 rounded-xl">
-            <p className="text-sm text-amber-800 text-center">
-              Tap an item to move it back to the merge board
+          <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gradient-to-r from-green-100 via-emerald-100 to-green-100 rounded-xl border border-green-300">
+            <p className="text-xs sm:text-sm text-green-700 text-center flex items-center justify-center gap-2">
+              <span>🌻</span>
+              <span>Tap an item to move it back to your garden!</span>
+              <span>🌻</span>
             </p>
           </div>
         </div>
