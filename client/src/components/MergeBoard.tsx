@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
 import { MERGE_ITEMS } from '@/lib/mergeData';
 import MergeBoardItem from './MergeBoardItem';
@@ -18,8 +18,42 @@ export default function MergeBoard() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [mergeableItems, setMergeableItems] = useState<Set<string>>(new Set());
+  const [cellSize, setCellSize] = useState(70);
   const boardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
+  const GAP = 4;
+
+  const calculateCellSize = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    const containerWidth = containerRef.current.clientWidth;
+    const containerHeight = containerRef.current.clientHeight;
+    
+    const padding = 32;
+    const availableWidth = containerWidth - padding;
+    const availableHeight = containerHeight - padding;
+    
+    const maxCellWidth = Math.floor((availableWidth - (gridSize.cols - 1) * GAP) / gridSize.cols);
+    const maxCellHeight = Math.floor((availableHeight - (gridSize.rows - 1) * GAP) / gridSize.rows);
+    
+    const newCellSize = Math.min(maxCellWidth, maxCellHeight, 90);
+    const minCellSize = 40;
+    
+    setCellSize(Math.max(minCellSize, newCellSize));
+  }, [gridSize.cols, gridSize.rows]);
+
+  useEffect(() => {
+    calculateCellSize();
+    
+    const handleResize = () => {
+      calculateCellSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [calculateCellSize]);
+
   useEffect(() => {
     if (!draggedId) {
       setMergeableItems(new Set());
@@ -38,13 +72,10 @@ export default function MergeBoard() {
     setMergeableItems(new Set(matching.map(i => i.id)));
   }, [draggedId, items]);
 
-  const CELL_SIZE = 70;
-  const GAP = 4;
-
   const getCellPosition = (x: number, y: number) => {
     return {
-      left: x * (CELL_SIZE + GAP),
-      top: y * (CELL_SIZE + GAP)
+      left: x * (cellSize + GAP),
+      top: y * (cellSize + GAP)
     };
   };
 
@@ -55,8 +86,8 @@ export default function MergeBoard() {
     const relX = screenX - rect.left;
     const relY = screenY - rect.top;
     
-    const gridX = Math.floor(relX / (CELL_SIZE + GAP));
-    const gridY = Math.floor(relY / (CELL_SIZE + GAP));
+    const gridX = Math.floor(relX / (cellSize + GAP));
+    const gridY = Math.floor(relY / (cellSize + GAP));
     
     if (gridX >= 0 && gridX < gridSize.cols && gridY >= 0 && gridY < gridSize.rows) {
       return { x: gridX, y: gridY };
@@ -112,8 +143,8 @@ export default function MergeBoard() {
           const animId = `anim_${Date.now()}_${Math.random()}`;
           setAnimations(prev => [...prev, {
             id: animId,
-            x: pos.left + CELL_SIZE / 2,
-            y: pos.top + CELL_SIZE / 2
+            x: pos.left + cellSize / 2,
+            y: pos.top + cellSize / 2
           }]);
           
           setTimeout(() => {
@@ -141,8 +172,8 @@ export default function MergeBoard() {
                 const animId = `anim_${Date.now()}_${Math.random()}`;
                 setAnimations(prev => [...prev, {
                   id: animId,
-                  x: pos.left + CELL_SIZE / 2,
-                  y: pos.top + CELL_SIZE / 2
+                  x: pos.left + cellSize / 2,
+                  y: pos.top + cellSize / 2
                 }]);
                 
                 setTimeout(() => {
@@ -170,16 +201,16 @@ export default function MergeBoard() {
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center p-2 sm:p-4">
       <motion.div
         ref={boardRef}
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-4 touch-none"
+        className="relative bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-4 touch-none"
         style={{
-          width: gridSize.cols * (CELL_SIZE + GAP) + 8,
-          height: gridSize.rows * (CELL_SIZE + GAP) + 8
+          width: gridSize.cols * (cellSize + GAP) + 16,
+          height: gridSize.rows * (cellSize + GAP) + 16
         }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -194,12 +225,12 @@ export default function MergeBoard() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: (y * gridSize.cols + x) * 0.01 }}
-                className="absolute bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border-2 border-gray-300"
+                className="absolute bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg sm:rounded-xl border border-gray-300 sm:border-2"
                 style={{
                   left: pos.left,
                   top: pos.top,
-                  width: CELL_SIZE,
-                  height: CELL_SIZE
+                  width: cellSize,
+                  height: cellSize
                 }}
               />
             );
@@ -212,7 +243,7 @@ export default function MergeBoard() {
           const isMergeable = mergeableItems.has(item.id);
           
           return (
-            <div key={item.id} className="absolute" style={{ left: pos.left, top: pos.top, width: CELL_SIZE, height: CELL_SIZE }}>
+            <div key={item.id} className="absolute" style={{ left: pos.left, top: pos.top, width: cellSize, height: cellSize }}>
               {isMergeable && (
                 <motion.div
                   animate={{ 
@@ -224,14 +255,14 @@ export default function MergeBoard() {
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  className="absolute inset-0 bg-green-400 rounded-xl -m-1"
-                  style={{ filter: 'blur(8px)' }}
+                  className="absolute inset-0 bg-green-400 rounded-lg sm:rounded-xl -m-1"
+                  style={{ filter: 'blur(6px)' }}
                 />
               )}
               <MergeBoardItem
                 item={item}
                 position={isDragging ? dragPosition : { x: pos.left, y: pos.top }}
-                size={CELL_SIZE}
+                size={cellSize}
                 isDragging={isDragging}
                 dragOffset={dragOffset}
                 onPointerDown={(e) => handleItemPointerDown(e, item.id)}

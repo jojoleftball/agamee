@@ -8,7 +8,7 @@ export default function TutorialOverlay() {
 
   const tutorialMessages: Record<number, { title: string; message: string; position: string }> = {
     0: {
-      title: 'Welcome to Merge Garden!',
+      title: 'Start Playing!',
       message: 'Tap "Open Merge Board" to start creating beautiful flowers!',
       position: 'bottom-24',
     },
