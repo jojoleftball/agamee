@@ -4,7 +4,15 @@
 
 Merge Garden is a mobile-optimized 3D merge game where players restore a wrecked garden. Players merge items (flowers, trees, garden tools, decorations) to create higher-tier items while expanding their garden. Built with React, React Three Fiber, and Express.
 
-**Recent Changes (November 28, 2025)**
+**Recent Changes (November 29, 2025)**
+- Complete merge board redesign with custom sprite-based background
+- New UI icons (store, inventory, back arrow, tasks) using provided garden-themed sprites
+- Smart sticker-like icon system: icons can be dragged and resized with touch
+- Edit Layout mode to reposition and resize UI icons, with positions saved to localStorage
+- Grid snapping system: 8x8 grid overlay aligned with the merge board sprite for precise item placement
+- Items snap to grid squares when dragged, providing clean visual alignment
+
+**Previous Changes (November 28, 2025)**
 - Complete emoji-to-icon replacement across all screens (MergeBoardScreen, ShopModal, InventoryModal, TasksModal)
 - Implemented audio system with background music and sound effects for merging/clicking
 - AudioInitializer component handles music on first user interaction with mute toggle button
