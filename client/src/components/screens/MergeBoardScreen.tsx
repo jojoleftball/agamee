@@ -165,25 +165,23 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   };
 
   const tryMerge = (targetX: number, targetY: number, draggedItem: BoardItem) => {
-    const allMatching = boardItems.filter(
-      item => 
+    const targetItem = boardItems.find(
+      item =>
+        item.id !== draggedItem.id &&
         item.itemType === draggedItem.itemType &&
         item.rank === draggedItem.rank &&
         item.category === draggedItem.category &&
-        Math.abs(item.x - targetX) <= 1 &&
-        Math.abs(item.y - targetY) <= 1
+        item.x === targetX &&
+        item.y === targetY
     );
 
-    if (allMatching.length >= 2) {
+    if (targetItem) {
       if (draggedItem.maxRank && draggedItem.rank >= draggedItem.maxRank) {
         return false;
       }
 
-      const itemsToMerge = allMatching.slice(0, 2);
-      
-      itemsToMerge.forEach(item => {
-        removeBoardItem(item.id);
-      });
+      removeBoardItem(draggedItem.id);
+      removeBoardItem(targetItem.id);
 
       const newItem: BoardItem = {
         id: `merged-${Date.now()}-${Math.random()}`,
