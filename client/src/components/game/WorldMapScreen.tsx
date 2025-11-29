@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { SettingsFlowerIcon, LockIcon, PlayButtonIcon, FogCloudIcon } from '../icons/GardenIcons';
 import SettingsModal from './SettingsModal';
-import LoginButton from '../LoginButton';
 
 interface WorldMapScreenProps {
   onEnterGarden: (gardenId: string) => void;
@@ -100,14 +99,6 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
         </motion.h1>
 
         <div className="flex items-center gap-3">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <LoginButton variant="full" />
-          </motion.div>
-          
           <motion.button
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

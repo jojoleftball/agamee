@@ -21,12 +21,28 @@ interface DraggableIcon {
   sprite: string;
 }
 
+interface GridSettings {
+  offsetX: number;
+  offsetY: number;
+  cellWidth: number;
+  cellHeight: number;
+  showOutlines: boolean;
+}
+
 const DEFAULT_ICONS: DraggableIcon[] = [
   { id: 'back', type: 'back', x: 20, y: 40, size: 60, sprite: '/game-assets/icon_back.png' },
   { id: 'tasks', type: 'tasks', x: 20, y: 120, size: 60, sprite: '/game-assets/icon_tasks.png' },
   { id: 'store', type: 'store', x: -80, y: 40, size: 60, sprite: '/game-assets/icon_store.png' },
   { id: 'inventory', type: 'inventory', x: -80, y: 120, size: 60, sprite: '/game-assets/icon_inventory.png' },
 ];
+
+const DEFAULT_GRID_SETTINGS: GridSettings = {
+  offsetX: 12,
+  offsetY: 12,
+  cellWidth: 76,
+  cellHeight: 76,
+  showOutlines: true,
+};
 
 interface MergeBoardScreenProps {
   onBack?: () => void;
@@ -35,7 +51,6 @@ interface MergeBoardScreenProps {
 export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   const setScreen = useGameStore((state) => state.setScreen);
   const boardItems = useGameStore((state) => state.boardItems);
-  const storageItems = useGameStore((state) => state.storageItems);
   const removeBoardItem = useGameStore((state) => state.removeBoardItem);
   const addBoardItem = useGameStore((state) => state.addBoardItem);
   const moveBoardItem = useGameStore((state) => state.moveBoardItem);
@@ -62,19 +77,36 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     }
     return DEFAULT_ICONS;
   });
+  
+  const [gridSettings, setGridSettings] = useState<GridSettings>(() => {
+    const saved = localStorage.getItem('mergeBoard_gridSettings');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_GRID_SETTINGS;
+      }
+    }
+    return DEFAULT_GRID_SETTINGS;
+  });
+  
   const [draggedIcon, setDraggedIcon] = useState<string | null>(null);
-  const [resizingIcon, setResizingIcon] = useState<string | null>(null);
   const [iconDragOffset, setIconDragOffset] = useState({ x: 0, y: 0 });
   const [editMode, setEditMode] = useState(false);
+  const [draggingGrid, setDraggingGrid] = useState(false);
+  const [gridDragStart, setGridDragStart] = useState({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   
   const boardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState({ width: 300, height: 300 });
-  const [cellSize, setCellSize] = useState(35);
 
   useEffect(() => {
     localStorage.setItem('mergeBoard_iconPositions', JSON.stringify(icons));
   }, [icons]);
+
+  useEffect(() => {
+    localStorage.setItem('mergeBoard_gridSettings', JSON.stringify(gridSettings));
+  }, [gridSettings]);
 
   const calculateBoardSize = useCallback(() => {
     if (!containerRef.current) return;
@@ -84,11 +116,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     
     const maxBoardSize = Math.min(containerWidth * 0.9, containerHeight * 0.75, 500);
     setBoardSize({ width: maxBoardSize, height: maxBoardSize });
-    
-    const borderPercent = 0.12;
-    const innerSize = maxBoardSize * (1 - borderPercent * 2);
-    const newCellSize = innerSize / GRID_COLS;
-    setCellSize(newCellSize);
   }, []);
 
   useEffect(() => {
@@ -97,36 +124,37 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     return () => window.removeEventListener('resize', calculateBoardSize);
   }, [calculateBoardSize]);
 
-  const gridOffset = useMemo(() => {
-    const borderPercent = 0.12;
-    return {
-      x: boardSize.width * borderPercent,
-      y: boardSize.height * borderPercent
-    };
-  }, [boardSize]);
+  const scaleFactor = useMemo(() => boardSize.width / 500, [boardSize.width]);
+
+  const scaledGrid = useMemo(() => ({
+    offsetX: gridSettings.offsetX * scaleFactor,
+    offsetY: gridSettings.offsetY * scaleFactor,
+    cellWidth: gridSettings.cellWidth * scaleFactor,
+    cellHeight: gridSettings.cellHeight * scaleFactor,
+  }), [gridSettings, scaleFactor]);
 
   const getCellPosition = useCallback((gridX: number, gridY: number) => {
     return {
-      left: gridOffset.x + gridX * cellSize,
-      top: gridOffset.y + gridY * cellSize
+      left: scaledGrid.offsetX + gridX * scaledGrid.cellWidth,
+      top: scaledGrid.offsetY + gridY * scaledGrid.cellHeight
     };
-  }, [gridOffset, cellSize]);
+  }, [scaledGrid]);
 
   const screenToGrid = useCallback((screenX: number, screenY: number) => {
     if (!boardRef.current) return null;
     
     const rect = boardRef.current.getBoundingClientRect();
-    const relX = screenX - rect.left - gridOffset.x;
-    const relY = screenY - rect.top - gridOffset.y;
+    const relX = screenX - rect.left - scaledGrid.offsetX;
+    const relY = screenY - rect.top - scaledGrid.offsetY;
     
-    const gridX = Math.floor(relX / cellSize);
-    const gridY = Math.floor(relY / cellSize);
+    const gridX = Math.floor(relX / scaledGrid.cellWidth);
+    const gridY = Math.floor(relY / scaledGrid.cellHeight);
     
     if (gridX >= 0 && gridX < GRID_COLS && gridY >= 0 && gridY < GRID_ROWS) {
       return { x: gridX, y: gridY };
     }
     return null;
-  }, [gridOffset, cellSize]);
+  }, [scaledGrid]);
 
   const handleBackToGarden = () => {
     if (onBack) {
@@ -146,12 +174,12 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
         Math.abs(item.y - targetY) <= 1
     );
 
-    if (allMatching.length >= 3) {
+    if (allMatching.length >= 2) {
       if (draggedItem.maxRank && draggedItem.rank >= draggedItem.maxRank) {
         return false;
       }
 
-      const itemsToMerge = allMatching.slice(0, 3);
+      const itemsToMerge = allMatching.slice(0, 2);
       
       itemsToMerge.forEach(item => {
         removeBoardItem(item.id);
@@ -351,15 +379,54 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     ));
   };
 
-  const resetIconPositions = () => {
+  const resetAll = () => {
     setIcons(DEFAULT_ICONS);
+    setGridSettings(DEFAULT_GRID_SETTINGS);
+  };
+
+  const handleGridDragStart = (e: React.PointerEvent) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    setDraggingGrid(true);
+    setGridDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      offsetX: gridSettings.offsetX,
+      offsetY: gridSettings.offsetY
+    });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleGridDragMove = (e: React.PointerEvent) => {
+    if (!draggingGrid) return;
+    
+    const deltaX = (e.clientX - gridDragStart.x) / scaleFactor;
+    const deltaY = (e.clientY - gridDragStart.y) / scaleFactor;
+    
+    setGridSettings(prev => ({
+      ...prev,
+      offsetX: gridDragStart.offsetX + deltaX,
+      offsetY: gridDragStart.offsetY + deltaY
+    }));
+  };
+
+  const handleGridDragEnd = () => {
+    setDraggingGrid(false);
+  };
+
+  const adjustGridCellSize = (delta: number) => {
+    setGridSettings(prev => ({
+      ...prev,
+      cellWidth: Math.max(30, Math.min(100, prev.cellWidth + delta)),
+      cellHeight: Math.max(30, Math.min(100, prev.cellHeight + delta))
+    }));
   };
 
   const getDragStyle = (item: BoardItem) => {
     if (draggedItem?.id === item.id && boardRef.current) {
       return {
-        left: dragPosition.x - cellSize / 2,
-        top: dragPosition.y - cellSize / 2,
+        left: dragPosition.x - scaledGrid.cellWidth / 2,
+        top: dragPosition.y - scaledGrid.cellHeight / 2,
         zIndex: 100,
         opacity: 0.9,
         transform: 'scale(1.1)',
@@ -395,31 +462,61 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
       }}
       onPointerMove={(e) => {
         if (draggedIcon) handleIconPointerMove(e);
+        if (draggingGrid) handleGridDragMove(e);
       }}
       onPointerUp={() => {
         if (draggedIcon) handleIconPointerUp();
+        if (draggingGrid) handleGridDragEnd();
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/20 to-emerald-800/40" />
       
-      <div className="absolute top-2 right-2 z-50">
-        <button
-          onClick={() => setEditMode(!editMode)}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-            editMode 
-              ? 'bg-amber-500 text-white shadow-lg' 
-              : 'bg-white/80 text-gray-700 hover:bg-white'
-          }`}
-        >
-          {editMode ? 'Done Editing' : 'Edit Layout'}
-        </button>
-        {editMode && (
+      <div className="absolute top-2 right-2 z-50 flex flex-col items-end gap-2">
+        <div className="flex gap-2">
           <button
-            onClick={resetIconPositions}
-            className="ml-2 px-3 py-1.5 rounded-full text-xs font-medium bg-red-500 text-white"
+            onClick={() => setEditMode(!editMode)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              editMode 
+                ? 'bg-amber-500 text-white shadow-lg' 
+                : 'bg-white/80 text-gray-700 hover:bg-white'
+            }`}
           >
-            Reset
+            {editMode ? 'Done Editing' : 'Edit Layout'}
           </button>
+          {editMode && (
+            <button
+              onClick={resetAll}
+              className="px-3 py-1.5 rounded-full text-xs font-medium bg-red-500 text-white"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        
+        {editMode && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+            <div className="text-[10px] font-medium text-gray-700 mb-1">Grid Size</div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => adjustGridCellSize(-2)}
+                className="w-6 h-6 bg-red-500 text-white rounded text-xs flex items-center justify-center"
+              >
+                -
+              </button>
+              <span className="text-[10px] text-gray-600 flex items-center px-1">
+                {Math.round(gridSettings.cellWidth)}
+              </span>
+              <button
+                onClick={() => adjustGridCellSize(2)}
+                className="w-6 h-6 bg-green-500 text-white rounded text-xs flex items-center justify-center"
+              >
+                +
+              </button>
+            </div>
+            <div className="text-[8px] text-gray-500 mt-1 text-center">
+              Drag grid to move
+            </div>
+          </div>
         )}
       </div>
       
@@ -491,18 +588,25 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
           {Array.from({ length: GRID_ROWS }).map((_, rowIndex) =>
             Array.from({ length: GRID_COLS }).map((_, colIndex) => {
               const pos = getCellPosition(colIndex, rowIndex);
+              const isFirstCell = rowIndex === 0 && colIndex === 0;
               return (
                 <div
                   key={`cell-${rowIndex}-${colIndex}`}
-                  className="absolute pointer-events-none"
+                  className={`absolute ${editMode && isFirstCell ? 'cursor-move' : 'pointer-events-none'}`}
                   style={{
                     left: pos.left,
                     top: pos.top,
-                    width: cellSize - 2,
-                    height: cellSize - 2,
-                    border: '1px solid rgba(139, 69, 19, 0.2)',
+                    width: scaledGrid.cellWidth - 2,
+                    height: scaledGrid.cellHeight - 2,
+                    border: gridSettings.showOutlines 
+                      ? (editMode 
+                          ? '2px solid rgba(251, 191, 36, 0.8)' 
+                          : '1px solid rgba(139, 69, 19, 0.3)')
+                      : 'none',
                     borderRadius: 4,
+                    backgroundColor: editMode ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
                   }}
+                  onPointerDown={editMode && isFirstCell ? handleGridDragStart : undefined}
                 />
               );
             })
@@ -511,7 +615,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
           {boardItems.map((item) => {
             const style = getDragStyle(item);
             const isGenerator = item.category === 'generator';
-            const itemSize = cellSize - 4;
+            const itemSize = Math.min(scaledGrid.cellWidth, scaledGrid.cellHeight) - 4;
             
             return (
               <div
@@ -523,8 +627,8 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
                   ...style,
                   width: itemSize,
                   height: itemSize,
-                  marginLeft: 2,
-                  marginTop: 2,
+                  marginLeft: (scaledGrid.cellWidth - itemSize) / 2,
+                  marginTop: (scaledGrid.cellHeight - itemSize) / 2,
                 }}
                 onPointerDown={(e) => handlePointerDown(e, item)}
                 onClick={() => handleItemClick(item)}
@@ -541,12 +645,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-amber-900/90 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-amber-600">
-        <span className="text-amber-100 text-xs font-medium">
-          Drag 3 matching items to merge!
-        </span>
-      </div>
-      
       {plantingItem && (
         <PlantingModal
           plant={plantingItem}
