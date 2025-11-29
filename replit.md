@@ -5,12 +5,18 @@
 Merge Garden is a mobile-optimized 3D merge game where players restore a wrecked garden. Players merge items (flowers, trees, garden tools, decorations) to create higher-tier items while expanding their garden. Built with React, React Three Fiber, and Express.
 
 **Recent Changes (November 29, 2025)**
+- Editable grid square overlay system: visible square outlines can be dragged and resized to align with sprite
+- Grid settings (offsetX, offsetY, cellWidth, cellHeight) saved to localStorage
+- Drag the top-left grid cell in Edit Layout mode to reposition entire grid
+- Grid cell size adjustable via +/- buttons in Edit Layout mode
+- Removed "Drag 3 items to merge" message (merging now requires 2 items)
+- Removed music/speaker mute button from bottom right
+- Removed login button from world map (authentication will be from settings)
+- Fixed merge logic to properly consume dragged item and target item only
 - Complete merge board redesign with custom sprite-based background
 - New UI icons (store, inventory, back arrow, tasks) using provided garden-themed sprites
 - Smart sticker-like icon system: icons can be dragged and resized with touch
 - Edit Layout mode to reposition and resize UI icons, with positions saved to localStorage
-- Grid snapping system: 8x8 grid overlay aligned with the merge board sprite for precise item placement
-- Items snap to grid squares when dragged, providing clean visual alignment
 
 **Previous Changes (November 28, 2025)**
 - Complete emoji-to-icon replacement across all screens (MergeBoardScreen, ShopModal, InventoryModal, TasksModal)
@@ -162,18 +168,14 @@ Zod validation schemas generated from Drizzle tables.
 - Replit-specific runtime error modal plugin
 
 **Authentication**
-- Replit Auth (legacy Repl Auth 2.0) implemented for user login
-- `useReplitAuth` hook provides user state, login/logout functions
-- `LoginButton` component displays in WorldMapScreen header
-- Fetches user info from `/__replauthuser` endpoint
+- Planned: Google/Apple/email authentication from settings (not yet implemented)
 - Session management prepared (connect-pg-simple available) but not configured
 
 **Audio System**
 - `SoundManager` class in `client/src/lib/sounds.ts` handles all audio
 - Background music plays on first user interaction (auto-play policy)
 - Sound effects: merge, click, success (stored in `client/public/sounds/`)
-- `AudioInitializer` component wraps game flow with mute toggle button
-- Mute/unmute control in bottom-right corner of screen
+- `AudioInitializer` component wraps game flow (mute button removed)
 
 **Asset Management**
 - Custom sprite images stored in `client/public/sprites/`
