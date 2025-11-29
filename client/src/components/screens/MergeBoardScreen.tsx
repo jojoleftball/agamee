@@ -1,17 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { soundManager } from '../../lib/sounds';
-import { 
-  GardenHomeIcon, 
-  ShopStoreIcon, 
-  StorageBoxIcon, 
-  TaskListIcon,
-  CherryBlossomIcon,
-  TulipIcon,
-  SunflowerIcon,
-  RoseIcon,
-  SproutIcon
-} from '../icons/GardenIcons';
 import ItemSprite from '../ItemSprite';
 import PlantingModal from '../PlantingModal';
 import ShopModal from './ShopModal';
@@ -20,10 +9,24 @@ import TasksModal from './TasksModal';
 import ItemDetailsPanel from './ItemDetailsPanel';
 import type { BoardItem } from '../../types/game';
 
-const GRID_COLS = 6;
-const GRID_ROWS = 5;
-const CELL_SIZE = 70;
-const GAP = 6;
+const GRID_COLS = 8;
+const GRID_ROWS = 8;
+
+interface DraggableIcon {
+  id: string;
+  type: 'store' | 'inventory' | 'back' | 'tasks';
+  x: number;
+  y: number;
+  size: number;
+  sprite: string;
+}
+
+const DEFAULT_ICONS: DraggableIcon[] = [
+  { id: 'back', type: 'back', x: 20, y: 40, size: 60, sprite: '/game-assets/icon_back.png' },
+  { id: 'tasks', type: 'tasks', x: 20, y: 120, size: 60, sprite: '/game-assets/icon_tasks.png' },
+  { id: 'store', type: 'store', x: -80, y: 40, size: 60, sprite: '/game-assets/icon_store.png' },
+  { id: 'inventory', type: 'inventory', x: -80, y: 120, size: 60, sprite: '/game-assets/icon_inventory.png' },
+];
 
 interface MergeBoardScreenProps {
   onBack?: () => void;
@@ -33,7 +36,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   const setScreen = useGameStore((state) => state.setScreen);
   const boardItems = useGameStore((state) => state.boardItems);
   const storageItems = useGameStore((state) => state.storageItems);
-  const resources = useGameStore((state) => state.resources);
   const removeBoardItem = useGameStore((state) => state.removeBoardItem);
   const addBoardItem = useGameStore((state) => state.addBoardItem);
   const moveBoardItem = useGameStore((state) => state.moveBoardItem);
@@ -48,7 +50,83 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   const [showShop, setShowShop] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
+  
+  const [icons, setIcons] = useState<DraggableIcon[]>(() => {
+    const saved = localStorage.getItem('mergeBoard_iconPositions');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_ICONS;
+      }
+    }
+    return DEFAULT_ICONS;
+  });
+  const [draggedIcon, setDraggedIcon] = useState<string | null>(null);
+  const [resizingIcon, setResizingIcon] = useState<string | null>(null);
+  const [iconDragOffset, setIconDragOffset] = useState({ x: 0, y: 0 });
+  const [editMode, setEditMode] = useState(false);
+  
   const boardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [boardSize, setBoardSize] = useState({ width: 300, height: 300 });
+  const [cellSize, setCellSize] = useState(35);
+
+  useEffect(() => {
+    localStorage.setItem('mergeBoard_iconPositions', JSON.stringify(icons));
+  }, [icons]);
+
+  const calculateBoardSize = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    const containerWidth = containerRef.current.clientWidth;
+    const containerHeight = containerRef.current.clientHeight;
+    
+    const maxBoardSize = Math.min(containerWidth * 0.9, containerHeight * 0.75, 500);
+    setBoardSize({ width: maxBoardSize, height: maxBoardSize });
+    
+    const borderPercent = 0.12;
+    const innerSize = maxBoardSize * (1 - borderPercent * 2);
+    const newCellSize = innerSize / GRID_COLS;
+    setCellSize(newCellSize);
+  }, []);
+
+  useEffect(() => {
+    calculateBoardSize();
+    window.addEventListener('resize', calculateBoardSize);
+    return () => window.removeEventListener('resize', calculateBoardSize);
+  }, [calculateBoardSize]);
+
+  const gridOffset = useMemo(() => {
+    const borderPercent = 0.12;
+    return {
+      x: boardSize.width * borderPercent,
+      y: boardSize.height * borderPercent
+    };
+  }, [boardSize]);
+
+  const getCellPosition = useCallback((gridX: number, gridY: number) => {
+    return {
+      left: gridOffset.x + gridX * cellSize,
+      top: gridOffset.y + gridY * cellSize
+    };
+  }, [gridOffset, cellSize]);
+
+  const screenToGrid = useCallback((screenX: number, screenY: number) => {
+    if (!boardRef.current) return null;
+    
+    const rect = boardRef.current.getBoundingClientRect();
+    const relX = screenX - rect.left - gridOffset.x;
+    const relY = screenY - rect.top - gridOffset.y;
+    
+    const gridX = Math.floor(relX / cellSize);
+    const gridY = Math.floor(relY / cellSize);
+    
+    if (gridX >= 0 && gridX < GRID_COLS && gridY >= 0 && gridY < GRID_ROWS) {
+      return { x: gridX, y: gridY };
+    }
+    return null;
+  }, [gridOffset, cellSize]);
 
   const handleBackToGarden = () => {
     if (onBack) {
@@ -56,23 +134,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     } else {
       setScreen('garden');
     }
-  };
-
-  const findAdjacentMatching = (centerX: number, centerY: number, itemType: string, rank: number, category: string): BoardItem[] => {
-    const matching: BoardItem[] = [];
-    
-    for (const item of boardItems) {
-      if (item.itemType !== itemType || item.rank !== rank || item.category !== category) continue;
-      
-      const dx = Math.abs(item.x - centerX);
-      const dy = Math.abs(item.y - centerY);
-      
-      if (dx <= 1 && dy <= 1 && (dx + dy) > 0) {
-        matching.push(item);
-      }
-    }
-    
-    return matching;
   };
 
   const tryMerge = (targetX: number, targetY: number, draggedItem: BoardItem) => {
@@ -85,19 +146,14 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
         Math.abs(item.y - targetY) <= 1
     );
 
-    console.log(`Found ${allMatching.length} matching items near (${targetX}, ${targetY})`);
-
     if (allMatching.length >= 3) {
       if (draggedItem.maxRank && draggedItem.rank >= draggedItem.maxRank) {
-        console.log('Item already at max rank, cannot merge');
         return false;
       }
 
-      console.log('MERGING 3 items!');
       const itemsToMerge = allMatching.slice(0, 3);
       
       itemsToMerge.forEach(item => {
-        console.log('Removing item:', item.id);
         removeBoardItem(item.id);
       });
 
@@ -111,9 +167,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
         y: targetY,
       };
 
-      console.log('Adding new merged item:', newItem);
       addBoardItem(newItem);
-      
       soundManager.playMerge();
       
       const coinReward = 10 * draggedItem.rank;
@@ -145,13 +199,15 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!draggedItem || !boardRef.current) return;
+    if (!boardRef.current) return;
     
-    const rect = boardRef.current.getBoundingClientRect();
-    setDragPosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    if (draggedItem) {
+      const rect = boardRef.current.getBoundingClientRect();
+      setDragPosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -160,26 +216,19 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
       return;
     }
 
-    const rect = boardRef.current.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-    const relY = e.clientY - rect.top;
+    const gridPos = screenToGrid(e.clientX, e.clientY);
 
-    const gridX = Math.round(relX / (CELL_SIZE + GAP));
-    const gridY = Math.round(relY / (CELL_SIZE + GAP));
-
-    console.log(`Dropped at grid (${gridX}, ${gridY})`);
-
-    if (gridX >= 0 && gridX < GRID_COLS && gridY >= 0 && gridY < GRID_ROWS) {
+    if (gridPos) {
       const occupied = boardItems.find(
-        item => item.x === gridX && item.y === gridY && item.id !== draggedItem.id
+        item => item.x === gridPos.x && item.y === gridPos.y && item.id !== draggedItem.id
       );
 
       if (!occupied || (occupied.itemType === draggedItem.itemType && occupied.rank === draggedItem.rank)) {
-        const merged = tryMerge(gridX, gridY, draggedItem);
+        const merged = tryMerge(gridPos.x, gridPos.y, draggedItem);
         
         if (!merged) {
           if (!occupied) {
-            moveBoardItem(draggedItem.id, gridX, gridY);
+            moveBoardItem(draggedItem.id, gridPos.x, gridPos.y);
           }
         }
       }
@@ -194,7 +243,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     
     const now = Date.now();
     if (item.lastGenerated && (now - item.lastGenerated) < 10000) {
-      console.log('Generator on cooldown');
       return;
     }
     
@@ -209,7 +257,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     }
     
     if (emptySlots.length === 0) {
-      console.log('No empty slots for generator');
       return;
     }
     
@@ -230,8 +277,6 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
       charges: (item.charges || 0) - 1,
       lastGenerated: now,
     });
-    
-    console.log('Generator created new item');
   };
 
   const handleItemClick = (item: BoardItem) => {
@@ -244,182 +289,262 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
     }
   };
 
+  const handleIconPointerDown = (e: React.PointerEvent, iconId: string) => {
+    if (!editMode) return;
+    
+    e.stopPropagation();
+    const icon = icons.find(i => i.id === iconId);
+    if (!icon) return;
+    
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setIconDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setDraggedIcon(iconId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleIconPointerMove = (e: React.PointerEvent) => {
+    if (!draggedIcon || !containerRef.current) return;
+    
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newX = e.clientX - containerRect.left - iconDragOffset.x;
+    const newY = e.clientY - containerRect.top - iconDragOffset.y;
+    
+    setIcons(prev => prev.map(icon => 
+      icon.id === draggedIcon 
+        ? { ...icon, x: newX, y: newY }
+        : icon
+    ));
+  };
+
+  const handleIconPointerUp = () => {
+    setDraggedIcon(null);
+  };
+
+  const handleIconClick = (iconType: string) => {
+    if (editMode) return;
+    
+    soundManager.playClick();
+    switch (iconType) {
+      case 'back':
+        handleBackToGarden();
+        break;
+      case 'store':
+        setShowShop(true);
+        break;
+      case 'inventory':
+        setShowInventory(true);
+        break;
+      case 'tasks':
+        setShowTasks(true);
+        break;
+    }
+  };
+
+  const handleIconResize = (iconId: string, delta: number) => {
+    setIcons(prev => prev.map(icon => 
+      icon.id === iconId 
+        ? { ...icon, size: Math.max(40, Math.min(100, icon.size + delta)) }
+        : icon
+    ));
+  };
+
+  const resetIconPositions = () => {
+    setIcons(DEFAULT_ICONS);
+  };
+
   const getDragStyle = (item: BoardItem) => {
     if (draggedItem?.id === item.id && boardRef.current) {
       return {
-        left: dragPosition.x - CELL_SIZE / 2,
-        top: dragPosition.y - CELL_SIZE / 2,
+        left: dragPosition.x - cellSize / 2,
+        top: dragPosition.y - cellSize / 2,
         zIndex: 100,
-        opacity: 0.8,
+        opacity: 0.9,
+        transform: 'scale(1.1)',
       };
     }
+    const pos = getCellPosition(item.x, item.y);
     return {
-      left: item.x * (CELL_SIZE + GAP) + GAP,
-      top: item.y * (CELL_SIZE + GAP) + GAP,
+      left: pos.left,
+      top: pos.top,
       zIndex: 10,
     };
   };
 
+  const getIconPosition = (icon: DraggableIcon) => {
+    if (!containerRef.current) return { left: icon.x, top: icon.y };
+    
+    const containerWidth = containerRef.current.clientWidth;
+    
+    if (icon.x < 0) {
+      return { left: containerWidth + icon.x, top: icon.y };
+    }
+    return { left: icon.x, top: icon.y };
+  };
+
   return (
     <div 
-      className="fixed inset-0"
+      ref={containerRef}
+      className="fixed inset-0 overflow-hidden"
       style={{
         backgroundImage: 'url(/game-assets/basic_garden_background_vertical.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
+      onPointerMove={(e) => {
+        if (draggedIcon) handleIconPointerMove(e);
+      }}
+      onPointerUp={() => {
+        if (draggedIcon) handleIconPointerUp();
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/30 to-emerald-800/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/20 to-emerald-800/40" />
       
-      <div className="absolute inset-0 flex flex-col">
-
-        <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-auto relative">
-          {selectedItem && (
-            <ItemDetailsPanel 
-              item={selectedItem} 
-              onClose={() => setSelectedItem(null)} 
+      <div className="absolute top-2 right-2 z-50">
+        <button
+          onClick={() => setEditMode(!editMode)}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            editMode 
+              ? 'bg-amber-500 text-white shadow-lg' 
+              : 'bg-white/80 text-gray-700 hover:bg-white'
+          }`}
+        >
+          {editMode ? 'Done Editing' : 'Edit Layout'}
+        </button>
+        {editMode && (
+          <button
+            onClick={resetIconPositions}
+            className="ml-2 px-3 py-1.5 rounded-full text-xs font-medium bg-red-500 text-white"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+      
+      {icons.map(icon => {
+        const pos = getIconPosition(icon);
+        return (
+          <div
+            key={icon.id}
+            className={`absolute z-40 transition-transform ${
+              editMode ? 'cursor-move ring-2 ring-amber-400 ring-offset-2 animate-pulse' : 'cursor-pointer hover:scale-110'
+            } ${draggedIcon === icon.id ? 'scale-110 shadow-2xl' : ''}`}
+            style={{
+              left: pos.left,
+              top: pos.top,
+              width: icon.size,
+              height: icon.size,
+            }}
+            onPointerDown={(e) => handleIconPointerDown(e, icon.id)}
+            onClick={() => handleIconClick(icon.type)}
+          >
+            <img 
+              src={icon.sprite} 
+              alt={icon.type}
+              className="w-full h-full object-contain drop-shadow-lg"
+              draggable={false}
             />
+            {editMode && (
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleIconResize(icon.id, -10); }}
+                  className="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                >
+                  -
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleIconResize(icon.id, 10); }}
+                  className="w-5 h-5 bg-green-500 text-white rounded-full text-xs flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        {selectedItem && (
+          <ItemDetailsPanel 
+            item={selectedItem} 
+            onClose={() => setSelectedItem(null)} 
+          />
+        )}
+        
+        <div
+          ref={boardRef}
+          className="relative touch-none select-none"
+          style={{
+            width: boardSize.width,
+            height: boardSize.height,
+            backgroundImage: 'url(/game-assets/merge_board_sprite.png)',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          {Array.from({ length: GRID_ROWS }).map((_, rowIndex) =>
+            Array.from({ length: GRID_COLS }).map((_, colIndex) => {
+              const pos = getCellPosition(colIndex, rowIndex);
+              return (
+                <div
+                  key={`cell-${rowIndex}-${colIndex}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: pos.left,
+                    top: pos.top,
+                    width: cellSize - 2,
+                    height: cellSize - 2,
+                    border: '1px solid rgba(139, 69, 19, 0.2)',
+                    borderRadius: 4,
+                  }}
+                />
+              );
+            })
           )}
-          
-          <div className="bg-gradient-to-b from-green-50/95 via-emerald-50/95 to-green-100/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-4 border-4 border-green-500 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-pink-400 via-yellow-300 to-pink-400" />
-            <div className="absolute -top-1 left-4 opacity-60"><CherryBlossomIcon size={20} /></div>
-            <div className="absolute -top-1 right-4 opacity-60"><TulipIcon size={20} /></div>
+
+          {boardItems.map((item) => {
+            const style = getDragStyle(item);
+            const isGenerator = item.category === 'generator';
+            const itemSize = cellSize - 4;
             
-            <div className="flex items-center justify-center mb-2 sm:mb-3">
-              <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 via-emerald-500 to-green-600 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-green-400">
-                <SunflowerIcon size={20} />
-                <span className="text-white font-bold text-xs sm:text-sm drop-shadow">Garden Merge</span>
-                <SunflowerIcon size={20} />
-              </div>
-            </div>
-
-            <div
-              ref={boardRef}
-              className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-2 select-none"
-              style={{
-                width: GRID_COLS * (CELL_SIZE + GAP) + GAP,
-                height: GRID_ROWS * (CELL_SIZE + GAP) + GAP,
-                touchAction: 'none',
-                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%)',
-                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.1)',
-                border: '3px solid #86efac',
-              }}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-            >
-              {Array.from({ length: GRID_ROWS }).map((_, rowIndex) =>
-                Array.from({ length: GRID_COLS }).map((_, colIndex) => (
-                  <div
-                    key={`cell-${rowIndex}-${colIndex}`}
-                    className="absolute bg-white/70 border-2 border-green-300/60 rounded-lg sm:rounded-xl"
-                    style={{
-                      left: colIndex * (CELL_SIZE + GAP) + GAP,
-                      top: rowIndex * (CELL_SIZE + GAP) + GAP,
-                      width: CELL_SIZE,
-                      height: CELL_SIZE,
-                      boxShadow: 'inset 0 1px 3px rgba(34,197,94,0.1)',
-                    }}
-                  />
-                ))
-              )}
-
-              {boardItems.map((item) => {
-                const style = getDragStyle(item);
-                const isGenerator = item.category === 'generator';
-                
-                return (
-                  <div
-                    key={item.id}
-                    className={`absolute transition-all ${
-                      isGenerator ? 'cursor-pointer hover:scale-110' : 'cursor-grab active:cursor-grabbing'
-                    } ${draggedItem?.id === item.id ? 'scale-110' : ''}`}
-                    style={{
-                      ...style,
-                      width: CELL_SIZE,
-                      height: CELL_SIZE,
-                    }}
-                    onPointerDown={(e) => handlePointerDown(e, item)}
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <ItemSprite item={item} size={CELL_SIZE} />
-                    {isGenerator && item.charges !== undefined && (
-                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-900 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full border-2 border-amber-500 shadow">
-                        {item.charges}
-                      </div>
-                    )}
+            return (
+              <div
+                key={item.id}
+                className={`absolute transition-all ${
+                  isGenerator ? 'cursor-pointer hover:scale-110' : 'cursor-grab active:cursor-grabbing'
+                } ${draggedItem?.id === item.id ? 'scale-110' : ''}`}
+                style={{
+                  ...style,
+                  width: itemSize,
+                  height: itemSize,
+                  marginLeft: 2,
+                  marginTop: 2,
+                }}
+                onPointerDown={(e) => handlePointerDown(e, item)}
+                onClick={() => handleItemClick(item)}
+              >
+                <ItemSprite item={item} size={itemSize} />
+                {isGenerator && item.charges !== undefined && (
+                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-900 text-[8px] font-bold px-1 py-0.5 rounded-full border border-amber-500 shadow">
+                    {item.charges}
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-2 sm:mt-3 text-center text-[10px] sm:text-xs text-green-700 bg-gradient-to-r from-green-100 via-emerald-100 to-green-100 py-1.5 sm:py-2 px-3 sm:px-4 rounded-full border border-green-300 flex items-center justify-center gap-1 sm:gap-2">
-              <SproutIcon size={16} />
-              <span>Drag 3 matching items to merge!</span>
-              <SproutIcon size={16} />
-            </div>
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      </div>
 
-        <div className="bg-gradient-to-t from-green-800/95 via-emerald-700/90 to-green-600/80 backdrop-blur-sm p-3 sm:p-4 shadow-lg border-t-4 border-green-900/50 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-1 left-8"><CherryBlossomIcon size={20} /></div>
-            <div className="absolute top-2 right-16"><TulipIcon size={20} /></div>
-            <div className="absolute bottom-1 left-1/4"><SunflowerIcon size={18} /></div>
-            <div className="absolute bottom-2 right-8"><RoseIcon size={18} /></div>
-          </div>
-          
-          <div className="flex items-end justify-around max-w-lg mx-auto relative z-10">
-            <button 
-              onClick={handleBackToGarden}
-              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-100 to-emerald-200 rounded-xl flex items-center justify-center border-2 border-green-400 shadow-lg">
-                <GardenHomeIcon size={28} />
-              </div>
-              <span className="text-[10px] sm:text-xs font-medium text-white">Garden</span>
-            </button>
-
-            <button 
-              onClick={() => setShowShop(true)}
-              className="flex flex-col items-center gap-1 px-3 sm:px-4 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95 -mt-4 sm:-mt-6"
-            >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-200 via-yellow-200 to-amber-300 rounded-2xl flex items-center justify-center border-4 border-amber-500 shadow-2xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/30 to-transparent" />
-                <ShopStoreIcon size={40} className="relative z-10" />
-                <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-pink-500 rounded-full flex items-center justify-center border-2 border-pink-300 animate-pulse">
-                  <CherryBlossomIcon size={14} />
-                </div>
-              </div>
-              <span className="text-xs sm:text-sm font-bold text-white bg-green-600/80 px-2 py-0.5 rounded-full">Shop</span>
-            </button>
-
-            <button 
-              onClick={() => setShowInventory(true)}
-              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95 relative"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-orange-400 shadow-lg">
-                <StorageBoxIcon size={28} />
-              </div>
-              <span className="text-[10px] sm:text-xs font-medium text-white">Storage</span>
-              {storageItems.length > 0 && (
-                <div className="absolute -top-1 right-0 bg-pink-500 text-white text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border border-pink-300">
-                  {storageItems.length}
-                </div>
-              )}
-            </button>
-
-            <button 
-              onClick={() => setShowTasks(true)}
-              className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 hover:bg-green-600/50 rounded-xl transition-all active:scale-95"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-100 to-amber-200 rounded-xl flex items-center justify-center border-2 border-yellow-400 shadow-lg">
-                <TaskListIcon size={28} />
-              </div>
-              <span className="text-[10px] sm:text-xs font-medium text-white">Tasks</span>
-            </button>
-          </div>
-        </div>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-amber-900/90 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-amber-600">
+        <span className="text-amber-100 text-xs font-medium">
+          Drag 3 matching items to merge!
+        </span>
       </div>
       
       {plantingItem && (
