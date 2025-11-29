@@ -9,8 +9,8 @@ import TasksModal from './TasksModal';
 import ItemDetailsPanel from './ItemDetailsPanel';
 import type { BoardItem } from '../../types/game';
 
-const GRID_COLS = 8;
-const GRID_ROWS = 8;
+const GRID_COLS = 7;
+const GRID_ROWS = 7;
 
 interface DraggableIcon {
   id: string;
@@ -571,7 +571,7 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
         
         <div
           ref={boardRef}
-          className="relative touch-none select-none"
+          className={`relative touch-none select-none ${editMode ? 'cursor-move' : ''}`}
           style={{
             width: boardSize.width,
             height: boardSize.height,
@@ -582,6 +582,11 @@ export default function MergeBoardScreen({ onBack }: MergeBoardScreenProps) {
           }}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerDown={(e) => {
+            if (editMode && e.button === 0) {
+              handleGridDragStart(e as any);
+            }
+          }}
         >
           {Array.from({ length: GRID_ROWS }).map((_, rowIndex) =>
             Array.from({ length: GRID_COLS }).map((_, colIndex) => {
