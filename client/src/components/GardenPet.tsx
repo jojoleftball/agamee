@@ -3,16 +3,16 @@ import { useMergeGame } from '@/lib/stores/useMergeGame';
 import { useBoardStore } from '@/lib/stores/useBoardStore';
 
 const PET_MESSAGES = [
-  "Great job merging! 🌺",
-  "Your garden is looking beautiful! 🌸",
-  "Keep planting those flowers! 🌻",
-  "Don't forget to water your plants! 💧",
-  "You're doing amazing! 🌼",
-  "What a lovely garden! 🌷",
-  "The flowers are blooming! 🌹",
-  "Time to grow something new! 🌱",
-  "Your garden makes me happy! ✨",
-  "Let's make this the best garden ever! 🦋"
+  "Great job merging!",
+  "Your garden is looking beautiful!",
+  "Keep planting those flowers!",
+  "Don't forget to water your plants!",
+  "You're doing amazing!",
+  "What a lovely garden!",
+  "The flowers are blooming!",
+  "Time to grow something new!",
+  "Your garden makes me happy!",
+  "Let's make this the best garden ever!"
 ];
 
 const HINTS = [
@@ -73,7 +73,7 @@ export default function GardenPet() {
   // Celebrate milestones
   useEffect(() => {
     if (coins > 0 && coins % 500 === 0) {
-      setMessage(`Wow! ${coins} coins! You're doing great! 🎉`);
+      setMessage(`Wow! ${coins} coins! You're doing great!`);
       setShowMessage(true);
       setPetAnimation('happy');
       
@@ -123,7 +123,7 @@ export default function GardenPet() {
       >
         {/* Simple Pet Face */}
         <div className="text-center">
-          <div className="text-3xl mb-1">🦋</div>
+          <div className="text-lg font-bold text-white">Pet</div>
         </div>
       </div>
       

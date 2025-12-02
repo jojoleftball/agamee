@@ -59,7 +59,7 @@ export default function PlantCareModal({ slot, onClose }: PlantCareModalProps) {
 
         <div className="mb-6">
           <div className="text-center mb-4">
-            <div className="text-6xl mb-2">🌸</div>
+            <div className="w-20 h-20 mb-2 mx-auto bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">P</div>
             <p className="text-gray-600">Keep your plant healthy!</p>
           </div>
 

@@ -59,16 +59,13 @@ export default function GardenScreen() {
 
           <div className="flex items-center gap-4">
             <div className="bg-yellow-500 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border-2 border-yellow-600">
-              <span className="text-2xl">💰</span>
-              <span className="font-bold text-white">{resources.coins}</span>
+              <span className="font-bold text-white">Coins: {resources.coins}</span>
             </div>
             <div className="bg-blue-500 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border-2 border-blue-600">
-              <span className="text-2xl">⚡</span>
-              <span className="font-bold text-white">{resources.energy}/{resources.maxEnergy}</span>
+              <span className="font-bold text-white">Energy: {resources.energy}/{resources.maxEnergy}</span>
             </div>
             <div className="bg-purple-500 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border-2 border-purple-600">
-              <span className="text-2xl">💎</span>
-              <span className="font-bold text-white">{resources.gems}</span>
+              <span className="font-bold text-white">Gems: {resources.gems}</span>
             </div>
           </div>
         </div>
@@ -99,7 +96,7 @@ export default function GardenScreen() {
               >
                 {slot.occupied && plantDef ? (
                   <div className="w-full h-full p-2 flex flex-col items-center justify-center">
-                    <div className="text-3xl mb-2">{plantDef.emoji}</div>
+                    <div className="w-10 h-10 mb-2 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold">{plantDef.name.charAt(0)}</div>
                     <div className="flex gap-1 w-full">
                       <div className="flex-1 bg-blue-300 rounded-full h-1">
                         <div 
@@ -123,7 +120,7 @@ export default function GardenScreen() {
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-4xl text-green-400">✨</div>
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full flex items-center justify-center text-white font-bold text-lg">+</div>
                   </div>
                 )}
               </button>

@@ -164,7 +164,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'flower_bed',
     name: 'Flower Bed',
-    emoji: '🌸',
+    emoji: '',
     description: 'Create a beautiful flower garden',
     unlockCost: 0,
     isUnlocked: true,
@@ -175,7 +175,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'vegetable_patch',
     name: 'Vegetable Patch',
-    emoji: '🥕',
+    emoji: '',
     description: 'Grow fresh vegetables',
     unlockCost: 100,
     isUnlocked: false,
@@ -186,7 +186,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'pond_area',
     name: 'Pond Area',
-    emoji: '🌊',
+    emoji: '',
     description: 'Create a peaceful water feature',
     unlockCost: 250,
     isUnlocked: false,
@@ -197,7 +197,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'tree_grove',
     name: 'Tree Grove',
-    emoji: '🌳',
+    emoji: '',
     description: 'Grow a magnificent tree grove',
     unlockCost: 400,
     isUnlocked: false,
@@ -208,7 +208,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'greenhouse',
     name: 'Greenhouse',
-    emoji: '🏡',
+    emoji: '',
     description: 'Build an amazing greenhouse',
     unlockCost: 600,
     isUnlocked: false,
@@ -219,7 +219,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'zen_garden',
     name: 'Zen Garden',
-    emoji: '☯️',
+    emoji: '',
     description: 'Create a peaceful meditation space',
     unlockCost: 900,
     isUnlocked: false,
@@ -230,7 +230,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'animal_sanctuary',
     name: 'Animal Sanctuary',
-    emoji: '🦋',
+    emoji: '',
     description: 'Welcome garden animals',
     unlockCost: 1200,
     isUnlocked: false,
@@ -241,7 +241,7 @@ export const TASK_AREAS: TaskArea[] = [
   {
     id: 'rose_garden',
     name: 'Rose Garden',
-    emoji: '🌹',
+    emoji: '',
     description: 'Cultivate beautiful roses',
     unlockCost: 1500,
     isUnlocked: false,

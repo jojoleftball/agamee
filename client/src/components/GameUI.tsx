@@ -43,18 +43,18 @@ export default function GameUI() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-2 pointer-events-auto">
               <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl shadow-lg px-4 py-2 flex items-center gap-2 border-2 border-amber-600">
-                <span className="text-2xl">💰</span>
+                <span className="font-bold text-white text-lg">Coins:</span>
                 <span className="font-bold text-white text-lg min-w-[60px]">{coins}</span>
               </div>
               
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg px-4 py-2 flex items-center gap-2 border-2 border-purple-600">
-                <span className="text-2xl">💎</span>
+                <span className="font-bold text-white text-lg">Gems:</span>
                 <span className="font-bold text-white text-lg min-w-[60px]">{gems}</span>
               </div>
               
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-lg px-4 py-3 border-2 border-blue-600">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">⚡</span>
+                  <span className="font-bold text-white text-lg">Energy:</span>
                   <span className="font-bold text-white text-lg">{energy}/{maxEnergy}</span>
                 </div>
                 <div className="w-full bg-blue-900/50 rounded-full h-2 overflow-hidden">
@@ -67,7 +67,6 @@ export default function GameUI() {
               
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg px-4 py-3 border-2 border-green-600">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">⭐</span>
                   <span className="font-bold text-white text-lg">Level {level}</span>
                 </div>
                 <div className="w-full bg-green-900/50 rounded-full h-2 overflow-hidden">

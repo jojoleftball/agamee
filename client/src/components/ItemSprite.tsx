@@ -14,7 +14,7 @@ export default function ItemSprite({ item, size = 80, showRank = true }: ItemSpr
       const plant = PLANT_DEFINITIONS[item.itemType as keyof typeof PLANT_DEFINITIONS];
       if (plant) {
         return {
-          emoji: plant.emoji,
+          icon: plant.name.charAt(0).toUpperCase(),
           color: plant.color,
           name: plant.name,
         };
@@ -25,7 +25,7 @@ export default function ItemSprite({ item, size = 80, showRank = true }: ItemSpr
       const tool = TOOL_DEFINITIONS[item.itemType];
       if (tool) {
         return {
-          emoji: tool.emoji,
+          icon: tool.name.charAt(0).toUpperCase(),
           color: tool.color,
           name: tool.name,
         };
@@ -34,14 +34,14 @@ export default function ItemSprite({ item, size = 80, showRank = true }: ItemSpr
     
     if (item.category === 'generator') {
       return {
-        emoji: '🎁',
+        icon: 'G',
         color: '#8b5cf6',
         name: 'Generator',
       };
     }
     
     return {
-      emoji: '❓',
+      icon: '?',
       color: '#6b7280',
       name: 'Unknown',
     };
@@ -64,10 +64,10 @@ export default function ItemSprite({ item, size = 80, showRank = true }: ItemSpr
       />
       
       <div 
-        className="relative z-10 text-center"
-        style={{ fontSize: `${size * 0.5 * rankScale}px` }}
+        className="relative z-10 text-center text-white font-bold"
+        style={{ fontSize: `${size * 0.4 * rankScale}px` }}
       >
-        {display.emoji}
+        {display.icon}
       </div>
       
       {showRank && (

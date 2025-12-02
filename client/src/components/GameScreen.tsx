@@ -9,22 +9,8 @@ import { Dialogue } from '@/lib/dialogues';
 
 const STARTER_ITEMS = ['seed', 'wood', 'stone', 'hammer'];
 
-function getCategoryEmoji(category: string): string {
-  const emojis: Record<string, string> = {
-    flower: '🌸',
-    vegetable: '🥕',
-    tree: '🌳',
-    tool: '🔨',
-    decoration: '✨',
-    water: '💧',
-    animal: '🐰',
-    generator: '⚙️',
-    chest: '🎁',
-    currency: '💰',
-    special: '⭐',
-    blocked: '🚫'
-  };
-  return emojis[category] || '📦';
+function getCategoryIcon(category: string): string {
+  return category.charAt(0).toUpperCase();
 }
 
 interface GameScreenProps {
@@ -72,12 +58,12 @@ export default function GameScreen({ onShowDialogue }: GameScreenProps) {
           onClick={() => setPhase('menu')}
           className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg transition-colors text-xs sm:text-sm"
         >
-          ← Menu
+          Menu
         </button>
         
         <div className="flex gap-1.5 sm:gap-2">
           <div className="bg-blue-500 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg font-bold shadow text-xs sm:text-sm">
-            ⚡ {energy}/{maxEnergy}
+            Energy: {energy}/{maxEnergy}
           </div>
         </div>
       </div>
@@ -92,14 +78,14 @@ export default function GameScreen({ onShowDialogue }: GameScreenProps) {
             onClick={() => setShowShop(!showShop)}
             className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-xs sm:text-base"
           >
-            {showShop ? '✕ Close Shop' : '🛒 Shop (5 ⚡ per item)'}
+            {showShop ? 'Close Shop' : 'Shop (5 Energy per item)'}
           </button>
           
           <button
             onClick={toggleMute}
             className="bg-gradient-to-r from-gray-400 to-gray-500 text-white font-bold py-2 px-3 sm:py-3 sm:px-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-xs sm:text-base"
           >
-            {isMuted ? '🔇' : '🔊'}
+            {isMuted ? 'Unmute' : 'Mute'}
           </button>
         </div>
         
@@ -110,7 +96,7 @@ export default function GameScreen({ onShowDialogue }: GameScreenProps) {
 
       {showShop && (
         <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl sm:rounded-t-3xl shadow-2xl p-2 sm:p-4 z-30 border-t-2 sm:border-t-4 border-blue-300 max-h-[40vh] sm:max-h-64 overflow-y-auto">
-          <h3 className="text-sm sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3 text-center">Buy Items (5 ⚡ each)</h3>
+          <h3 className="text-sm sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3 text-center">Buy Items (5 Energy each)</h3>
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {STARTER_ITEMS.map(itemType => {
               const item = MERGE_ITEMS[itemType];
@@ -120,7 +106,7 @@ export default function GameScreen({ onShowDialogue }: GameScreenProps) {
                   onClick={() => handleBuyItem(itemType)}
                   className="bg-gradient-to-br from-white to-blue-50 rounded-lg sm:rounded-xl p-2 sm:p-3 border border-blue-200 sm:border-2 hover:border-blue-400 transition-all shadow-md hover:shadow-lg active:scale-95"
                 >
-                  <div className="text-xl sm:text-3xl mb-0.5 sm:mb-1">{getCategoryEmoji(item.category)}</div>
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 mb-0.5 sm:mb-1 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg">{getCategoryIcon(item.category)}</div>
                   <div className="text-[10px] sm:text-xs font-bold text-gray-700 truncate">{item.name}</div>
                   <div className="text-[10px] sm:text-xs text-gray-500">Lv.{item.level}</div>
                 </button>

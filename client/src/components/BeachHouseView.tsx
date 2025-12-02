@@ -81,7 +81,7 @@ export default function BeachHouseView({ onAreaClick }: BeachHouseViewProps) {
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-600">Cost to unlock:</span>
-                <span className="font-bold text-lg text-yellow-600">💰 {selectedArea.unlockCost}</span>
+                <span className="font-bold text-lg text-yellow-600">{selectedArea.unlockCost} Coins</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Tasks to complete:</span>
@@ -198,7 +198,7 @@ function RoomCard({ area, onClick }: { area: BeachHouseArea; onClick: () => void
       
       {area.state === 'clean' && (
         <div className="mt-auto text-yellow-200 text-xs font-bold">
-          ✓ Complete!
+          Complete!
         </div>
       )}
     </button>

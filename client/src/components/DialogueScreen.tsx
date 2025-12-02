@@ -78,7 +78,7 @@ export default function DialogueScreen({ dialogues, onComplete }: DialogueScreen
               onClick={handleNext}
               className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
-              {isLast ? 'Continue ✨' : 'Next →'}
+              {isLast ? 'Continue' : 'Next'}
             </button>
           </div>
         </div>

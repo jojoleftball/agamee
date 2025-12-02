@@ -9,7 +9,7 @@ export default function RoomProgress() {
   const handleUnlockRoom = (room: Room) => {
     if (spendCoins(room.unlockCost)) {
       unlockRoom(room.id);
-      alert(`🎉 ${room.name} unlocked!`);
+      alert(`${room.name} unlocked!`);
     } else {
       alert('Not enough coins!');
     }
@@ -25,7 +25,7 @@ export default function RoomProgress() {
         onClick={() => setShowRooms(!showRooms)}
         className="w-full bg-gradient-to-r from-purple-400 to-pink-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all"
       >
-        🏠 Beach House Progress ({unlockedCount}/{totalCount})
+        Beach House Progress ({unlockedCount}/{totalCount})
       </button>
 
       <div className="mt-2 bg-white/80 rounded-full h-4 overflow-hidden border-2 border-purple-300">
@@ -54,11 +54,11 @@ export default function RoomProgress() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="text-3xl">{room.emoji}</div>
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">{room.name.charAt(0)}</div>
                       <div>
                         <h4 className="font-bold text-gray-800">
                           {room.name}
-                          {unlocked && <span className="ml-2 text-green-500">✓</span>}
+                          {unlocked && <span className="ml-2 text-green-500">(Done)</span>}
                         </h4>
                         <p className="text-xs text-gray-600">{room.description}</p>
                       </div>
@@ -69,7 +69,7 @@ export default function RoomProgress() {
                         onClick={() => handleUnlockRoom(room)}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow transition-all text-sm"
                       >
-                        💰 {room.unlockCost}
+                        {room.unlockCost} Coins
                       </button>
                     )}
                   </div>

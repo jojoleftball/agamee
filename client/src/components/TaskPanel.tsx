@@ -134,7 +134,7 @@ export default function TaskPanel({ onClose }: TaskPanelProps) {
                           }}
                           className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg"
                         >
-                          Unlock ({area.unlockCost} 💰)
+                          Unlock ({area.unlockCost} Coins)
                         </Button>
                       )}
                     </div>
@@ -182,14 +182,14 @@ export default function TaskPanel({ onClose }: TaskPanelProps) {
                                     <span className="text-gray-600">Rewards:</span>
                                     <div className="flex items-center gap-2">
                                       <span className="px-2 py-0.5 bg-yellow-100 rounded-lg border border-yellow-300 font-bold text-yellow-700">
-                                        💰 {task.rewards.coins}
+                                        {task.rewards.coins} Coins
                                       </span>
                                       <span className="px-2 py-0.5 bg-amber-100 rounded-lg border border-amber-300 font-bold text-amber-700">
-                                        ⚡ {task.rewards.xp} XP
+                                        {task.rewards.xp} XP
                                       </span>
                                       {task.rewards.gems && (
                                         <span className="px-2 py-0.5 bg-purple-100 rounded-lg border border-purple-300 font-bold text-purple-700">
-                                          💎 {task.rewards.gems}
+                                          {task.rewards.gems} Gems
                                         </span>
                                       )}
                                     </div>
@@ -198,7 +198,7 @@ export default function TaskPanel({ onClose }: TaskPanelProps) {
                                   {/* Unlock Info */}
                                   {task.unlockAreaId && (
                                     <div className="mt-2 text-xs text-emerald-600 font-bold">
-                                      🔓 Unlocks: {taskAreas.find(a => a.id === task.unlockAreaId)?.name}
+                                      Unlocks: {taskAreas.find(a => a.id === task.unlockAreaId)?.name}
                                     </div>
                                   )}
                                 </div>

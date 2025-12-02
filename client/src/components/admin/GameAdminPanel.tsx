@@ -5,8 +5,9 @@ import {
   Map, Gift, Store, Calendar, Settings, Upload, Download,
   ZoomIn, ZoomOut, Move, Link, Layers, Image, Edit2
 } from 'lucide-react';
-import { useAdminStore, AdminMergeItem, AdminGarden, AdminChest, AdminStoreItem, AdminEvent } from '@/lib/stores/useAdminStore';
+import { useAdminStore, AdminMergeItem, AdminGarden, AdminChest, AdminStoreItem, AdminEvent, ChestContent, EventTask } from '@/lib/stores/useAdminStore';
 import { ItemCategory } from '@/lib/mergeData';
+import SpriteUploader from './SpriteUploader';
 
 interface GameAdminPanelProps {
   onClose: () => void;
@@ -441,16 +442,11 @@ function ItemForm({ item, onChange, onSave, onCancel, isNew }: ItemFormProps) {
 
       <div className="border-t border-slate-700 pt-4">
         <h3 className="text-lg font-medium text-white mb-3">Sprite Settings</h3>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Sprite Path</label>
-          <input
-            type="text"
-            value={item.sprite || ''}
-            onChange={(e) => onChange({ sprite: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            placeholder="/game-assets/sprite.png"
-          />
-        </div>
+        <SpriteUploader
+          currentSprite={item.sprite}
+          onSpriteChange={(sprite) => onChange({ sprite })}
+          label="Item Sprite"
+        />
         <div className="grid grid-cols-4 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Sprite X</label>
@@ -1086,6 +1082,12 @@ function ChestForm({ chest, onSave, onCancel, onDelete, isNew }: ChestFormProps)
           className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
         />
       </div>
+
+      <SpriteUploader
+        currentSprite={formData.sprite}
+        onSpriteChange={(sprite) => updateField({ sprite })}
+        label="Chest Sprite"
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <div>

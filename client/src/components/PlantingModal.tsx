@@ -55,7 +55,7 @@ export default function PlantingModal({ plant, onClose }: PlantingModalProps) {
 
         <div className="mb-6">
           <div className="text-center mb-4">
-            <div className="text-6xl mb-2">{plantDef.emoji}</div>
+            <div className="w-20 h-20 mb-2 mx-auto bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">{plantDef.name.charAt(0)}</div>
             <h4 className="text-xl font-bold text-gray-800">{plantDef.name}</h4>
             <p className="text-gray-600">Rank {plant.rank} (Max)</p>
           </div>
@@ -64,13 +64,11 @@ export default function PlantingModal({ plant, onClose }: PlantingModalProps) {
             <p className="text-sm text-gray-700 mb-2 font-medium">Rewards:</p>
             <div className="flex items-center justify-around">
               <div className="text-center">
-                <div className="text-2xl mb-1">💰</div>
                 <div className="text-sm font-bold text-yellow-600">
-                  +{plantDef.coinValue * plant.rank}
+                  +{plantDef.coinValue * plant.rank} Coins
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl mb-1">⭐</div>
                 <div className="text-sm font-bold text-blue-600">
                   +{plantDef.xpValue * plant.rank} XP
                 </div>
@@ -91,7 +89,7 @@ export default function PlantingModal({ plant, onClose }: PlantingModalProps) {
                   onClick={() => handlePlant(slot.id)}
                   className="aspect-square bg-green-100 hover:bg-green-200 border-2 border-green-400 border-dashed rounded-lg flex items-center justify-center transition-colors active:scale-95"
                 >
-                  <div className="text-2xl">✨</div>
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full flex items-center justify-center text-white font-bold text-sm">+</div>
                 </button>
               ))}
             </div>

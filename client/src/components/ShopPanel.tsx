@@ -90,8 +90,8 @@ export default function ShopPanel({ onClose }: ShopPanelProps) {
                 key={item.id}
                 className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-4 shadow-lg border border-green-200 sm:border-2 hover:border-green-400 transition-all hover:shadow-xl"
               >
-                <div className="w-full aspect-square bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3 flex items-center justify-center text-3xl sm:text-5xl">
-                  {getCategoryEmoji(item.category)}
+                <div className="w-full aspect-square bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3 flex items-center justify-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl sm:text-2xl">{getCategoryIcon(item.category)}</div>
                 </div>
                 
                 <h3 className="font-bold text-gray-800 text-center text-xs sm:text-base mb-0.5 sm:mb-1 truncate">{item.name}</h3>
@@ -103,7 +103,7 @@ export default function ShopPanel({ onClose }: ShopPanelProps) {
                   size="sm"
                   className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold rounded-lg sm:rounded-xl py-1 sm:py-2 text-xs sm:text-sm"
                 >
-                  💰 {item.coinValue}
+                  {item.coinValue} Coins
                 </Button>
               </div>
             ))}
@@ -114,20 +114,6 @@ export default function ShopPanel({ onClose }: ShopPanelProps) {
   );
 }
 
-function getCategoryEmoji(category: string): string {
-  const emojis: Record<string, string> = {
-    flower: '🌸',
-    vegetable: '🥕',
-    tree: '🌳',
-    tool: '🔨',
-    decoration: '✨',
-    water: '💧',
-    animal: '🐰',
-    generator: '⚙️',
-    chest: '🎁',
-    currency: '💰',
-    special: '⭐',
-    blocked: '🚫'
-  };
-  return emojis[category] || '📦';
+function getCategoryIcon(category: string): string {
+  return category.charAt(0).toUpperCase();
 }

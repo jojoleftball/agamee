@@ -36,7 +36,7 @@ export default function TutorialOverlay() {
     <div className={`fixed left-0 right-0 ${current.position} z-50 px-4 pointer-events-none`}>
       <div className="max-w-md mx-auto bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border-4 border-yellow-400 pointer-events-auto animate-bounce">
         <div className="flex items-start gap-4">
-          <div className="text-4xl">💡</div>
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold text-xl">!</div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-800 mb-2">
               {current.title}

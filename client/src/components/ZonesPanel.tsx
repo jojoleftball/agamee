@@ -107,7 +107,7 @@ export default function ZonesPanel({ onClose }: ZonesPanelProps) {
                     className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold rounded-xl py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Lock className="w-5 h-5 mr-2" />
-                    Unlock for 💰 {zone.cost}
+                    Unlock for {zone.cost} Coins
                   </Button>
                 )}
               </div>

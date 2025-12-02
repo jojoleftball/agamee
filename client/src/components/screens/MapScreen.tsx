@@ -56,7 +56,6 @@ export default function MapScreen() {
                 className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg shadow-lg transition-colors active:scale-95 flex items-center justify-center gap-2"
               >
                 <span>ENTER</span>
-                <span className="text-2xl">→</span>
               </button>
             </div>
           </div>

@@ -12,7 +12,7 @@ export const ROOMS: Room[] = [
   {
     id: 'living_room',
     name: 'Living Room',
-    emoji: '🛋️',
+    emoji: '',
     description: 'A cozy space for the family to relax together',
     unlockCost: 500,
     chapter: 1,
@@ -21,7 +21,7 @@ export const ROOMS: Room[] = [
   {
     id: 'garden',
     name: 'Garden',
-    emoji: '🌻',
+    emoji: '',
     description: 'A beautiful outdoor space with flowers and plants',
     unlockCost: 1000,
     chapter: 2,
@@ -30,7 +30,7 @@ export const ROOMS: Room[] = [
   {
     id: 'kitchen',
     name: 'Kitchen',
-    emoji: '🍳',
+    emoji: '',
     description: 'Where delicious family meals are made',
     unlockCost: 1500,
     chapter: 3,
@@ -39,7 +39,7 @@ export const ROOMS: Room[] = [
   {
     id: 'nursery',
     name: 'Baby\'s Room',
-    emoji: '👶',
+    emoji: '',
     description: 'A sweet room for your little one',
     unlockCost: 2000,
     chapter: 3,
@@ -48,7 +48,7 @@ export const ROOMS: Room[] = [
   {
     id: 'bedroom',
     name: 'Bedroom',
-    emoji: '🛏️',
+    emoji: '',
     description: 'A peaceful place to rest and dream',
     unlockCost: 2500,
     chapter: 4,
@@ -57,7 +57,7 @@ export const ROOMS: Room[] = [
   {
     id: 'beach',
     name: 'Beach Area',
-    emoji: '🏖️',
+    emoji: '',
     description: 'Your private beach paradise',
     unlockCost: 3000,
     chapter: 5,
