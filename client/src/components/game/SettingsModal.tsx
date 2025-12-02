@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore, HUDPositions } from '@/lib/stores/useSettingsStore';
 import { Language, languageNames } from '@/lib/i18n/translations';
-import { Settings2, RotateCcw, Move } from 'lucide-react';
-import AdminPanel from './AdminPanel';
+import { Settings2, RotateCcw, Move, Wrench } from 'lucide-react';
 import HUDEditor from './HUDEditor';
+import GameAdminPanel from '../admin/GameAdminPanel';
 import {
   CloseFlowerIcon,
   SoundWaveIcon,
-  MusicNoteIcon,
   VolumeHighIcon,
   VolumeMutedIcon,
   GoogleIcon,
@@ -30,20 +29,17 @@ type SettingsView = 'main' | 'language' | 'account' | 'admin';
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [currentView, setCurrentView] = useState<SettingsView>('main');
   const [showHUDEditor, setShowHUDEditor] = useState(false);
+  const [showGameAdmin, setShowGameAdmin] = useState(false);
   const {
     language,
     soundVolume,
-    musicVolume,
     soundMuted,
-    musicMuted,
     connectedAccounts,
     appVersion,
     hudPositions,
     setLanguage,
     setSoundVolume,
-    setMusicVolume,
     toggleSoundMute,
-    toggleMusicMute,
     setHUDPosition,
     resetHUDPositions,
     t,
@@ -95,39 +91,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             onChange={(e) => setSoundVolume(parseInt(e.target.value))}
             disabled={soundMuted}
             className="flex-1 h-3 bg-gray-200 rounded-full appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
-          />
-          <span className="text-sm text-gray-600">100</span>
-        </div>
-      </div>
-
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <MusicNoteIcon size={28} color="#8b5cf6" />
-          <span className="font-bold text-gray-800">{t('settings.music')}</span>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleMusicMute}
-            className={`ml-auto w-10 h-10 rounded-full flex items-center justify-center ${
-              musicMuted ? 'bg-red-100' : 'bg-purple-100'
-            }`}
-          >
-            {musicMuted ? (
-              <VolumeMutedIcon size={24} color="#dc2626" />
-            ) : (
-              <VolumeHighIcon size={24} color="#8b5cf6" />
-            )}
-          </motion.button>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600 w-8">{musicMuted ? 0 : musicVolume}</span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={musicMuted ? 0 : musicVolume}
-            onChange={(e) => setMusicVolume(parseInt(e.target.value))}
-            disabled={musicMuted}
-            className="flex-1 h-3 bg-gray-200 rounded-full appearance-none cursor-pointer accent-purple-500 disabled:opacity-50"
           />
           <span className="text-sm text-gray-600">100</span>
         </div>
@@ -211,6 +174,24 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="text-left">
           <span className="font-bold text-white block">Advanced</span>
           <span className="text-gray-300 text-sm">Use sliders for precise control</span>
+        </div>
+        <svg className="ml-auto" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </motion.button>
+
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setShowGameAdmin(true)}
+        className="w-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-4 shadow-lg flex items-center gap-4"
+      >
+        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+          <Wrench size={28} color="#fff" />
+        </div>
+        <div className="text-left">
+          <span className="font-bold text-white block">Game Admin Panel</span>
+          <span className="text-amber-100 text-sm">Manage items, gardens, chests, store & events</span>
         </div>
         <svg className="ml-auto" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
           <path d="M9 18l6-6-6-6" />
@@ -524,6 +505,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         isOpen={showHUDEditor} 
         onClose={() => setShowHUDEditor(false)} 
       />
+
+      {showGameAdmin && (
+        <GameAdminPanel onClose={() => setShowGameAdmin(false)} />
+      )}
     </>
   );
 }

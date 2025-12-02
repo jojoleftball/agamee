@@ -32,9 +32,7 @@ const getDefaultHUDPositions = (): HUDPositions => ({
 interface SettingsState {
   language: Language;
   soundVolume: number;
-  musicVolume: number;
   soundMuted: boolean;
-  musicMuted: boolean;
   hasSeenIntro: boolean;
   connectedAccounts: AccountConnection[];
   appVersion: string;
@@ -42,9 +40,7 @@ interface SettingsState {
   
   setLanguage: (lang: Language) => void;
   setSoundVolume: (volume: number) => void;
-  setMusicVolume: (volume: number) => void;
   toggleSoundMute: () => void;
-  toggleMusicMute: () => void;
   setHasSeenIntro: (seen: boolean) => void;
   connectAccount: (type: 'google' | 'apple' | 'email', email?: string) => void;
   disconnectAccount: (type: 'google' | 'apple' | 'email') => void;
@@ -62,9 +58,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set, get) => ({
       language: 'en',
       soundVolume: 80,
-      musicVolume: 60,
       soundMuted: false,
-      musicMuted: false,
       hasSeenIntro: false,
       connectedAccounts: [
         { type: 'google', connected: false },
@@ -78,11 +72,7 @@ export const useSettingsStore = create<SettingsState>()(
       
       setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(100, volume)) }),
       
-      setMusicVolume: (volume) => set({ musicVolume: Math.max(0, Math.min(100, volume)) }),
-      
       toggleSoundMute: () => set((state) => ({ soundMuted: !state.soundMuted })),
-      
-      toggleMusicMute: () => set((state) => ({ musicMuted: !state.musicMuted })),
       
       setHasSeenIntro: (seen) => set({ hasSeenIntro: seen }),
       
@@ -136,9 +126,7 @@ export const useSettingsStore = create<SettingsState>()(
       partialize: (state) => ({
         language: state.language,
         soundVolume: state.soundVolume,
-        musicVolume: state.musicVolume,
         soundMuted: state.soundMuted,
-        musicMuted: state.musicMuted,
         hasSeenIntro: state.hasSeenIntro,
         connectedAccounts: state.connectedAccounts,
         hudPositions: state.hudPositions,
