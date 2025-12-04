@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface EdgeColorData {
+  top: string[];
+  right: string[];
+  bottom: string[];
+  left: string[];
+}
+
 export interface EdgeSignature {
   edge: 'top' | 'right' | 'bottom' | 'left';
   colorSamples: string[];
@@ -28,6 +35,7 @@ export interface MapPiece {
   isLocked: boolean;
   connections: MapPieceConnection[];
   edgeSignatures?: EdgeSignature[];
+  edgeColors?: EdgeColorData;
 }
 
 interface MapEditorViewport {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { useMapEditorStore } from '@/lib/stores/useMapEditorStore';
@@ -6,7 +6,7 @@ import { SettingsFlowerIcon, LockIcon, FogCloudIcon } from '../icons/GardenIcons
 import { Edit3, Map as MapIcon } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 import { WorldMapViewer } from '../MapEditor';
-import MapEditorPage from '../MapEditor/MapEditorPage';
+import { MapBuilder } from '../MapBuilder';
 
 interface WorldMapScreenProps {
   onEnterGarden: (gardenId: string) => void;
@@ -66,12 +66,25 @@ const GARDEN_ZONES: GardenZone[] = [
 
 export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
-  const [showMapEditor, setShowMapEditor] = useState(false);
+  const [showMapBuilder, setShowMapBuilder] = useState(false);
   const [useExpandedMap, setUseExpandedMap] = useState(false);
   const t = useSettingsStore((state) => state.t);
   const { pieces } = useMapEditorStore();
 
   const hasMapPieces = pieces.length > 0;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'm' || e.key === 'M') {
+        if (!showSettings && !showMapBuilder) {
+          setShowMapBuilder(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showSettings, showMapBuilder]);
 
   const handleGardenClick = (zone: GardenZone) => {
     if (zone.unlocked) {
@@ -203,9 +216,9 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
             animate={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setShowMapEditor(true)}
-            className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-xl border-4 border-purple-300"
-            title="Map Editor"
+            onClick={() => setShowMapBuilder(true)}
+            className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-700 rounded-full flex items-center justify-center shadow-xl border-4 border-cyan-400"
+            title="World Map Builder (M)"
           >
             <Edit3 size={28} color="#fff" />
           </motion.button>
@@ -227,8 +240,8 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
         {showSettings && (
           <SettingsModal onClose={() => setShowSettings(false)} />
         )}
-        {showMapEditor && (
-          <MapEditorPage onClose={() => setShowMapEditor(false)} />
+        {showMapBuilder && (
+          <MapBuilder onClose={() => setShowMapBuilder(false)} />
         )}
       </AnimatePresence>
     </div>

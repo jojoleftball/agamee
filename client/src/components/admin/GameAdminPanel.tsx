@@ -821,86 +821,84 @@ function GardensManager() {
           </div>
         </div>
 
-      {selectedGarden && editorMode === 'zones' && (
-        <div className="w-80 bg-slate-800 border-l border-slate-700 p-4 overflow-y-auto">
-          <h3 className="text-lg font-bold text-white mb-4">Garden Settings</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-              <input
-                type="text"
-                value={selectedGarden.name}
-                onChange={(e) => updateGarden(selectedGarden.id, { name: e.target.value })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-              <textarea
-                value={selectedGarden.description}
-                onChange={(e) => updateGarden(selectedGarden.id, { description: e.target.value })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        {selectedGarden && (
+          <div className="w-80 bg-slate-800 border-l border-slate-700 p-4 overflow-y-auto">
+            <h3 className="text-lg font-bold text-white mb-4">Garden Settings</h3>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Grid Cols</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
                 <input
-                  type="number"
-                  value={selectedGarden.gridSize.cols}
-                  onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, cols: parseInt(e.target.value) } })}
+                  type="text"
+                  value={selectedGarden.name}
+                  onChange={(e) => updateGarden(selectedGarden.id, { name: e.target.value })}
                   className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                  min="1"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Grid Rows</label>
-                <input
-                  type="number"
-                  value={selectedGarden.gridSize.rows}
-                  onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, rows: parseInt(e.target.value) } })}
-                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                  min="1"
+                <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                <textarea
+                  value={selectedGarden.description}
+                  onChange={(e) => updateGarden(selectedGarden.id, { description: e.target.value })}
+                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Grid Cols</label>
+                  <input
+                    type="number"
+                    value={selectedGarden.gridSize.cols}
+                    onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, cols: parseInt(e.target.value) } })}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Grid Rows</label>
+                  <input
+                    type="number"
+                    value={selectedGarden.gridSize.rows}
+                    onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, rows: parseInt(e.target.value) } })}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    min="1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Level</label>
+                  <input
+                    type="number"
+                    value={selectedGarden.unlockLevel}
+                    onChange={(e) => updateGarden(selectedGarden.id, { unlockLevel: parseInt(e.target.value) })}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Cost</label>
+                  <input
+                    type="number"
+                    value={selectedGarden.unlockCoins}
+                    onChange={(e) => updateGarden(selectedGarden.id, { unlockCoins: parseInt(e.target.value) })}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  removeGarden(selectedGarden.id);
+                  setSelectedGardenId(null);
+                }}
+                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                Delete Garden
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Level</label>
-                <input
-                  type="number"
-                  value={selectedGarden.unlockLevel}
-                  onChange={(e) => updateGarden(selectedGarden.id, { unlockLevel: parseInt(e.target.value) })}
-                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Cost</label>
-                <input
-                  type="number"
-                  value={selectedGarden.unlockCoins}
-                  onChange={(e) => updateGarden(selectedGarden.id, { unlockCoins: parseInt(e.target.value) })}
-                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                  min="0"
-                />
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                removeGarden(selectedGarden.id);
-                setSelectedGardenId(null);
-              }}
-              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-            >
-              <Trash2 size={16} />
-              Delete Garden
-            </button>
           </div>
-        </div>
-      )}
-      </>
-      )}
+        )}
       </div>
     </motion.div>
   );
