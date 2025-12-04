@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Plus, Trash2, ChevronLeft, ChevronRight, Package, 
   Map, Gift, Store, Calendar, Settings, Upload, Download,
-  ZoomIn, ZoomOut, Move, Link, Layers, Image, Edit2
+  ZoomIn, ZoomOut, Move, Link, Layers
 } from 'lucide-react';
 import { useAdminStore, AdminMergeItem, AdminGarden, AdminChest, AdminStoreItem, AdminEvent, ChestContent, EventTask } from '@/lib/stores/useAdminStore';
 import { ItemCategory } from '@/lib/mergeData';
 import SpriteUploader from './SpriteUploader';
-import MapSpriteEditor from './MapSpriteEditor';
 
 interface GameAdminPanelProps {
   onClose: () => void;
@@ -616,7 +615,6 @@ function GardensManager() {
   const { gardens, addGarden, updateGarden, removeGarden, selectedGardenId, setSelectedGardenId, mapViewport, setMapViewport } = useAdminStore();
   const [showNewGardenForm, setShowNewGardenForm] = useState(false);
   const [dragMode, setDragMode] = useState<'pan' | 'select' | 'connect'>('pan');
-  const [editorMode, setEditorMode] = useState<'zones' | 'sprites'>('sprites');
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -719,45 +717,6 @@ function GardensManager() {
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-slate-800 border-b border-slate-700 p-2 flex items-center gap-2">
-          <div className="flex bg-slate-700 rounded-lg p-1">
-            <button
-              onClick={() => setEditorMode('sprites')}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                editorMode === 'sprites' 
-                  ? 'bg-amber-500 text-black' 
-                  : 'text-gray-300 hover:text-white hover:bg-slate-600'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <Image size={16} />
-                Map Sprites
-              </span>
-            </button>
-            <button
-              onClick={() => setEditorMode('zones')}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                editorMode === 'zones' 
-                  ? 'bg-amber-500 text-black' 
-                  : 'text-gray-300 hover:text-white hover:bg-slate-600'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <Layers size={16} />
-                Zones (Grid)
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {editorMode === 'sprites' && selectedGarden ? (
-          <MapSpriteEditor garden={selectedGarden} />
-        ) : editorMode === 'sprites' ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Select a garden to edit map sprites
-          </div>
-        ) : (
-        <>
         <div className="bg-slate-800 border-b border-slate-700 p-3 flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-700 rounded-lg p-1">
             <button
