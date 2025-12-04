@@ -41,6 +41,27 @@ export interface AdminMergeChain {
   items: string[];
 }
 
+export interface MapSprite {
+  id: string;
+  name: string;
+  imagePath: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  originalWidth: number;
+  originalHeight: number;
+  zIndex: number;
+  isLocked: boolean;
+  connections: MapSpriteConnection[];
+}
+
+export interface MapSpriteConnection {
+  edge: 'top' | 'right' | 'bottom' | 'left';
+  targetSpriteId: string;
+  targetEdge: 'top' | 'right' | 'bottom' | 'left';
+}
+
 export interface AdminGarden {
   id: string;
   name: string;
@@ -51,6 +72,7 @@ export interface AdminGarden {
   gridSize: { rows: number; cols: number };
   zones: AdminGardenZone[];
   connections: GardenConnection[];
+  mapSprites: MapSprite[];
   isUnlocked: boolean;
 }
 
@@ -170,6 +192,12 @@ interface AdminState {
   addGardenConnection: (gardenId: string, connection: GardenConnection) => void;
   removeGardenConnection: (gardenId: string, fromZoneId: string, toZoneId: string) => void;
   
+  addMapSprite: (gardenId: string, sprite: MapSprite) => void;
+  updateMapSprite: (gardenId: string, spriteId: string, updates: Partial<MapSprite>) => void;
+  removeMapSprite: (gardenId: string, spriteId: string) => void;
+  connectMapSprites: (gardenId: string, spriteId: string, connection: MapSpriteConnection) => void;
+  disconnectMapSprites: (gardenId: string, spriteId: string, targetSpriteId: string) => void;
+  
   addChest: (chest: AdminChest) => void;
   updateChest: (id: string, updates: Partial<AdminChest>) => void;
   removeChest: (id: string) => void;
@@ -208,6 +236,7 @@ const getDefaultState = () => ({
       gridSize: { rows: 10, cols: 8 },
       zones: [],
       connections: [],
+      mapSprites: [],
       isUnlocked: true,
     },
   ],
@@ -318,6 +347,73 @@ export const useAdminStore = create<AdminState>()(
                 ...garden,
                 connections: garden.connections.filter(
                   (c) => !(c.fromZoneId === fromZoneId && c.toZoneId === toZoneId)
+                ),
+              }
+            : garden
+        ),
+      })),
+
+      addMapSprite: (gardenId, sprite) => set((state) => ({
+        gardens: state.gardens.map((garden) =>
+          garden.id === gardenId
+            ? { ...garden, mapSprites: [...(garden.mapSprites || []), sprite] }
+            : garden
+        ),
+      })),
+
+      updateMapSprite: (gardenId, spriteId, updates) => set((state) => ({
+        gardens: state.gardens.map((garden) =>
+          garden.id === gardenId
+            ? {
+                ...garden,
+                mapSprites: (garden.mapSprites || []).map((sprite) =>
+                  sprite.id === spriteId ? { ...sprite, ...updates } : sprite
+                ),
+              }
+            : garden
+        ),
+      })),
+
+      removeMapSprite: (gardenId, spriteId) => set((state) => ({
+        gardens: state.gardens.map((garden) =>
+          garden.id === gardenId
+            ? {
+                ...garden,
+                mapSprites: (garden.mapSprites || []).filter((sprite) => sprite.id !== spriteId),
+              }
+            : garden
+        ),
+      })),
+
+      connectMapSprites: (gardenId, spriteId, connection) => set((state) => ({
+        gardens: state.gardens.map((garden) =>
+          garden.id === gardenId
+            ? {
+                ...garden,
+                mapSprites: (garden.mapSprites || []).map((sprite) =>
+                  sprite.id === spriteId
+                    ? { ...sprite, connections: [...sprite.connections, connection] }
+                    : sprite
+                ),
+              }
+            : garden
+        ),
+      })),
+
+      disconnectMapSprites: (gardenId, spriteId, targetSpriteId) => set((state) => ({
+        gardens: state.gardens.map((garden) =>
+          garden.id === gardenId
+            ? {
+                ...garden,
+                mapSprites: (garden.mapSprites || []).map((sprite) =>
+                  sprite.id === spriteId
+                    ? {
+                        ...sprite,
+                        connections: sprite.connections.filter(
+                          (c) => c.targetSpriteId !== targetSpriteId
+                        ),
+                      }
+                    : sprite
                 ),
               }
             : garden

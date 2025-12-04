@@ -8,6 +8,7 @@ import {
 import { useAdminStore, AdminMergeItem, AdminGarden, AdminChest, AdminStoreItem, AdminEvent, ChestContent, EventTask } from '@/lib/stores/useAdminStore';
 import { ItemCategory } from '@/lib/mergeData';
 import SpriteUploader from './SpriteUploader';
+import MapSpriteEditor from './MapSpriteEditor';
 
 interface GameAdminPanelProps {
   onClose: () => void;
@@ -615,6 +616,7 @@ function GardensManager() {
   const { gardens, addGarden, updateGarden, removeGarden, selectedGardenId, setSelectedGardenId, mapViewport, setMapViewport } = useAdminStore();
   const [showNewGardenForm, setShowNewGardenForm] = useState(false);
   const [dragMode, setDragMode] = useState<'pan' | 'select' | 'connect'>('pan');
+  const [editorMode, setEditorMode] = useState<'zones' | 'sprites'>('sprites');
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -707,7 +709,9 @@ function GardensManager() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-white truncate">{garden.name}</div>
-                <div className="text-xs text-gray-400">{garden.zones.length} zones</div>
+                <div className="text-xs text-gray-400">
+                  {(garden.mapSprites?.length || 0)} sprites · {garden.zones.length} zones
+                </div>
               </div>
             </button>
           ))}
@@ -715,6 +719,45 @@ function GardensManager() {
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="bg-slate-800 border-b border-slate-700 p-2 flex items-center gap-2">
+          <div className="flex bg-slate-700 rounded-lg p-1">
+            <button
+              onClick={() => setEditorMode('sprites')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                editorMode === 'sprites' 
+                  ? 'bg-amber-500 text-black' 
+                  : 'text-gray-300 hover:text-white hover:bg-slate-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Image size={16} />
+                Map Sprites
+              </span>
+            </button>
+            <button
+              onClick={() => setEditorMode('zones')}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                editorMode === 'zones' 
+                  ? 'bg-amber-500 text-black' 
+                  : 'text-gray-300 hover:text-white hover:bg-slate-600'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Layers size={16} />
+                Zones (Grid)
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {editorMode === 'sprites' && selectedGarden ? (
+          <MapSpriteEditor garden={selectedGarden} />
+        ) : editorMode === 'sprites' ? (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a garden to edit map sprites
+          </div>
+        ) : (
+        <>
         <div className="bg-slate-800 border-b border-slate-700 p-3 flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-700 rounded-lg p-1">
             <button
@@ -818,9 +861,8 @@ function GardensManager() {
             )}
           </div>
         </div>
-      </div>
 
-      {selectedGarden && (
+      {selectedGarden && editorMode === 'zones' && (
         <div className="w-80 bg-slate-800 border-l border-slate-700 p-4 overflow-y-auto">
           <h3 className="text-lg font-bold text-white mb-4">Garden Settings</h3>
           <div className="space-y-4">
@@ -898,6 +940,9 @@ function GardensManager() {
           </div>
         </div>
       )}
+      </>
+      )}
+      </div>
     </motion.div>
   );
 }

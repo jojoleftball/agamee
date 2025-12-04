@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/lib/stores/useSettingsStore';
-import { SettingsFlowerIcon, LockIcon, PlayButtonIcon, FogCloudIcon } from '../icons/GardenIcons';
+import { SettingsFlowerIcon, LockIcon, FogCloudIcon } from '../icons/GardenIcons';
 import SettingsModal from './SettingsModal';
 
 interface WorldMapScreenProps {
@@ -62,18 +62,11 @@ const GARDEN_ZONES: GardenZone[] = [
 
 export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedGarden, setSelectedGarden] = useState<string | null>(null);
   const t = useSettingsStore((state) => state.t);
 
   const handleGardenClick = (zone: GardenZone) => {
     if (zone.unlocked) {
-      setSelectedGarden(zone.id);
-    }
-  };
-
-  const handleEnter = () => {
-    if (selectedGarden) {
-      onEnterGarden(selectedGarden);
+      onEnterGarden(zone.id);
     }
   };
 
@@ -118,7 +111,7 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: index * 0.1 + 0.3 }}
-          className="absolute cursor-pointer"
+          className={`absolute ${zone.unlocked ? 'cursor-pointer' : 'cursor-not-allowed'}`}
           style={{
             top: zone.position.top,
             left: zone.position.left,
@@ -156,13 +149,11 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
           )}
 
           <motion.div
-            whileHover={zone.unlocked ? { scale: 1.05 } : {}}
-            whileTap={zone.unlocked ? { scale: 0.98 } : {}}
-            className={`absolute inset-0 rounded-2xl border-4 transition-all ${
-              selectedGarden === zone.id
-                ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]'
-                : zone.unlocked
-                ? 'border-transparent hover:border-white/50'
+            whileHover={zone.unlocked ? { scale: 1.08 } : {}}
+            whileTap={zone.unlocked ? { scale: 0.95 } : {}}
+            className={`absolute inset-0 rounded-2xl transition-all ${
+              zone.unlocked
+                ? 'border-4 border-transparent hover:border-emerald-400 hover:shadow-[0_0_40px_rgba(52,211,153,0.5)]'
                 : 'border-transparent'
             }`}
           >
@@ -176,38 +167,6 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
           </motion.div>
         </motion.div>
       ))}
-
-      <AnimatePresence>
-        {selectedGarden && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-8 left-4 right-4 z-20"
-          >
-            <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-3xl p-6 shadow-2xl border-4 border-emerald-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-white drop-shadow-lg">
-                    {t(`map.${selectedGarden}_garden`)}
-                  </h2>
-                  <p className="text-emerald-100 mt-1">
-                    {t('common.enter')} {t('common.play')}
-                  </p>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleEnter}
-                  className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow-xl border-4 border-yellow-300"
-                >
-                  <PlayButtonIcon size={40} color="#fff" />
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showSettings && (
