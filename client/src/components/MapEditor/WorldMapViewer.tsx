@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ZoomIn, ZoomOut, Home, Minimize2, ChevronLeft } from 'lucide-react';
+import { ZoomIn, ZoomOut, Minimize2, ChevronLeft, Focus } from 'lucide-react';
 import { useMapEditorStore } from '@/lib/stores/useMapEditorStore';
 
 interface WorldMapViewerProps {
@@ -16,6 +16,9 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hoveredPiece, setHoveredPiece] = useState<string | null>(null);
+  const [touchStartDistance, setTouchStartDistance] = useState<number | null>(null);
+  const [touchStartZoom, setTouchStartZoom] = useState(1);
+  const [lastTouchCenter, setLastTouchCenter] = useState<{ x: number; y: number } | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -48,25 +51,86 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
     });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('map-viewer-bg')) {
-      setIsPanning(true);
-      setPanStart({ x: e.clientX - viewport.x, y: e.clientY - viewport.y });
+  const getEventPosition = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
+    if ('clientX' in e) {
+      return { x: e.clientX, y: e.clientY };
+    }
+    return { x: 0, y: 0 };
   };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return null;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getTouchCenter = (touches: React.TouchList) => {
+    if (touches.length < 2) return null;
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    };
+  };
+
+  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.map-piece')) return;
+
+    if ('touches' in e && e.touches.length === 2) {
+      const distance = getTouchDistance(e.touches);
+      const center = getTouchCenter(e.touches);
+      setTouchStartDistance(distance);
+      setTouchStartZoom(viewport.zoom);
+      setLastTouchCenter(center);
+      return;
+    }
+
+    setIsPanning(true);
+    const pos = getEventPosition(e);
+    setPanStart({ x: pos.x - viewport.x, y: pos.y - viewport.y });
+  };
+
+  const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e && e.touches.length === 2) {
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches);
+      const center = getTouchCenter(e.touches);
+      
+      if (distance && touchStartDistance && center && lastTouchCenter) {
+        const scale = distance / touchStartDistance;
+        const newZoom = Math.max(0.1, Math.min(2, touchStartZoom * scale));
+        
+        const dx = center.x - lastTouchCenter.x;
+        const dy = center.y - lastTouchCenter.y;
+        
+        setViewport(prev => ({
+          x: prev.x + dx,
+          y: prev.y + dy,
+          zoom: newZoom
+        }));
+        setLastTouchCenter(center);
+      }
+      return;
+    }
+
     if (isPanning) {
+      const pos = getEventPosition(e);
       setViewport(prev => ({
         ...prev,
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y,
+        x: pos.x - panStart.x,
+        y: pos.y - panStart.y,
       }));
     }
-  }, [isPanning, panStart]);
+  }, [isPanning, panStart, touchStartDistance, touchStartZoom, lastTouchCenter]);
 
-  const handleMouseUp = () => {
+  const handleEnd = () => {
     setIsPanning(false);
+    setTouchStartDistance(null);
+    setLastTouchCenter(null);
   };
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -96,16 +160,38 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
     }
   };
 
+  const handleZoom = (direction: 'in' | 'out') => {
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return;
+    
+    const centerX = containerRect.width / 2;
+    const centerY = containerRect.height / 2;
+    
+    const zoomFactor = direction === 'in' ? 1.3 : 0.7;
+    const newZoom = Math.max(0.05, Math.min(2, viewport.zoom * zoomFactor));
+    
+    const worldX = (centerX - viewport.x) / viewport.zoom;
+    const worldY = (centerY - viewport.y) / viewport.zoom;
+    
+    const newX = centerX - worldX * newZoom;
+    const newY = centerY - worldY * newZoom;
+    
+    setViewport({ x: newX, y: newY, zoom: newZoom });
+  };
+
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden touch-none">
       <div
         ref={containerRef}
         className="w-full h-full cursor-grab active:cursor-grabbing map-viewer-bg"
         onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseDown={handleStart}
+        onMouseMove={handleMove}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+        onTouchStart={handleStart}
+        onTouchMove={handleMove}
+        onTouchEnd={handleEnd}
         style={{
           background: `radial-gradient(ellipse at center, #1e3a5f 0%, #0f172a 70%, #000 100%)`,
         }}
@@ -125,7 +211,7 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
                 key={piece.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`absolute cursor-pointer transition-all duration-200 ${
+                className={`absolute cursor-pointer transition-all duration-200 map-piece ${
                   hoveredPiece === piece.id 
                     ? 'ring-4 ring-emerald-400 shadow-2xl' 
                     : ''
@@ -140,6 +226,10 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
                 onMouseEnter={() => setHoveredPiece(piece.id)}
                 onMouseLeave={() => setHoveredPiece(null)}
                 onClick={() => handlePieceClick(piece.id)}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  handlePieceClick(piece.id);
+                }}
               >
                 <img
                   src={piece.imagePath}
@@ -164,7 +254,7 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
         {pieces.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
             <p className="text-lg">No map pieces available</p>
-            <p className="text-sm mt-2">Open the Map Editor to add pieces</p>
+            <p className="text-sm mt-2">Open the Map Builder to add pieces</p>
           </div>
         )}
       </div>
@@ -181,36 +271,29 @@ export default function WorldMapViewer({ onSelectLocation, onClose, showControls
             </button>
           )}
 
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-xl p-2">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-2xl p-2">
             <button
-              onClick={() => setViewport(prev => ({ ...prev, zoom: Math.max(0.05, prev.zoom * 0.8) }))}
-              className="p-2 hover:bg-white/10 text-white rounded-lg"
+              onClick={() => handleZoom('out')}
+              className="w-12 h-12 flex items-center justify-center hover:bg-white/10 text-white rounded-xl transition-colors"
             >
-              <ZoomOut size={20} />
+              <ZoomOut size={22} />
             </button>
-            <span className="text-white text-sm w-14 text-center font-mono">
+            <div className="text-white text-sm w-14 text-center font-medium">
               {Math.round(viewport.zoom * 100)}%
-            </span>
+            </div>
             <button
-              onClick={() => setViewport(prev => ({ ...prev, zoom: Math.min(2, prev.zoom * 1.25) }))}
-              className="p-2 hover:bg-white/10 text-white rounded-lg"
+              onClick={() => handleZoom('in')}
+              className="w-12 h-12 flex items-center justify-center hover:bg-white/10 text-white rounded-xl transition-colors"
             >
-              <ZoomIn size={20} />
+              <ZoomIn size={22} />
             </button>
-            <div className="w-px h-6 bg-white/20" />
+            <div className="w-px h-8 bg-white/20" />
             <button
               onClick={zoomToFit}
-              className="p-2 hover:bg-white/10 text-white rounded-lg"
+              className="w-12 h-12 flex items-center justify-center hover:bg-white/10 text-white rounded-xl transition-colors"
               title="Fit all"
             >
-              <Minimize2 size={20} />
-            </button>
-            <button
-              onClick={() => setViewport({ x: 0, y: 0, zoom: 0.3 })}
-              className="p-2 hover:bg-white/10 text-white rounded-lg"
-              title="Reset"
-            >
-              <Home size={20} />
+              <Focus size={22} />
             </button>
           </div>
         </>
