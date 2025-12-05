@@ -60,7 +60,7 @@ interface MapEditorState {
   
   setViewport: (viewport: Partial<MapEditorViewport>) => void;
   resetViewport: () => void;
-  zoomToFit: () => void;
+  zoomToFit: (maxZoom?: number) => void;
   
   setEditorOpen: (open: boolean) => void;
   setShowConnections: (show: boolean) => void;
@@ -116,7 +116,7 @@ export const useMapEditorStore = create<MapEditorState>()(
         viewport: { x: 0, y: 0, zoom: 0.5 },
       }),
 
-      zoomToFit: () => {
+      zoomToFit: (maxZoom = 1) => {
         const bounds = get().getMapBounds();
         if (bounds.width === 0 || bounds.height === 0) return;
         
@@ -126,7 +126,7 @@ export const useMapEditorStore = create<MapEditorState>()(
         
         const scaleX = viewportWidth / bounds.width;
         const scaleY = viewportHeight / bounds.height;
-        const zoom = Math.min(scaleX, scaleY, 1);
+        const zoom = Math.min(scaleX, scaleY, maxZoom);
         
         const centerX = bounds.minX + bounds.width / 2;
         const centerY = bounds.minY + bounds.height / 2;
