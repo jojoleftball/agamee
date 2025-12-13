@@ -48,11 +48,65 @@ export default function MapBuilder({ onClose }: { onClose: () => void }) {
 
   const selectedPiece = pieces.find(p => p.id === selectedPieceId);
 
+  const defaultMaps = useMemo(() => [
+    { name: 'World Map Overview', path: '/game-assets/world-map-overview.jpg' },
+    { name: 'Garden World Map', path: '/game-assets/garden_world_map_background.png' },
+    { name: 'Garden World Map Fog', path: '/game-assets/garden-world-map-fog.jpg' },
+    { name: 'Middle Garden View', path: '/game-assets/middle-garden-view.jpg' },
+    { name: 'Basic Garden', path: '/game-assets/basic_garden_background_vertical.png' },
+    { name: 'Tropical Garden', path: '/game-assets/tropical_garden_background_vertical.png' },
+    { name: 'Zen Garden', path: '/game-assets/zen_garden_background_vertical.png' },
+    { name: 'Desert Garden', path: '/game-assets/desert_garden_background_vertical.png' },
+    { name: 'Winter Garden', path: '/game-assets/winter_garden_background_vertical.png' },
+  ], []);
+
   useEffect(() => {
-    if (pieces.length > 0) {
-      setTimeout(() => zoomToFit(0.6), 100);
+    if (pieces.length === 0) {
+      const loadDefaultMaps = async () => {
+        let xOffset = 0;
+        
+        for (let i = 0; i < defaultMaps.length; i++) {
+          const map = defaultMaps[i];
+          
+          const img = document.createElement('img');
+          img.src = map.path;
+          
+          await new Promise<void>((resolve) => {
+            img.onload = () => {
+              const newPiece: MapPiece = {
+                id: `default_${i}_${Date.now()}`,
+                name: map.name,
+                imagePath: map.path,
+                x: xOffset,
+                y: 0,
+                width: img.width,
+                height: img.height,
+                originalWidth: img.width,
+                originalHeight: img.height,
+                scale: 1,
+                zIndex: i,
+                isLocked: false,
+                connections: [],
+              };
+              
+              addPiece(newPiece);
+              xOffset += img.width + 50;
+              resolve();
+            };
+            
+            img.onerror = () => {
+              console.warn(`Failed to load image: ${map.path}`);
+              resolve();
+            };
+          });
+        }
+        
+        setTimeout(() => zoomToFit(0.3), 200);
+      };
+      
+      loadDefaultMaps();
     } else {
-      setViewport({ x: window.innerWidth / 2, y: window.innerHeight / 2, zoom: 0.5 });
+      setTimeout(() => zoomToFit(0.6), 100);
     }
   }, []);
 

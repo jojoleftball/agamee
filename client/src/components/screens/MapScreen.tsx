@@ -1,5 +1,6 @@
-import { Lock } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+
+const LOCKED_ICON_URL = '/game-assets/locked-area-icon.png';
 
 export default function MapScreen() {
   const setScreen = useGameStore((state) => state.setScreen);
@@ -65,8 +66,11 @@ export default function MapScreen() {
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-xl p-6 border-4 border-gray-400 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gray-900/40 z-10 flex items-center justify-center">
                   <div className="text-center">
-                    <Lock className="w-16 h-16 text-white mx-auto mb-2" />
-                    <p className="text-white font-bold">Locked</p>
+                    <img 
+                      src={LOCKED_ICON_URL} 
+                      alt="Locked" 
+                      className="w-24 h-24 mx-auto mb-2 object-contain"
+                    />
                     <p className="text-white/80 text-sm">Level {(index + 1) * 5} required</p>
                   </div>
                 </div>

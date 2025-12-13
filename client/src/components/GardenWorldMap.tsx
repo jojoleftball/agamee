@@ -2,7 +2,9 @@ import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
 import { GARDEN_BIOMES } from '@/lib/mergeData';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LockIcon, CheckmarkIcon, CloseFlowerIcon, GardenFlowerIcon, MapPinIcon } from './icons/GardenIcons';
+import { CheckmarkIcon, CloseFlowerIcon, GardenFlowerIcon, MapPinIcon } from './icons/GardenIcons';
+
+const LOCKED_ICON_URL = '/game-assets/locked-area-icon.png';
 
 interface GardenWorldMapProps {
   onGardenSelect: (gardenId: string) => void;
@@ -129,7 +131,11 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                     transition={{ delay: index * 0.1 + 0.3 }}
                     className="absolute inset-0 flex items-center justify-center rounded-full"
                   >
-                    <LockIcon size={48} color="#fff" />
+                    <img 
+                      src={LOCKED_ICON_URL} 
+                      alt="Locked" 
+                      className="w-24 h-24 object-contain"
+                    />
                   </motion.div>
                 )}
                 {isCurrent && isUnlocked && (
@@ -219,7 +225,7 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                       className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-2 border-amber-300"
                     >
                       <p className="text-sm font-bold text-amber-800 mb-1 flex items-center gap-2">
-                        <LockIcon size={16} color="#92400e" />
+                        <img src={LOCKED_ICON_URL} alt="Locked" className="w-5 h-5 object-contain" />
                         Requirements:
                       </p>
                       <p className="text-sm text-amber-700">
@@ -240,7 +246,7 @@ export default function GardenWorldMap({ onGardenSelect, onClose }: GardenWorldM
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400'
                       }`}
                     >
-                      <LockIcon size={20} color={canUnlock ? '#78350f' : '#6b7280'} />
+                      <img src={LOCKED_ICON_URL} alt="Locked" className="w-6 h-6 object-contain" />
                       <span>{canUnlock ? `Unlock for ${selectedBiome?.unlockCoins} coins` : 'Requirements not met'}</span>
                     </motion.button>
                   </>

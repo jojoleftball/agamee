@@ -29,7 +29,6 @@ export interface Translations {
     maria_line3: string;
   };
   map: {
-    title: string;
     main_garden: string;
     zen_garden: string;
     tropical_garden: string;
@@ -91,7 +90,6 @@ export const translations: Record<Language, Translations> = {
       maria_line3: "That's a great plan! I can't wait to see this garden bloom again!",
     },
     map: {
-      title: 'Garden World',
       main_garden: 'Main Garden',
       zen_garden: 'Zen Garden',
       tropical_garden: 'Tropical Paradise',
@@ -151,7 +149,6 @@ export const translations: Record<Language, Translations> = {
       maria_line3: "È un ottimo piano! Non vedo l'ora di vedere questo giardino fiorire di nuovo!",
     },
     map: {
-      title: 'Mondo del Giardino',
       main_garden: 'Giardino Principale',
       zen_garden: 'Giardino Zen',
       tropical_garden: 'Paradiso Tropicale',
@@ -211,7 +208,6 @@ export const translations: Record<Language, Translations> = {
       maria_line3: "Αυτό είναι ένα εξαιρετικό σχέδιο! Ανυπομονώ να δω αυτόν τον κήπο να ανθίζει ξανά!",
     },
     map: {
-      title: 'Κόσμος Κήπου',
       main_garden: 'Κύριος Κήπος',
       zen_garden: 'Κήπος Ζεν',
       tropical_garden: 'Τροπικός Παράδεισος',
@@ -271,7 +267,6 @@ export const translations: Record<Language, Translations> = {
       maria_line3: "¡Es un gran plan! ¡No puedo esperar a ver este jardín florecer de nuevo!",
     },
     map: {
-      title: 'Mundo del Jardín',
       main_garden: 'Jardín Principal',
       zen_garden: 'Jardín Zen',
       tropical_garden: 'Paraíso Tropical',
