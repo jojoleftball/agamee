@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckmarkIcon, CloseFlowerIcon, GardenFlowerIcon, MapPinIcon } from './icons/GardenIcons';
 
-const LOCKED_ICON_URL = '/game-assets/locked-area-icon.png';
+const LOCKED_ICON_URL = '/sprites/locked-icon.png';
 
 interface GardenWorldMapProps {
   onGardenSelect: (gardenId: string) => void;

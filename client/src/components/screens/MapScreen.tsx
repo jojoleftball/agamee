@@ -1,6 +1,6 @@
 import { useGameStore } from '../../store/gameStore';
 
-const LOCKED_ICON_URL = '/game-assets/locked-area-icon.png';
+const LOCKED_ICON_URL = '/sprites/locked-icon.png';
 
 export default function MapScreen() {
   const setScreen = useGameStore((state) => state.setScreen);
@@ -22,15 +22,6 @@ export default function MapScreen() {
       />
 
       <div className="relative h-full flex flex-col items-center justify-center p-4">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">
-            Your Gardens
-          </h1>
-          <p className="text-white/90 text-lg">
-            Choose a garden to restore
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full">
           <div className="relative">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border-4 border-green-600">

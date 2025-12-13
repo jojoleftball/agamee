@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { useMapEditorStore } from '@/lib/stores/useMapEditorStore';
-import { SettingsFlowerIcon, LockIcon, FogCloudIcon } from '../icons/GardenIcons';
+import { SettingsFlowerIcon, FogCloudIcon } from '../icons/GardenIcons';
 import { Edit3, Map as MapIcon } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 import { WorldMapViewer } from '../MapEditor';
 import { MapBuilder } from '../MapBuilder';
+
+const LOCKED_SPRITE_URL = '/sprites/locked-icon.png';
 
 interface WorldMapScreenProps {
   onEnterGarden: (gardenId: string) => void;
@@ -172,9 +174,11 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
               >
                 {!zone.unlocked && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-black/50 backdrop-blur-sm rounded-full p-4">
-                      <LockIcon size={40} color="#9ca3af" />
-                    </div>
+                    <img 
+                      src={LOCKED_SPRITE_URL} 
+                      alt="Locked" 
+                      className="w-20 h-20 object-contain drop-shadow-lg"
+                    />
                   </div>
                 )}
               </motion.div>
@@ -183,16 +187,7 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
         </>
       )}
 
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
-        <motion.h1
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-2xl font-bold text-white drop-shadow-2xl bg-black/30 backdrop-blur-sm rounded-2xl px-6 py-3"
-        >
-          {t('map.title')}
-        </motion.h1>
-
-        <div className="flex items-center gap-3">
+      <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
           {hasMapPieces && (
             <motion.button
               initial={{ scale: 0 }}
@@ -233,7 +228,6 @@ export default function WorldMapScreen({ onEnterGarden }: WorldMapScreenProps) {
           >
             <SettingsFlowerIcon size={32} color="#fff" />
           </motion.button>
-        </div>
       </div>
 
       <AnimatePresence>
