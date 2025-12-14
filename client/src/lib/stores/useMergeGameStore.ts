@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { MERGE_ITEMS, BoardItem, GARDEN_BIOMES } from '../mergeData';
 import { soundManager } from '../sounds';
+import { useSettingsStore } from './useSettingsStore';
 
 interface GameTask {
   id: string;
@@ -485,8 +486,9 @@ export const useMergeGameStore = create<MergeGameState>()(
       
       findEmptySpot: () => {
         const state = get();
-        for (let y = 0; y < state.gridSize.rows; y++) {
-          for (let x = 0; x < state.gridSize.cols; x++) {
+        const { boardSettings } = useSettingsStore.getState();
+        for (let y = 0; y < boardSettings.rows; y++) {
+          for (let x = 0; x < boardSettings.cols; x++) {
             if (!state.getItemAt(x, y)) {
               return { x, y };
             }
