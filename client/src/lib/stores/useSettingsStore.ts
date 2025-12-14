@@ -21,12 +21,30 @@ export interface HUDPositions {
   levelCircle: HUDElementPosition;
   coinsBar: HUDElementPosition;
   gemsBar: HUDElementPosition;
+  storeIcon: HUDElementPosition;
+  inventoryIcon: HUDElementPosition;
+  settingsIcon: HUDElementPosition;
+  energyBar: HUDElementPosition;
+}
+
+export interface BoardSettings {
+  rows: number;
+  cols: number;
 }
 
 const getDefaultHUDPositions = (): HUDPositions => ({
   levelCircle: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 22 },
   coinsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
   gemsBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
+  storeIcon: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 12 },
+  inventoryIcon: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 12 },
+  settingsIcon: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 12 },
+  energyBar: { x: 0, y: 0, textOffsetX: 0, textOffsetY: 0, scale: 1, fontSize: 14 },
+});
+
+const getDefaultBoardSettings = (): BoardSettings => ({
+  rows: 8,
+  cols: 5,
 });
 
 interface SettingsState {
@@ -37,6 +55,7 @@ interface SettingsState {
   connectedAccounts: AccountConnection[];
   appVersion: string;
   hudPositions: HUDPositions;
+  boardSettings: BoardSettings;
   
   setLanguage: (lang: Language) => void;
   setSoundVolume: (volume: number) => void;
@@ -48,6 +67,8 @@ interface SettingsState {
   t: (key: string) => string;
   setHUDPosition: (element: keyof HUDPositions, position: Partial<HUDElementPosition>) => void;
   resetHUDPositions: () => void;
+  setBoardSettings: (settings: Partial<BoardSettings>) => void;
+  resetBoardSettings: () => void;
 }
 
 const STORAGE_KEY = 'merge-garden-settings';
@@ -67,6 +88,7 @@ export const useSettingsStore = create<SettingsState>()(
       ],
       appVersion: APP_VERSION,
       hudPositions: getDefaultHUDPositions(),
+      boardSettings: getDefaultBoardSettings(),
 
       setLanguage: (lang) => set({ language: lang }),
       
@@ -120,6 +142,15 @@ export const useSettingsStore = create<SettingsState>()(
       })),
 
       resetHUDPositions: () => set({ hudPositions: getDefaultHUDPositions() }),
+
+      setBoardSettings: (settings) => set((state) => ({
+        boardSettings: {
+          ...state.boardSettings,
+          ...settings,
+        },
+      })),
+
+      resetBoardSettings: () => set({ boardSettings: getDefaultBoardSettings() }),
     }),
     {
       name: STORAGE_KEY,
@@ -130,6 +161,7 @@ export const useSettingsStore = create<SettingsState>()(
         hasSeenIntro: state.hasSeenIntro,
         connectedAccounts: state.connectedAccounts,
         hudPositions: state.hudPositions,
+        boardSettings: state.boardSettings,
       }),
     }
   )

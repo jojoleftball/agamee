@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
+import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { MERGE_ITEMS } from '@/lib/mergeData';
 import MergeBoardItem from './MergeBoardItem';
 import MergeAnimation from './MergeAnimation';
@@ -12,7 +13,9 @@ interface MergeAnimationData {
 }
 
 export default function MergeBoard() {
-  const { items, gridSize, selectedItem, selectItem, tryMerge, moveItem, tapGenerator } = useMergeGameStore();
+  const { items, selectedItem, selectItem, tryMerge, moveItem, tapGenerator } = useMergeGameStore();
+  const { boardSettings } = useSettingsStore();
+  const gridSize = boardSettings;
   const [animations, setAnimations] = useState<MergeAnimationData[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
