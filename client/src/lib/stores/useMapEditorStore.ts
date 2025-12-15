@@ -56,6 +56,7 @@ interface MapEditorState {
   addPiece: (piece: MapPiece) => void;
   updatePiece: (id: string, updates: Partial<MapPiece>) => void;
   removePiece: (id: string) => void;
+  clearAllPieces: () => void;
   selectPiece: (id: string | null) => void;
   
   setViewport: (viewport: Partial<MapEditorViewport>) => void;
@@ -105,6 +106,12 @@ export const useMapEditorStore = create<MapEditorState>()(
         })),
         selectedPieceId: state.selectedPieceId === id ? null : state.selectedPieceId,
       })),
+
+      clearAllPieces: () => set({
+        pieces: [],
+        selectedPieceId: null,
+        viewport: { x: 0, y: 0, zoom: 0.5 },
+      }),
 
       selectPiece: (id) => set({ selectedPieceId: id }),
 

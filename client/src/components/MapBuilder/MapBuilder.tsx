@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Upload, Trash2, Lock, Unlock, Move, 
-  ZoomIn, ZoomOut, Image, X, 
-  ChevronLeft, Save, Layers, Focus
+  ZoomIn, ZoomOut, Image, X, Plus,
+  ChevronLeft, Save, Layers, Focus, RotateCcw
 } from 'lucide-react';
 import { useMapEditorStore, MapPiece } from '@/lib/stores/useMapEditorStore';
 
@@ -24,6 +24,7 @@ export default function MapBuilder({ onClose }: { onClose: () => void }) {
     addPiece,
     updatePiece,
     removePiece,
+    clearAllPieces,
     selectPiece,
     setViewport,
     zoomToFit,
@@ -208,6 +209,52 @@ export default function MapBuilder({ onClose }: { onClose: () => void }) {
     
     setTimeout(() => zoomToFit(0.6), 100);
   }, [addPiece, getMapBounds, pieces.length, selectPiece, zoomToFit]);
+
+  const addDefaultMapToCanvas = useCallback((mapInfo: { name: string; path: string }) => {
+    const existingPiece = pieces.find(p => p.imagePath === mapInfo.path);
+    if (existingPiece) {
+      selectPiece(existingPiece.id);
+      return;
+    }
+
+    const img = document.createElement('img');
+    img.src = mapInfo.path;
+    
+    img.onload = () => {
+      const bounds = getMapBounds();
+      let startX = 0;
+      let startY = 0;
+      
+      if (bounds.width > 0) {
+        startX = bounds.maxX + 50;
+        startY = bounds.minY;
+      }
+
+      const newPiece: MapPiece = {
+        id: `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: mapInfo.name,
+        imagePath: mapInfo.path,
+        x: startX,
+        y: startY,
+        width: img.width,
+        height: img.height,
+        originalWidth: img.width,
+        originalHeight: img.height,
+        scale: 1,
+        zIndex: pieces.length,
+        isLocked: false,
+        connections: [],
+      };
+      
+      addPiece(newPiece);
+      selectPiece(newPiece.id);
+      setTimeout(() => zoomToFit(0.6), 100);
+    };
+  }, [addPiece, getMapBounds, pieces, selectPiece, zoomToFit]);
+
+  const isMapOnCanvas = useCallback((path: string) => {
+    return pieces.some(p => p.imagePath === path);
+  }, [pieces]);
 
   const getEventPosition = (e: React.MouseEvent | React.TouchEvent) => {
     if ('touches' in e && e.touches.length > 0) {
@@ -459,34 +506,84 @@ export default function MapBuilder({ onClose }: { onClose: () => void }) {
             className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             <Upload size={18} />
-            {uploadingImage ? 'Uploading...' : 'Add Map Piece'}
+            {uploadingImage ? 'Uploading...' : 'Upload Image'}
           </button>
+          {pieces.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm('Clear all map pieces from the canvas?')) {
+                  clearAllPieces();
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <RotateCcw size={18} />
+              Clear All
+            </button>
+          )}
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {pendingPieces.length > 0 && (
-          <div className="w-48 bg-slate-800 border-r border-slate-700 p-3 overflow-y-auto shrink-0">
-            <h3 className="text-sm font-medium text-slate-300 mb-3">New Pieces</h3>
-            <div className="space-y-2">
-              {pendingPieces.map(pending => (
+        <div className="w-52 bg-slate-800 border-r border-slate-700 p-3 overflow-y-auto shrink-0">
+          <h3 className="text-sm font-medium text-slate-300 mb-3">Available Maps</h3>
+          <div className="space-y-2">
+            {defaultMaps.map((map, idx) => {
+              const onCanvas = isMapOnCanvas(map.path);
+              return (
                 <div
-                  key={pending.id}
-                  className="bg-slate-700 rounded-lg p-2 cursor-pointer hover:bg-slate-600 transition-colors"
-                  onClick={() => placePendingPiece(pending)}
+                  key={idx}
+                  className={`rounded-lg p-2 cursor-pointer transition-colors ${
+                    onCanvas 
+                      ? 'bg-emerald-600/30 border border-emerald-500/50' 
+                      : 'bg-slate-700 hover:bg-slate-600'
+                  }`}
+                  onClick={() => addDefaultMapToCanvas(map)}
                 >
                   <img
-                    src={pending.thumbnail}
-                    alt={pending.name}
-                    className="w-full h-20 object-contain bg-slate-900 rounded mb-2"
+                    src={map.path}
+                    alt={map.name}
+                    className="w-full h-16 object-cover bg-slate-900 rounded mb-2"
                   />
-                  <p className="text-xs text-white truncate">{pending.name}</p>
-                  <p className="text-xs text-slate-400">{pending.width} x {pending.height}</p>
+                  <div className="flex items-center gap-1">
+                    {onCanvas ? (
+                      <span className="text-xs text-emerald-400">Added</span>
+                    ) : (
+                      <Plus size={12} className="text-slate-400" />
+                    )}
+                    <p className="text-xs text-white truncate flex-1">{map.name}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+          
+          {pendingPieces.length > 0 && (
+            <>
+              <div className="my-4 border-t border-slate-600" />
+              <h3 className="text-sm font-medium text-slate-300 mb-3">Uploaded</h3>
+              <div className="space-y-2">
+                {pendingPieces.map(pending => (
+                  <div
+                    key={pending.id}
+                    className="bg-slate-700 rounded-lg p-2 cursor-pointer hover:bg-slate-600 transition-colors"
+                    onClick={() => placePendingPiece(pending)}
+                  >
+                    <img
+                      src={pending.thumbnail}
+                      alt={pending.name}
+                      className="w-full h-16 object-cover bg-slate-900 rounded mb-2"
+                    />
+                    <div className="flex items-center gap-1">
+                      <Plus size={12} className="text-slate-400" />
+                      <p className="text-xs text-white truncate">{pending.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="flex-1 relative overflow-hidden bg-slate-950">
           <div
