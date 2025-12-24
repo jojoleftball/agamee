@@ -402,7 +402,7 @@ export default function MapEditorPage({ onClose }: MapEditorPageProps) {
           </div>
           
           <button
-            onClick={zoomToFit}
+            onClick={() => zoomToFit()}
             className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
             title="Zoom to fit all"
           >

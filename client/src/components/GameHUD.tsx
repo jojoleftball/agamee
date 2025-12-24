@@ -4,12 +4,14 @@ import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface GameHUDProps {
-  onOpenTasks: () => void;
-  onOpenShop: () => void;
-  onOpenBiomes: () => void;
+  onOpenTasks?: () => void;
+  onOpenShop?: () => void;
+  onOpenBiomes?: () => void;
+  onOpenChests?: () => void;
+  onMenuClick?: () => void;
 }
 
-export default function GameHUD({ onOpenTasks, onOpenShop, onOpenBiomes }: GameHUDProps) {
+export default function GameHUD({ onOpenTasks, onOpenShop, onOpenBiomes, onOpenChests, onMenuClick }: GameHUDProps) {
   const { energy, maxEnergy, level, refillEnergyWithGems } = useMergeGameStore();
   const { isMuted, toggleMute } = useAudio();
   
@@ -98,20 +100,32 @@ export default function GameHUD({ onOpenTasks, onOpenShop, onOpenBiomes }: GameH
               className="flex-1 relative h-10 sm:h-12 flex items-center justify-center font-bold text-white text-xs sm:text-sm drop-shadow-md transition-transform active:scale-95"
               style={{
                 backgroundImage: 'url(/game-assets/garden_ui_buttons_sprite_sheet.png)',
-                backgroundSize: '300% 100%',
-                backgroundPosition: '50% 0%',
+                backgroundSize: '400% 100%',
+                backgroundPosition: '25% 0%',
                 backgroundRepeat: 'no-repeat'
               }}
             >
               Shop
             </button>
             <button
+              onClick={onOpenChests}
+              className="flex-1 relative h-10 sm:h-12 flex items-center justify-center font-bold text-white text-xs sm:text-sm drop-shadow-md transition-transform active:scale-95"
+              style={{
+                backgroundImage: 'url(/game-assets/garden_ui_buttons_sprite_sheet.png)',
+                backgroundSize: '400% 100%',
+                backgroundPosition: '50% 0%',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              Chests
+            </button>
+            <button
               onClick={onOpenBiomes}
               className="flex-1 relative h-10 sm:h-12 flex items-center justify-center font-bold text-white text-xs sm:text-sm drop-shadow-md transition-transform active:scale-95"
               style={{
                 backgroundImage: 'url(/game-assets/garden_ui_buttons_sprite_sheet.png)',
-                backgroundSize: '300% 100%',
-                backgroundPosition: '100% 0%',
+                backgroundSize: '400% 100%',
+                backgroundPosition: '75% 0%',
                 backgroundRepeat: 'no-repeat'
               }}
             >

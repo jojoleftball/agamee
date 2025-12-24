@@ -18,6 +18,7 @@ export interface AdminMergeItem {
   coinValue: number;
   xpValue: number;
   sellPrice: number;
+  gemSellPrice: number;
   isGenerator?: boolean;
   generates?: string[];
   generationTime?: number;
@@ -32,6 +33,9 @@ export interface AdminMergeItem {
     dropRates?: Record<string, number>;
   };
   isBlocked?: boolean;
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  unlockLevel?: number;
+  tags?: string[];
 }
 
 export interface AdminMergeChain {
@@ -165,6 +169,7 @@ interface AdminState {
   events: AdminEvent[];
   
   selectedItemId: string | null;
+  selectedChainId: string | null;
   selectedGardenId: string | null;
   selectedChestId: string | null;
   selectedEventId: string | null;
@@ -211,6 +216,7 @@ interface AdminState {
   removeEvent: (id: string) => void;
   
   setSelectedItemId: (id: string | null) => void;
+  setSelectedChainId: (id: string | null) => void;
   setSelectedGardenId: (id: string | null) => void;
   setSelectedChestId: (id: string | null) => void;
   setSelectedEventId: (id: string | null) => void;
@@ -244,6 +250,7 @@ const getDefaultState = () => ({
   storeItems: [],
   events: [],
   selectedItemId: null,
+  selectedChainId: null,
   selectedGardenId: null,
   selectedChestId: null,
   selectedEventId: null,
@@ -463,6 +470,7 @@ export const useAdminStore = create<AdminState>()(
       })),
 
       setSelectedItemId: (id) => set({ selectedItemId: id }),
+      setSelectedChainId: (id) => set({ selectedChainId: id }),
       setSelectedGardenId: (id) => set({ selectedGardenId: id }),
       setSelectedChestId: (id) => set({ selectedChestId: id }),
       setSelectedEventId: (id) => set({ selectedEventId: id }),
@@ -471,10 +479,22 @@ export const useAdminStore = create<AdminState>()(
         mapViewport: { ...state.mapViewport, ...viewport },
       })),
 
-      importConfig: (config) => set((state) => ({
-        ...state,
-        ...config,
-      })),
+      importConfig: async (config) => {
+        set((state) => ({
+          ...state,
+          ...config,
+        }));
+        // Save to server
+        try {
+          await fetch('/api/admin-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config),
+          });
+        } catch (error) {
+          console.error('Failed to save config to server:', error);
+        }
+      },
 
       exportConfig: () => {
         const state = get();

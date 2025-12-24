@@ -1,51 +1,34 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSettingsStore, HUDPositions } from '@/lib/stores/useSettingsStore';
-import { useMergeGameStore } from '@/lib/stores/useMergeGameStore';
+import { useNavigate } from 'react-router-dom';
+import { useSettingsStore } from '@/lib/stores/useSettingsStore';
 import { Language, languageNames } from '@/lib/i18n/translations';
-import { RotateCcw, Plus, Trash2, Grid, Move } from 'lucide-react';
-import { MERGE_ITEMS } from '@/lib/mergeData';
-import {
+import { RotateCcw, Grid, Shield } from 'lucide-react';
+import { 
+  SettingsFlowerIcon, 
+  SoundWaveIcon, 
+  VolumeMutedIcon, 
+  VolumeHighIcon, 
+  EmailIcon, 
+  LanguageGlobeIcon, 
+  VersionLeafIcon, 
+  BackArrowIcon, 
+  CheckmarkIcon, 
+  GoogleIcon, 
+  AppleIcon, 
   CloseFlowerIcon,
-  SoundWaveIcon,
-  VolumeHighIcon,
-  VolumeMutedIcon,
-  GoogleIcon,
-  AppleIcon,
-  EmailIcon,
-  LanguageGlobeIcon,
-  VersionLeafIcon,
-  CheckmarkIcon,
-  BackArrowIcon,
-  SettingsFlowerIcon,
-  MergeBoardIcon,
-  GardenFlowerIcon,
-  SellCoinIcon,
-  GemIcon,
-  EnergyBoltIcon,
-  ShopBagIcon,
-  InventoryChestIcon,
-  StarXPIcon,
+  MergeBoardIcon 
 } from '../icons/GardenIcons';
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'general' | 'board' | 'hud' | 'items';
+type SettingsTab = 'general' | 'board' | 'admin';
 type SettingsView = 'main' | 'language' | 'account';
 
-const HUD_ELEMENTS: { key: keyof HUDPositions; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: 'levelCircle', label: 'Level', icon: <StarXPIcon size={20} />, color: 'from-amber-400 to-yellow-500' },
-  { key: 'coinsBar', label: 'Coins', icon: <SellCoinIcon size={20} />, color: 'from-yellow-400 to-amber-600' },
-  { key: 'gemsBar', label: 'Gems', icon: <GemIcon size={20} />, color: 'from-purple-400 to-violet-600' },
-  { key: 'energyBar', label: 'Energy', icon: <EnergyBoltIcon size={20} />, color: 'from-blue-400 to-cyan-500' },
-  { key: 'storeIcon', label: 'Store', icon: <ShopBagIcon size={20} />, color: 'from-orange-400 to-red-500' },
-  { key: 'inventoryIcon', label: 'Inventory', icon: <InventoryChestIcon size={20} />, color: 'from-amber-600 to-orange-600' },
-  { key: 'settingsIcon', label: 'Settings', icon: <SettingsFlowerIcon size={20} />, color: 'from-emerald-400 to-green-600' },
-];
-
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [currentView, setCurrentView] = useState<SettingsView>('main');
   const {
@@ -54,19 +37,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     soundMuted,
     connectedAccounts,
     appVersion,
-    hudPositions,
     boardSettings,
     setLanguage,
     setSoundVolume,
     toggleSoundMute,
-    setHUDPosition,
-    resetHUDPositions,
     setBoardSettings,
     resetBoardSettings,
     t,
   } = useSettingsStore();
-
-  const { items, removeItem, addItem, findEmptySpot } = useMergeGameStore();
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -81,8 +59,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { id: 'general', label: 'General', icon: <SettingsFlowerIcon size={20} /> },
     { id: 'board', label: 'Board', icon: <MergeBoardIcon size={20} /> },
-    { id: 'hud', label: 'HUD', icon: <Move size={18} /> },
-    { id: 'items', label: 'Items', icon: <GardenFlowerIcon size={20} /> },
+    { id: 'admin', label: 'Admin', icon: <Shield size={20} /> },
   ];
 
   const renderGeneralTab = () => (
@@ -341,258 +318,95 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     </motion.div>
   );
 
-  const renderHUDTab = () => (
+  const renderAdminTab = () => (
     <motion.div
-      key="hud"
+      key="admin"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className="space-y-4"
     >
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <Move size={20} className="text-blue-600" />
-          HUD Elements
-        </h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={resetHUDPositions}
-          className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium border border-red-200"
-        >
-          <RotateCcw size={14} />
-          Reset All
-        </motion.button>
-      </div>
-
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-        {HUD_ELEMENTS.map(({ key, label, icon, color }) => (
-          <div key={key} className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border-2 border-green-100">
-            <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-gradient-to-r ${color}`}>
-              <div className="text-white">{icon}</div>
-              <span className="font-bold text-white text-sm">{label}</span>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">X</label>
-                <input
-                  type="range"
-                  min="-200"
-                  max="200"
-                  value={hudPositions[key].x}
-                  onChange={(e) => setHUDPosition(key, { x: parseInt(e.target.value) })}
-                  className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
-                />
-                <span className="text-xs text-gray-500">{hudPositions[key].x}px</span>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Y</label>
-                <input
-                  type="range"
-                  min="-200"
-                  max="200"
-                  value={hudPositions[key].y}
-                  onChange={(e) => setHUDPosition(key, { y: parseInt(e.target.value) })}
-                  className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-500"
-                />
-                <span className="text-xs text-gray-500">{hudPositions[key].y}px</span>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Scale</label>
-                <input
-                  type="range"
-                  min="50"
-                  max="200"
-                  value={hudPositions[key].scale * 100}
-                  onChange={(e) => setHUDPosition(key, { scale: parseInt(e.target.value) / 100 })}
-                  className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-green-500"
-                />
-                <span className="text-xs text-gray-500">{Math.round(hudPositions[key].scale * 100)}%</span>
-              </div>
-            </div>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border-2 border-red-200">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto">
+            <Shield size={32} color="#dc2626" />
           </div>
-        ))}
+          <h3 className="text-xl font-bold text-gray-800">Admin Panel</h3>
+          <p className="text-gray-600">Access advanced game management tools</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              navigate('/admin');
+              onClose(); // Close settings modal when opening admin panel
+            }}
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          >
+            Open Admin Panel
+          </motion.button>
+        </div>
       </div>
-
-      <p className="text-center text-gray-500 text-xs">Adjust position and scale of each HUD element</p>
     </motion.div>
   );
 
-  const renderItemsTab = () => {
-    const itemCategories = ['flower', 'tool', 'tree', 'vegetable', 'generator', 'blocked'] as const;
-    const [selectedCategory, setSelectedCategory] = useState<string>('flower');
-
-    const categoryItems = Object.entries(MERGE_ITEMS).filter(([_, item]) => item.category === selectedCategory);
-
-    const handleAddItem = (itemType: string) => {
-      const spot = findEmptySpot();
-      if (spot) {
-        addItem(itemType, spot.x, spot.y);
-      }
-    };
-
-    return (
+  return (
+    <>
       <motion.div
-        key="items"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className="space-y-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleBackdropClick}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       >
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <GardenFlowerIcon size={20} />
-          Board Items
-        </h3>
-
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border-2 border-green-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-medium text-gray-700">Current Items ({items.length})</span>
+        <motion.div
+          initial={{ scale: 0.9, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 50 }}
+          className="w-full max-w-md bg-gradient-to-b from-green-100 via-emerald-50 to-white rounded-3xl shadow-2xl overflow-hidden border-4 border-green-400"
+        >
+          <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 p-4 flex items-center justify-between relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20">
+            </div>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg flex items-center gap-2 relative z-10">
+              <SettingsFlowerIcon size={28} color="#fff" />
+              {t('settings.title')}
+            </h2>
             <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => items.forEach(item => removeItem(item.id))}
-              className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded-lg font-medium"
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center relative z-10"
             >
-              Clear All
+              <CloseFlowerIcon size={36} />
             </motion.button>
           </div>
-          
-          <div className="max-h-32 overflow-y-auto">
-            {items.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">No items on board</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {items.slice(0, 20).map((item) => {
-                  const itemData = MERGE_ITEMS[item.itemType];
-                  return (
-                    <div
-                      key={item.id}
-                      className="relative group bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-2 border border-green-200"
-                    >
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700 truncate">{itemData?.name || item.itemType}</div>
-                        <div className="text-[10px] text-gray-400">({item.x},{item.y})</div>
-                      </div>
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => removeItem(item.id)}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                      >
-                        <Trash2 size={10} />
-                      </motion.button>
-                    </div>
-                  );
-                })}
-                {items.length > 20 && (
-                  <div className="bg-gray-100 rounded-lg p-2 flex items-center justify-center">
-                    <span className="text-xs text-gray-500">+{items.length - 20} more</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
 
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border-2 border-green-200">
-          <span className="font-medium text-gray-700 mb-3 block">Add Items</span>
-          
-          <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-            {itemCategories.map((cat) => (
+          <div className="flex border-b border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+            {tabs.map((tab) => (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === cat
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); setCurrentView('main'); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'text-green-700 border-b-3 border-green-500 bg-white/50'
+                    : 'text-gray-500 hover:text-green-600 hover:bg-white/30'
                 }`}
               >
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-            {categoryItems.slice(0, 15).map(([id, item]) => (
-              <motion.button
-                key={id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleAddItem(id)}
-                className="p-2 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:border-green-400 transition-colors"
-              >
-                <div className="flex items-center gap-1">
-                  <Plus size={12} className="text-green-600" />
-                  <span className="text-xs font-medium text-gray-700 truncate">{item.name}</span>
-                </div>
-                <div className="text-[10px] text-gray-400">Lvl {item.level}</div>
-              </motion.button>
-            ))}
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            <AnimatePresence mode="wait">
+              {activeTab === 'general' && renderGeneralTab()}
+              {activeTab === 'board' && renderBoardTab()}
+              {activeTab === 'admin' && renderAdminTab()}
+            </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
-    );
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={handleBackdropClick}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 50 }}
-        className="w-full max-w-md bg-gradient-to-b from-green-100 via-emerald-50 to-white rounded-3xl shadow-2xl overflow-hidden border-4 border-green-400"
-      >
-        <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-500 p-4 flex items-center justify-between relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-1 left-4"><GardenFlowerIcon size={20} /></div>
-            <div className="absolute bottom-1 right-8"><GardenFlowerIcon size={16} /></div>
-          </div>
-          <h2 className="text-2xl font-bold text-white drop-shadow-lg flex items-center gap-2 relative z-10">
-            <SettingsFlowerIcon size={28} color="#fff" />
-            {t('settings.title')}
-          </h2>
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center relative z-10"
-          >
-            <CloseFlowerIcon size={36} />
-          </motion.button>
-        </div>
-
-        <div className="flex border-b border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setCurrentView('main'); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'text-green-700 border-b-3 border-green-500 bg-white/50'
-                  : 'text-gray-500 hover:text-green-600 hover:bg-white/30'
-              }`}
-            >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {activeTab === 'general' && renderGeneralTab()}
-            {activeTab === 'board' && renderBoardTab()}
-            {activeTab === 'hud' && renderHUDTab()}
-            {activeTab === 'items' && renderItemsTab()}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </motion.div>
+    </>
   );
 }

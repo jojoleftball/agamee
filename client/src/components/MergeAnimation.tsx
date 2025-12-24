@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react';
 interface MergeAnimationProps {
   x: number;
   y: number;
+  rewards?: {
+    coins?: number;
+    xp?: number;
+  };
 }
 
 interface Particle {
@@ -16,7 +20,7 @@ interface Particle {
   color: string;
 }
 
-export default function MergeAnimation({ x, y }: MergeAnimationProps) {
+export default function MergeAnimation({ x, y, rewards }: MergeAnimationProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showSuccess, setShowSuccess] = useState(true);
 
@@ -85,6 +89,32 @@ export default function MergeAnimation({ x, y }: MergeAnimationProps) {
         </div>
       )}
 
+      {rewards && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          {rewards.coins && (
+            <div 
+              className="text-yellow-400 font-bold text-lg drop-shadow-lg"
+              style={{
+                animation: 'rewardFloat 1.2s ease-out forwards'
+              }}
+            >
+              +{rewards.coins} coins
+            </div>
+          )}
+          {rewards.xp && (
+            <div 
+              className="text-blue-400 font-bold text-lg drop-shadow-lg mt-2"
+              style={{
+                animation: 'rewardFloat 1.2s ease-out forwards',
+                animationDelay: '0.2s'
+              }}
+            >
+              +{rewards.xp} XP
+            </div>
+          )}
+        </div>
+      )}
+
       <div 
         className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
         style={{
@@ -132,6 +162,17 @@ export default function MergeAnimation({ x, y }: MergeAnimationProps) {
           100% {
             opacity: 0;
             transform: translate(-50%, -50%) scale(2.5);
+          }
+        }
+
+        @keyframes rewardFloat {
+          0% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-40px);
           }
         }
       `}</style>

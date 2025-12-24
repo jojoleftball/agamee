@@ -19,6 +19,18 @@ interface GameTask {
   biomeId: string;
 }
 
+interface Chest {
+  id: string;
+  type: 'merge' | 'special';
+  rewards: {
+    coins?: number;
+    gems?: number;
+    energy?: number;
+    items?: string[];
+  };
+  opened: boolean;
+}
+
 interface MergeGameState {
   // Resources
   energy: number;
@@ -44,6 +56,9 @@ interface MergeGameState {
   
   // Tasks
   tasks: GameTask[];
+  
+  // Chests
+  chests: Chest[];
   
   // Energy regeneration
   lastEnergyUpdate: number;
@@ -80,6 +95,10 @@ interface MergeGameState {
   // Actions - Tasks
   checkTaskCompletion: (taskId: string) => boolean;
   completeTask: (taskId: string) => void;
+  
+  // Actions - Chests
+  addChest: (chest: Omit<Chest, 'id' | 'opened'>) => void;
+  openChest: (chestId: string) => boolean;
   
   // Utilities
   getItemAt: (x: number, y: number) => BoardItem | undefined;
@@ -157,6 +176,8 @@ export const useMergeGameStore = create<MergeGameState>()(
           biomeId: 'basic'
         }
       ],
+      
+      chests: [],
       
       lastEnergyUpdate: Date.now(),
       energyRegenRate: 1,
@@ -469,6 +490,14 @@ export const useMergeGameStore = create<MergeGameState>()(
         if (task.rewards.energy) get().addEnergy(task.rewards.energy);
         if (task.rewards.xp) get().addXP(task.rewards.xp);
         
+        // Add merge chest reward
+        get().addChest({
+          type: 'merge',
+          rewards: {
+            items: ['flower_1', 'flower_1', 'tool_1'] // Example items to merge
+          }
+        });
+        
         set((state) => ({
           tasks: state.tasks.map((t) =>
             t.id === taskId ? { ...t, completed: true } : t
@@ -476,6 +505,40 @@ export const useMergeGameStore = create<MergeGameState>()(
         }));
         
         soundManager.playSuccess();
+      },
+      
+      addChest: (chest) => {
+        set((state) => ({
+          chests: [...state.chests, { ...chest, id: `chest_${Date.now()}_${Math.random()}`, opened: false }]
+        }));
+      },
+      
+      openChest: (chestId) => {
+        const state = get();
+        const chest = state.chests.find((c) => c.id === chestId);
+        
+        if (!chest || chest.opened) return false;
+        
+        if (chest.rewards.coins) get().addCoins(chest.rewards.coins);
+        if (chest.rewards.gems) get().addGems(chest.rewards.gems);
+        if (chest.rewards.energy) get().addEnergy(chest.rewards.energy);
+        if (chest.rewards.items) {
+          chest.rewards.items.forEach((itemType) => {
+            const spot = get().findEmptySpot();
+            if (spot) {
+              get().addItem(itemType, spot.x, spot.y);
+            }
+          });
+        }
+        
+        set((state) => ({
+          chests: state.chests.map((c) =>
+            c.id === chestId ? { ...c, opened: true } : c
+          )
+        }));
+        
+        soundManager.playSuccess();
+        return true;
       },
       
       // Utilities

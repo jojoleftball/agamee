@@ -10,6 +10,10 @@ interface MergeAnimationData {
   id: string;
   x: number;
   y: number;
+  rewards?: {
+    coins?: number;
+    xp?: number;
+  };
 }
 
 export default function MergeBoard() {
@@ -143,11 +147,16 @@ export default function MergeBoard() {
         
         if (success) {
           const pos = getCellPosition(gridPos.x, gridPos.y);
+          const mergedItemData = MERGE_ITEMS[draggedItem.itemType]?.mergesInto ? MERGE_ITEMS[MERGE_ITEMS[draggedItem.itemType].mergesInto!] : null;
           const animId = `anim_${Date.now()}_${Math.random()}`;
           setAnimations(prev => [...prev, {
             id: animId,
             x: pos.left + cellSize / 2,
-            y: pos.top + cellSize / 2
+            y: pos.top + cellSize / 2,
+            rewards: mergedItemData ? {
+              coins: mergedItemData.coinValue,
+              xp: mergedItemData.xpValue
+            } : undefined
           }]);
           
           setTimeout(() => {
@@ -172,11 +181,16 @@ export default function MergeBoard() {
               const success = tryMerge(nearbyMatching[0].id, draggedId);
               if (success) {
                 const pos = getCellPosition(gridPos.x, gridPos.y);
+                const mergedItemData = MERGE_ITEMS[movedItem.itemType]?.mergesInto ? MERGE_ITEMS[MERGE_ITEMS[movedItem.itemType].mergesInto!] : null;
                 const animId = `anim_${Date.now()}_${Math.random()}`;
                 setAnimations(prev => [...prev, {
                   id: animId,
                   x: pos.left + cellSize / 2,
-                  y: pos.top + cellSize / 2
+                  y: pos.top + cellSize / 2,
+                  rewards: mergedItemData ? {
+                    coins: mergedItemData.coinValue,
+                    xp: mergedItemData.xpValue
+                  } : undefined
                 }]);
                 
                 setTimeout(() => {

@@ -3,17 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Plus, Trash2, ChevronLeft, ChevronRight, Package, 
   Map, Gift, Store, Calendar, Settings, Upload, Download,
-  ZoomIn, ZoomOut, Move, Link, Layers
+  ZoomIn, ZoomOut, Move, Link, Layers, GitBranch
 } from 'lucide-react';
-import { useAdminStore, AdminMergeItem, AdminGarden, AdminChest, AdminStoreItem, AdminEvent, ChestContent, EventTask } from '@/lib/stores/useAdminStore';
+import { useAdminStore, AdminMergeItem, AdminMergeChain, AdminGarden, AdminChest, AdminStoreItem, AdminEvent, ChestContent, EventTask } from '@/lib/stores/useAdminStore';
 import { ItemCategory } from '@/lib/mergeData';
 import SpriteUploader from './SpriteUploader';
+import ItemForm from './ItemForm';
+import { useEffect } from 'react';
 
 interface GameAdminPanelProps {
   onClose: () => void;
 }
 
-type AdminTab = 'items' | 'gardens' | 'chests' | 'store' | 'events';
+type AdminTab = 'items' | 'chains' | 'gardens' | 'chests' | 'store' | 'events';
 
 const ITEM_CATEGORIES: { value: ItemCategory; label: string; color: string }[] = [
   { value: 'flower', label: 'Flower', color: 'bg-pink-500' },
@@ -29,7 +31,44 @@ const ITEM_CATEGORIES: { value: ItemCategory; label: string; color: string }[] =
 
 export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>('items');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const { exportConfig, importConfig, resetToDefaults } = useAdminStore();
+
+  useEffect(() => {
+    // Load config from server on mount
+    const loadConfig = async () => {
+      try {
+        const response = await fetch('/api/admin-config');
+        if (response.ok) {
+          const config = await response.json();
+          if (Object.keys(config).length > 0) {
+            importConfig(config);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load config from server:', error);
+      }
+    };
+    loadConfig();
+  }, [importConfig]);
+
+  const saveConfig = async () => {
+    setSaveStatus('saving');
+    try {
+      const config = exportConfig();
+      await fetch('/api/admin-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Failed to save config to server:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }
+  };
 
   const handleExport = () => {
     const config = exportConfig();
@@ -53,6 +92,7 @@ export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
         try {
           const config = JSON.parse(text);
           importConfig(config);
+          await saveConfig(); // Save to server after import
         } catch (err) {
           console.error('Failed to parse config file:', err);
         }
@@ -63,6 +103,7 @@ export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
 
   const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { id: 'items', label: 'Items', icon: <Package size={20} /> },
+    { id: 'chains', label: 'Chains', icon: <GitBranch size={20} /> },
     { id: 'gardens', label: 'Gardens', icon: <Map size={20} /> },
     { id: 'chests', label: 'Chests', icon: <Gift size={20} /> },
     { id: 'store', label: 'Store', icon: <Store size={20} /> },
@@ -82,6 +123,25 @@ export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
           <h1 className="text-xl font-bold text-white">Game Admin Panel</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={saveConfig}
+            disabled={saveStatus === 'saving'}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              saveStatus === 'saved'
+                ? 'bg-green-700 text-white'
+                : saveStatus === 'error'
+                ? 'bg-red-700 text-white'
+                : saveStatus === 'saving'
+                ? 'bg-gray-600 text-gray-300'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            <Download size={16} />
+            {saveStatus === 'saving' ? 'Saving...' : 
+             saveStatus === 'saved' ? 'Saved!' : 
+             saveStatus === 'error' ? 'Error!' : 
+             'Save to Server'}
+          </button>
           <button
             onClick={handleImport}
             className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -132,6 +192,7 @@ export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
       <div className="flex-1 overflow-hidden bg-slate-900">
         <AnimatePresence mode="wait">
           {activeTab === 'items' && <ItemsManager key="items" />}
+          {activeTab === 'chains' && <ChainsManager key="chains" />}
           {activeTab === 'gardens' && <GardensManager key="gardens" />}
           {activeTab === 'chests' && <ChestsManager key="chests" />}
           {activeTab === 'store' && <StoreManager key="store" />}
@@ -144,65 +205,72 @@ export default function GameAdminPanel({ onClose }: GameAdminPanelProps) {
 
 function ItemsManager() {
   const { items, addItem, updateItem, removeItem, selectedItemId, setSelectedItemId } = useAdminStore();
+  const [activeCategoryTab, setActiveCategoryTab] = useState<ItemCategory>('flower');
   const [showNewItemForm, setShowNewItemForm] = useState(false);
-  const [newItem, setNewItem] = useState<Partial<AdminMergeItem>>({
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newItem, setNewItem] = useState<AdminMergeItem>({
+    id: '',
+    name: '',
+    description: '',
     category: 'flower',
     level: 1,
     maxLevel: 10,
-    coinValue: 10,
-    xpValue: 5,
-    sellPrice: 5,
+    sprite: '',
     spriteX: 0,
     spriteY: 0,
     spriteW: 128,
     spriteH: 128,
+    coinValue: 10,
+    xpValue: 5,
+    sellPrice: 5,
+    gemSellPrice: 1,
+    rarity: 'common',
+    unlockLevel: 1,
+    tags: [],
   });
-  const [filterCategory, setFilterCategory] = useState<ItemCategory | 'all'>('all');
 
-  const filteredItems = Object.values(items).filter(
-    (item) => filterCategory === 'all' || item.category === filterCategory
+  const categoryItems = Object.values(items).filter(item => item.category === activeCategoryTab);
+  const filteredItems = categoryItems.filter(
+    (item) => {
+      const matchesSearch = !searchQuery || 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesSearch;
+    }
   );
 
   const handleCreateItem = () => {
-    if (!newItem.id || !newItem.name) return;
-    addItem({
-      id: newItem.id,
-      name: newItem.name,
-      description: newItem.description || '',
-      category: newItem.category || 'flower',
-      level: newItem.level || 1,
-      maxLevel: newItem.maxLevel || 10,
-      sprite: newItem.sprite || '',
-      spriteX: newItem.spriteX || 0,
-      spriteY: newItem.spriteY || 0,
-      spriteW: newItem.spriteW || 128,
-      spriteH: newItem.spriteH || 128,
-      coinValue: newItem.coinValue || 0,
-      xpValue: newItem.xpValue || 0,
-      sellPrice: newItem.sellPrice || 0,
-      mergesInto: newItem.mergesInto,
-      isGenerator: newItem.isGenerator,
-      generates: newItem.generates,
-      generationTime: newItem.generationTime,
-      maxCharges: newItem.maxCharges,
-      energyCost: newItem.energyCost,
-      isChest: newItem.isChest,
-      chestRewards: newItem.chestRewards,
-      isBlocked: newItem.isBlocked,
-    });
     setNewItem({
-      category: 'flower',
+      id: '',
+      name: '',
+      description: '',
+      category: activeCategoryTab,
       level: 1,
       maxLevel: 10,
-      coinValue: 10,
-      xpValue: 5,
-      sellPrice: 5,
+      sprite: '',
       spriteX: 0,
       spriteY: 0,
       spriteW: 128,
       spriteH: 128,
+      coinValue: 10,
+      xpValue: 5,
+      sellPrice: 5,
+      gemSellPrice: 1,
+      rarity: 'common' as const,
+      unlockLevel: 1,
+      tags: [],
     });
-    setShowNewItemForm(false);
+    setShowNewItemForm(true);
+  };
+
+  const handleSaveNewItem = () => {
+    if (newItem.id && newItem.name) {
+      addItem(newItem);
+      setShowNewItemForm(false);
+      setSelectedItemId(newItem.id);
+    }
   };
 
   const selectedItem = selectedItemId ? items[selectedItemId] : null;
@@ -218,30 +286,97 @@ function ItemsManager() {
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-white">Items</h2>
-            <button
-              onClick={() => setShowNewItemForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-medium"
-            >
-              <Plus size={16} />
-              Add
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const itemsData = Object.values(items);
+                  const blob = new Blob([JSON.stringify(itemsData, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'items.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Download size={16} />
+                Export Items
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.json';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      const text = await file.text();
+                      try {
+                        const importedItems = JSON.parse(text);
+                        importedItems.forEach((item: AdminMergeItem) => {
+                          if (item.id && item.name) {
+                            addItem(item);
+                          }
+                        });
+                      } catch (err) {
+                        console.error('Failed to parse items file:', err);
+                      }
+                    }
+                  };
+                  input.click();
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Upload size={16} />
+                Import Items
+              </button>
+              <button
+                onClick={handleCreateItem}
+                className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-medium"
+              >
+                <Plus size={16} />
+                Add
+              </button>
+            </div>
           </div>
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value as ItemCategory | 'all')}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 text-sm border border-slate-600"
-          >
-            <option value="all">All Categories</option>
-            {ITEM_CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search items..."
+            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 text-sm border border-slate-600 mb-3"
+          />
+          
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            {ITEM_CATEGORIES.map((cat) => {
+              const itemCount = Object.values(items).filter(item => item.category === cat.value).length;
+              return (
+                <button
+                  key={cat.value}
+                  onClick={() => setActiveCategoryTab(cat.value)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeCategoryTab === cat.value
+                      ? 'bg-amber-500 text-black'
+                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                  }`}
+                >
+                  <div className={`w-3 h-3 rounded-full ${cat.color}`}></div>
+                  {cat.label}
+                  <span className="bg-slate-600 text-xs px-2 py-0.5 rounded-full">
+                    {itemCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-2">
           {filteredItems.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              No items yet. Add your first item!
+              No {activeCategoryTab} items yet. Add your first one!
             </div>
           ) : (
             <div className="space-y-1">
@@ -286,7 +421,7 @@ function ItemsManager() {
             <ItemForm
               item={newItem}
               onChange={setNewItem}
-              onSave={handleCreateItem}
+              onSave={handleSaveNewItem}
               onCancel={() => setShowNewItemForm(false)}
               isNew
             />
@@ -324,351 +459,55 @@ function ItemsManager() {
   );
 }
 
-interface ItemFormProps {
-  item: Partial<AdminMergeItem>;
-  onChange: (updates: Partial<AdminMergeItem>) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  isNew: boolean;
-}
+function ChainsManager() {
+  const { items, mergeChains, addMergeChain, updateMergeChain, removeMergeChain, selectedChainId, setSelectedChainId } = useAdminStore();
+  const [showNewChainForm, setShowNewChainForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newChain, setNewChain] = useState<AdminMergeChain>({
+    id: '',
+    name: '',
+    category: 'flower',
+    items: [],
+  });
 
-function ItemForm({ item, onChange, onSave, onCancel, isNew }: ItemFormProps) {
-  const isGenerator = item.category === 'generator' || item.isGenerator;
-  const isChest = item.category === 'chest' || item.isChest;
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Item ID</label>
-          <input
-            type="text"
-            value={item.id || ''}
-            onChange={(e) => onChange({ id: e.target.value })}
-            disabled={!isNew}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 disabled:opacity-50"
-            placeholder="unique_item_id"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-          <input
-            type="text"
-            value={item.name || ''}
-            onChange={(e) => onChange({ name: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            placeholder="Item Name"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-        <textarea
-          value={item.description || ''}
-          onChange={(e) => onChange({ description: e.target.value })}
-          className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-          placeholder="Item description..."
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-          <select
-            value={item.category || 'flower'}
-            onChange={(e) => onChange({ category: e.target.value as ItemCategory })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          >
-            {ITEM_CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Level</label>
-          <input
-            type="number"
-            value={item.level || 1}
-            onChange={(e) => onChange({ level: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="1"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Max Level</label>
-          <input
-            type="number"
-            value={item.maxLevel || 10}
-            onChange={(e) => onChange({ maxLevel: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="1"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Coin Value</label>
-          <input
-            type="number"
-            value={item.coinValue || 0}
-            onChange={(e) => onChange({ coinValue: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="0"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">XP Value</label>
-          <input
-            type="number"
-            value={item.xpValue || 0}
-            onChange={(e) => onChange({ xpValue: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="0"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Sell Price</label>
-          <input
-            type="number"
-            value={item.sellPrice || 0}
-            onChange={(e) => onChange({ sellPrice: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="0"
-          />
-        </div>
-      </div>
-
-      <div className="border-t border-slate-700 pt-4">
-        <h3 className="text-lg font-medium text-white mb-3">Sprite Settings</h3>
-        <SpriteUploader
-          currentSprite={item.sprite}
-          onSpriteChange={(sprite) => onChange({ sprite })}
-          label="Item Sprite"
-        />
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Sprite X</label>
-            <input
-              type="number"
-              value={item.spriteX || 0}
-              onChange={(e) => onChange({ spriteX: parseInt(e.target.value) })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Sprite Y</label>
-            <input
-              type="number"
-              value={item.spriteY || 0}
-              onChange={(e) => onChange({ spriteY: parseInt(e.target.value) })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Width</label>
-            <input
-              type="number"
-              value={item.spriteW || 128}
-              onChange={(e) => onChange({ spriteW: parseInt(e.target.value) })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Height</label>
-            <input
-              type="number"
-              value={item.spriteH || 128}
-              onChange={(e) => onChange({ spriteH: parseInt(e.target.value) })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-700 pt-4">
-        <h3 className="text-lg font-medium text-white mb-3">Merge Settings</h3>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Merges Into (Item ID)</label>
-          <input
-            type="text"
-            value={item.mergesInto || ''}
-            onChange={(e) => onChange({ mergesInto: e.target.value || undefined })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            placeholder="next_item_id"
-          />
-        </div>
-      </div>
-
-      {isGenerator && (
-        <div className="border-t border-slate-700 pt-4">
-          <h3 className="text-lg font-medium text-white mb-3">Generator Settings</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Generation Time (ms)</label>
-              <input
-                type="number"
-                value={item.generationTime || 60000}
-                onChange={(e) => onChange({ generationTime: parseInt(e.target.value) })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Max Charges</label>
-              <input
-                type="number"
-                value={item.maxCharges || 3}
-                onChange={(e) => onChange({ maxCharges: parseInt(e.target.value) })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Energy Cost</label>
-              <input
-                type="number"
-                value={item.energyCost || 5}
-                onChange={(e) => onChange({ energyCost: parseInt(e.target.value) })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-300 mb-1">Generates (comma-separated IDs)</label>
-            <input
-              type="text"
-              value={item.generates?.join(', ') || ''}
-              onChange={(e) => onChange({ generates: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              placeholder="item_1, item_2, item_3"
-            />
-          </div>
-        </div>
-      )}
-
-      {isChest && (
-        <div className="border-t border-slate-700 pt-4">
-          <h3 className="text-lg font-medium text-white mb-3">Chest Contents</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Coins Reward</label>
-              <input
-                type="number"
-                value={item.chestRewards?.coins || 0}
-                onChange={(e) => onChange({ chestRewards: { ...item.chestRewards, coins: parseInt(e.target.value) } })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Gems Reward</label>
-              <input
-                type="number"
-                value={item.chestRewards?.gems || 0}
-                onChange={(e) => onChange({ chestRewards: { ...item.chestRewards, gems: parseInt(e.target.value) } })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Energy Reward</label>
-              <input
-                type="number"
-                value={item.chestRewards?.energy || 0}
-                onChange={(e) => onChange({ chestRewards: { ...item.chestRewards, energy: parseInt(e.target.value) } })}
-                className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-300 mb-1">Item Rewards (comma-separated IDs)</label>
-            <input
-              type="text"
-              value={item.chestRewards?.items?.join(', ') || ''}
-              onChange={(e) => onChange({ chestRewards: { ...item.chestRewards, items: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) } })}
-              className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-              placeholder="item_1, item_2, item_3"
-            />
-          </div>
-        </div>
-      )}
-
-      {isNew && (
-        <div className="flex gap-3 pt-4">
-          <button
-            onClick={onSave}
-            className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
-          >
-            Create Item
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-    </div>
+  const filteredChains = mergeChains.filter(
+    (chain) => {
+      const matchesSearch = !searchQuery || 
+        chain.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        chain.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        chain.category.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    }
   );
-}
 
-function GardensManager() {
-  const { gardens, addGarden, updateGarden, removeGarden, selectedGardenId, setSelectedGardenId, mapViewport, setMapViewport } = useAdminStore();
-  const [showNewGardenForm, setShowNewGardenForm] = useState(false);
-  const [dragMode, setDragMode] = useState<'pan' | 'select' | 'connect'>('pan');
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const handleCreateChain = () => {
+    setNewChain({
+      id: '',
+      name: '',
+      category: 'flower',
+      items: [],
+    });
+    setShowNewChainForm(true);
+  };
 
-  const selectedGarden = selectedGardenId ? gardens.find((g) => g.id === selectedGardenId) : null;
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    const newZoom = Math.max(0.25, Math.min(3, mapViewport.zoom + delta));
-    setMapViewport({ zoom: newZoom });
-  }, [mapViewport.zoom, setMapViewport]);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (dragMode === 'pan') {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - mapViewport.x, y: e.clientY - mapViewport.y });
+  const handleSaveNewChain = () => {
+    if (newChain.id && newChain.name && newChain.items.length > 0) {
+      addMergeChain(newChain);
+      setShowNewChainForm(false);
+      setSelectedChainId(newChain.id);
     }
-  }, [dragMode, mapViewport]);
+  };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDragging && dragMode === 'pan') {
-      setMapViewport({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    }
-  }, [isDragging, dragMode, dragStart, setMapViewport]);
+  const selectedChain = selectedChainId ? mergeChains.find((c) => c.id === selectedChainId) : null;
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  const getItemName = (itemId: string) => {
+    const item = items[itemId];
+    return item ? item.name : `Unknown Item (${itemId})`;
+  };
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1 && dragMode === 'pan') {
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - mapViewport.x, y: e.touches[0].clientY - mapViewport.y });
-    }
-  }, [dragMode, mapViewport]);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-    } else if (isDragging && e.touches.length === 1 && dragMode === 'pan') {
-      setMapViewport({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y,
-      });
-    }
-  }, [isDragging, dragMode, dragStart, setMapViewport]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  const getAvailableItems = (category: ItemCategory) => {
+    return Object.values(items).filter(item => item.category === category);
+  };
 
   return (
     <motion.div
@@ -677,239 +516,292 @@ function GardensManager() {
       exit={{ opacity: 0, y: -20 }}
       className="flex h-full"
     >
-      <div className="w-72 bg-slate-800 border-r border-slate-700 flex flex-col">
+      <div className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-white">Gardens</h2>
+            <h2 className="text-lg font-bold text-white">Merge Chains</h2>
             <button
-              onClick={() => setShowNewGardenForm(true)}
+              onClick={handleCreateChain}
               className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-medium"
             >
               <Plus size={16} />
-              Add
+              Add Chain
             </button>
           </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search chains..."
+            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 text-sm border border-slate-600 mb-3"
+          />
         </div>
         
         <div className="flex-1 overflow-y-auto p-2">
-          {gardens.map((garden) => (
-            <button
-              key={garden.id}
-              onClick={() => setSelectedGardenId(garden.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors mb-1 ${
-                selectedGardenId === garden.id
-                  ? 'bg-amber-500/20 border border-amber-500/50'
-                  : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
-                <Map size={20} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-white truncate">{garden.name}</div>
-                <div className="text-xs text-gray-400">
-                  {(garden.mapSprites?.length || 0)} sprites · {garden.zones.length} zones
-                </div>
-              </div>
-            </button>
-          ))}
+          {filteredChains.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              No merge chains yet. Create your first chain!
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {filteredChains.map((chain) => (
+                <button
+                  key={chain.id}
+                  onClick={() => setSelectedChainId(chain.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                    selectedChainId === chain.id
+                      ? 'bg-amber-500/20 border border-amber-500/50'
+                      : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    ITEM_CATEGORIES.find((c) => c.value === chain.category)?.color || 'bg-gray-500'
+                  }`}>
+                    <GitBranch size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-white truncate">{chain.name}</div>
+                    <div className="text-xs text-gray-400">{chain.items.length} items · {chain.category}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-slate-800 border-b border-slate-700 p-3 flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-slate-700 rounded-lg p-1">
-            <button
-              onClick={() => setDragMode('pan')}
-              className={`p-2 rounded ${dragMode === 'pan' ? 'bg-amber-500 text-black' : 'text-white hover:bg-slate-600'}`}
-            >
-              <Move size={18} />
-            </button>
-            <button
-              onClick={() => setDragMode('select')}
-              className={`p-2 rounded ${dragMode === 'select' ? 'bg-amber-500 text-black' : 'text-white hover:bg-slate-600'}`}
-            >
-              <Layers size={18} />
-            </button>
-            <button
-              onClick={() => setDragMode('connect')}
-              className={`p-2 rounded ${dragMode === 'connect' ? 'bg-amber-500 text-black' : 'text-white hover:bg-slate-600'}`}
-            >
-              <Link size={18} />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMapViewport({ zoom: Math.max(0.25, mapViewport.zoom - 0.25) })}
-              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded"
-            >
-              <ZoomOut size={18} />
-            </button>
-            <span className="text-white text-sm w-16 text-center">{Math.round(mapViewport.zoom * 100)}%</span>
-            <button
-              onClick={() => setMapViewport({ zoom: Math.min(3, mapViewport.zoom + 0.25) })}
-              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded"
-            >
-              <ZoomIn size={18} />
-            </button>
-          </div>
-          <button
-            onClick={() => setMapViewport({ x: 0, y: 0, zoom: 1 })}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm"
-          >
-            Reset View
-          </button>
-        </div>
-
-        <div
-          ref={containerRef}
-          className="flex-1 overflow-hidden bg-slate-900 relative cursor-grab active:cursor-grabbing"
-          onWheel={handleWheel}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div
-            className="absolute"
-            style={{
-              transform: `translate(${mapViewport.x}px, ${mapViewport.y}px) scale(${mapViewport.zoom})`,
-              transformOrigin: '0 0',
-            }}
-          >
-            {selectedGarden ? (
-              <div className="relative">
-                <div
-                  className="bg-green-900/30 border-2 border-dashed border-green-500/50 rounded-lg"
-                  style={{
-                    width: selectedGarden.gridSize.cols * 60,
-                    height: selectedGarden.gridSize.rows * 60,
-                  }}
-                >
-                  <div className="grid" style={{ gridTemplateColumns: `repeat(${selectedGarden.gridSize.cols}, 60px)` }}>
-                    {Array.from({ length: selectedGarden.gridSize.rows * selectedGarden.gridSize.cols }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-[60px] h-[60px] border border-green-700/30 hover:bg-green-500/20 transition-colors"
-                      />
-                    ))}
-                  </div>
-                </div>
-                {selectedGarden.zones.map((zone) => (
-                  <div
-                    key={zone.id}
-                    className="absolute bg-amber-500/30 border-2 border-amber-500 rounded-lg cursor-pointer hover:bg-amber-500/50 transition-colors flex items-center justify-center"
-                    style={{
-                      left: zone.x * 60,
-                      top: zone.y * 60,
-                      width: zone.width * 60,
-                      height: zone.height * 60,
-                    }}
-                  >
-                    <span className="text-white font-medium text-sm">{zone.name}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-[400px] text-gray-500">
-                Select a garden to edit
-              </div>
-            )}
-          </div>
-        </div>
-
-        {selectedGarden && (
-          <div className="w-80 bg-slate-800 border-l border-slate-700 p-4 overflow-y-auto">
-            <h3 className="text-lg font-bold text-white mb-4">Garden Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={selectedGarden.name}
-                  onChange={(e) => updateGarden(selectedGarden.id, { name: e.target.value })}
-                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                <textarea
-                  value={selectedGarden.description}
-                  onChange={(e) => updateGarden(selectedGarden.id, { description: e.target.value })}
-                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Grid Cols</label>
-                  <input
-                    type="number"
-                    value={selectedGarden.gridSize.cols}
-                    onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, cols: parseInt(e.target.value) } })}
-                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Grid Rows</label>
-                  <input
-                    type="number"
-                    value={selectedGarden.gridSize.rows}
-                    onChange={(e) => updateGarden(selectedGarden.id, { gridSize: { ...selectedGarden.gridSize, rows: parseInt(e.target.value) } })}
-                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                    min="1"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Level</label>
-                  <input
-                    type="number"
-                    value={selectedGarden.unlockLevel}
-                    onChange={(e) => updateGarden(selectedGarden.id, { unlockLevel: parseInt(e.target.value) })}
-                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Unlock Cost</label>
-                  <input
-                    type="number"
-                    value={selectedGarden.unlockCoins}
-                    onChange={(e) => updateGarden(selectedGarden.id, { unlockCoins: parseInt(e.target.value) })}
-                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-                    min="0"
-                  />
-                </div>
-              </div>
+      <div className="flex-1 overflow-y-auto p-6">
+        {showNewChainForm ? (
+          <div className="max-w-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Create New Merge Chain</h2>
               <button
-                onClick={() => {
-                  removeGarden(selectedGarden.id);
-                  setSelectedGardenId(null);
-                }}
-                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                onClick={() => setShowNewChainForm(false)}
+                className="text-gray-400 hover:text-white"
               >
-                <Trash2 size={16} />
-                Delete Garden
+                <X size={24} />
               </button>
             </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Chain ID</label>
+                  <input
+                    type="text"
+                    value={newChain.id}
+                    onChange={(e) => setNewChain({...newChain, id: e.target.value})}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    placeholder="chain-id"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Chain Name</label>
+                  <input
+                    type="text"
+                    value={newChain.name}
+                    onChange={(e) => setNewChain({...newChain, name: e.target.value})}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    placeholder="Chain Name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <select
+                  value={newChain.category}
+                  onChange={(e) => setNewChain({...newChain, category: e.target.value as ItemCategory})}
+                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                >
+                  {ITEM_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Items in Chain</label>
+                <div className="space-y-2">
+                  {newChain.items.map((itemId, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="flex-1 bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600">
+                        {getItemName(itemId)}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newItems = [...newChain.items];
+                          newItems.splice(index, 1);
+                          setNewChain({...newChain, items: newItems});
+                        }}
+                        className="p-2 text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setNewChain({
+                          ...newChain, 
+                          items: [...newChain.items, e.target.value]
+                        });
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                  >
+                    <option value="">Add item to chain...</option>
+                    {getAvailableItems(newChain.category)
+                      .filter(item => !newChain.items.includes(item.id))
+                      .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} (Level {item.level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleSaveNewChain}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
+                >
+                  Create Chain
+                </button>
+                <button
+                  onClick={() => setShowNewChainForm(false)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : selectedChain ? (
+          <div className="max-w-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Edit Chain: {selectedChain.name}</h2>
+              <button
+                onClick={() => {
+                  removeMergeChain(selectedChain.id);
+                  setSelectedChainId(null);
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Trash2 size={16} />
+                Delete Chain
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Chain ID</label>
+                  <input
+                    type="text"
+                    value={selectedChain.id}
+                    disabled
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Chain Name</label>
+                  <input
+                    type="text"
+                    value={selectedChain.name}
+                    onChange={(e) => updateMergeChain(selectedChain.id, { name: e.target.value })}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <select
+                  value={selectedChain.category}
+                  onChange={(e) => updateMergeChain(selectedChain.id, { category: e.target.value as ItemCategory })}
+                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                >
+                  {ITEM_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Items in Chain</label>
+                <div className="space-y-2">
+                  {selectedChain.items.map((itemId, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="flex-1 bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600">
+                        {getItemName(itemId)}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newItems = [...selectedChain.items];
+                          newItems.splice(index, 1);
+                          updateMergeChain(selectedChain.id, { items: newItems });
+                        }}
+                        className="p-2 text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        updateMergeChain(selectedChain.id, {
+                          items: [...selectedChain.items, e.target.value]
+                        });
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                  >
+                    <option value="">Add item to chain...</option>
+                    {getAvailableItems(selectedChain.category)
+                      .filter(item => !selectedChain.items.includes(item.id))
+                      .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} (Level {item.level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setSelectedChainId(null)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+                >
+                  Done Editing
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Select a chain to edit or create a new one
           </div>
         )}
+      </div>
+    </motion.div>
+  );
+}
+
+function GardensManager() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="flex h-full"
+    >
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        Gardens Manager - Coming Soon
       </div>
     </motion.div>
   );
 }
 
 function ChestsManager() {
-  const { chests, addChest, updateChest, removeChest, selectedChestId, setSelectedChestId } = useAdminStore();
-  const [showNewChestForm, setShowNewChestForm] = useState(false);
-
-  const selectedChest = selectedChestId ? chests.find((c) => c.id === selectedChestId) : null;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -917,297 +809,14 @@ function ChestsManager() {
       exit={{ opacity: 0, y: -20 }}
       className="flex h-full"
     >
-      <div className="w-72 bg-slate-800 border-r border-slate-700 flex flex-col">
-        <div className="p-4 border-b border-slate-700">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-white">Chests</h2>
-            <button
-              onClick={() => setShowNewChestForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-medium"
-            >
-              <Plus size={16} />
-              Add
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-2">
-          {chests.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No chests yet. Add your first chest!
-            </div>
-          ) : (
-            chests.map((chest) => (
-              <button
-                key={chest.id}
-                onClick={() => setSelectedChestId(chest.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors mb-1 ${
-                  selectedChestId === chest.id
-                    ? 'bg-amber-500/20 border border-amber-500/50'
-                    : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-lg bg-yellow-600 flex items-center justify-center">
-                  <Gift size={20} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white truncate">{chest.name}</div>
-                  <div className="text-xs text-gray-400">{chest.contents.length} items</div>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
-        {showNewChestForm || selectedChest ? (
-          <ChestForm
-            chest={selectedChest || undefined}
-            onSave={(chest) => {
-              if (selectedChest) {
-                updateChest(selectedChest.id, chest);
-              } else {
-                addChest(chest as AdminChest);
-                setShowNewChestForm(false);
-              }
-            }}
-            onCancel={() => {
-              setShowNewChestForm(false);
-              setSelectedChestId(null);
-            }}
-            onDelete={selectedChest ? () => {
-              removeChest(selectedChest.id);
-              setSelectedChestId(null);
-            } : undefined}
-            isNew={showNewChestForm}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Select a chest to edit or create a new one
-          </div>
-        )}
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        Chests Manager - Coming Soon
       </div>
     </motion.div>
-  );
-}
-
-interface ChestFormProps {
-  chest?: AdminChest;
-  onSave: (chest: Partial<AdminChest>) => void;
-  onCancel: () => void;
-  onDelete?: () => void;
-  isNew: boolean;
-}
-
-function ChestForm({ chest, onSave, onCancel, onDelete, isNew }: ChestFormProps) {
-  const [formData, setFormData] = useState<Partial<AdminChest>>(chest || {
-    id: '',
-    name: '',
-    description: '',
-    sprite: '',
-    spriteX: 0,
-    spriteY: 0,
-    spriteW: 128,
-    spriteH: 128,
-    cost: 100,
-    costType: 'coins',
-    contents: [],
-  });
-
-  const updateField = (updates: Partial<AdminChest>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
-  };
-
-  const addContent = () => {
-    updateField({
-      contents: [...(formData.contents || []), { itemId: '', minAmount: 1, maxAmount: 1, dropRate: 100 }],
-    });
-  };
-
-  const updateContent = (index: number, updates: Partial<ChestContent>) => {
-    const newContents = [...(formData.contents || [])];
-    newContents[index] = { ...newContents[index], ...updates };
-    updateField({ contents: newContents });
-  };
-
-  const removeContent = (index: number) => {
-    updateField({
-      contents: (formData.contents || []).filter((_, i) => i !== index),
-    });
-  };
-
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">{isNew ? 'Create New Chest' : `Edit: ${chest?.name}`}</h2>
-        {onDelete && (
-          <button
-            onClick={onDelete}
-            className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
-          >
-            <Trash2 size={16} />
-            Delete
-          </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Chest ID</label>
-          <input
-            type="text"
-            value={formData.id || ''}
-            onChange={(e) => updateField({ id: e.target.value })}
-            disabled={!isNew}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 disabled:opacity-50"
-            placeholder="unique_chest_id"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-          <input
-            type="text"
-            value={formData.name || ''}
-            onChange={(e) => updateField({ name: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            placeholder="Chest Name"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-        <textarea
-          value={formData.description || ''}
-          onChange={(e) => updateField({ description: e.target.value })}
-          className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-        />
-      </div>
-
-      <SpriteUploader
-        currentSprite={formData.sprite}
-        onSpriteChange={(sprite) => updateField({ sprite })}
-        label="Chest Sprite"
-      />
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Cost</label>
-          <input
-            type="number"
-            value={formData.cost || 0}
-            onChange={(e) => updateField({ cost: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Cost Type</label>
-          <select
-            value={formData.costType || 'coins'}
-            onChange={(e) => updateField({ costType: e.target.value as 'coins' | 'gems' })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          >
-            <option value="coins">Coins</option>
-            <option value="gems">Gems</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-700 pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-white">Contents</h3>
-          <button
-            onClick={addContent}
-            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
-          >
-            <Plus size={16} />
-            Add Item
-          </button>
-        </div>
-        <div className="space-y-3">
-          {(formData.contents || []).map((content, index) => (
-            <div key={index} className="bg-slate-700/50 p-3 rounded-lg">
-              <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-400 mb-1">Item ID</label>
-                  <input
-                    type="text"
-                    value={content.itemId}
-                    onChange={(e) => updateContent(index, { itemId: e.target.value })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Min Amt</label>
-                  <input
-                    type="number"
-                    value={content.minAmount}
-                    onChange={(e) => updateContent(index, { minAmount: parseInt(e.target.value) })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Max Amt</label>
-                  <input
-                    type="number"
-                    value={content.maxAmount}
-                    onChange={(e) => updateContent(index, { maxAmount: parseInt(e.target.value) })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                    min="1"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3 mt-2">
-                <div className="flex-1">
-                  <label className="block text-xs text-gray-400 mb-1">Drop Rate (%)</label>
-                  <input
-                    type="number"
-                    value={content.dropRate}
-                    onChange={(e) => updateContent(index, { dropRate: parseInt(e.target.value) })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-                <button
-                  onClick={() => removeContent(index)}
-                  className="mt-4 p-2 text-red-400 hover:text-red-300"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={() => onSave(formData)}
-          className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
-        >
-          {isNew ? 'Create Chest' : 'Save Changes'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
   );
 }
 
 function StoreManager() {
-  const { storeItems, addStoreItem, updateStoreItem, removeStoreItem } = useAdminStore();
-  const [showNewItemForm, setShowNewItemForm] = useState(false);
-  const [selectedStoreItemId, setSelectedStoreItemId] = useState<string | null>(null);
-
-  const selectedStoreItem = selectedStoreItemId ? storeItems.find((i) => i.id === selectedStoreItemId) : null;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1215,221 +824,10 @@ function StoreManager() {
       exit={{ opacity: 0, y: -20 }}
       className="flex h-full"
     >
-      <div className="w-72 bg-slate-800 border-r border-slate-700 flex flex-col">
-        <div className="p-4 border-b border-slate-700">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-white">Store Items</h2>
-            <button
-              onClick={() => setShowNewItemForm(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg text-sm font-medium"
-            >
-              <Plus size={16} />
-              Add
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-2">
-          {storeItems.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No store items yet
-            </div>
-          ) : (
-            storeItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setSelectedStoreItemId(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors mb-1 ${
-                  selectedStoreItemId === item.id
-                    ? 'bg-amber-500/20 border border-amber-500/50'
-                    : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <Store size={20} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white truncate">{item.name}</div>
-                  <div className="text-xs text-gray-400">{item.price} {item.priceType}</div>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
-        {showNewItemForm || selectedStoreItem ? (
-          <StoreItemForm
-            item={selectedStoreItem || undefined}
-            onSave={(item) => {
-              if (selectedStoreItem) {
-                updateStoreItem(selectedStoreItem.id, item);
-              } else {
-                addStoreItem(item as AdminStoreItem);
-                setShowNewItemForm(false);
-              }
-            }}
-            onCancel={() => {
-              setShowNewItemForm(false);
-              setSelectedStoreItemId(null);
-            }}
-            onDelete={selectedStoreItem ? () => {
-              removeStoreItem(selectedStoreItem.id);
-              setSelectedStoreItemId(null);
-            } : undefined}
-            isNew={showNewItemForm}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Select a store item to edit or create a new one
-          </div>
-        )}
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        Store Manager - Coming Soon
       </div>
     </motion.div>
-  );
-}
-
-interface StoreItemFormProps {
-  item?: AdminStoreItem;
-  onSave: (item: Partial<AdminStoreItem>) => void;
-  onCancel: () => void;
-  onDelete?: () => void;
-  isNew: boolean;
-}
-
-function StoreItemForm({ item, onSave, onCancel, onDelete, isNew }: StoreItemFormProps) {
-  const [formData, setFormData] = useState<Partial<AdminStoreItem>>(item || {
-    id: '',
-    name: '',
-    description: '',
-    itemId: '',
-    price: 100,
-    priceType: 'coins',
-    category: 'items',
-    isLimited: false,
-  });
-
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">{isNew ? 'Add Store Item' : `Edit: ${item?.name}`}</h2>
-        {onDelete && (
-          <button onClick={onDelete} className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">
-            <Trash2 size={16} />
-            Delete
-          </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Store Item ID</label>
-          <input
-            type="text"
-            value={formData.id || ''}
-            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-            disabled={!isNew}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-          <input
-            type="text"
-            value={formData.name || ''}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-        <textarea
-          value={formData.description || ''}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Game Item ID</label>
-        <input
-          type="text"
-          value={formData.itemId || ''}
-          onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
-          className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          placeholder="flower_1, gen_flower_1, etc."
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Price</label>
-          <input
-            type="number"
-            value={formData.price || 0}
-            onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Price Type</label>
-          <select
-            value={formData.priceType || 'coins'}
-            onChange={(e) => setFormData({ ...formData, priceType: e.target.value as 'coins' | 'gems' })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          >
-            <option value="coins">Coins</option>
-            <option value="gems">Gems</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-          <input
-            type="text"
-            value={formData.category || ''}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={formData.isLimited || false}
-          onChange={(e) => setFormData({ ...formData, isLimited: e.target.checked })}
-          className="w-5 h-5 rounded"
-        />
-        <label className="text-gray-300">Limited Quantity</label>
-        {formData.isLimited && (
-          <input
-            type="number"
-            value={formData.limitCount || 1}
-            onChange={(e) => setFormData({ ...formData, limitCount: parseInt(e.target.value) })}
-            className="w-24 bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-            min="1"
-          />
-        )}
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={() => onSave(formData)}
-          className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
-        >
-          {isNew ? 'Add to Store' : 'Save Changes'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -1446,7 +844,7 @@ function EventsManager() {
       exit={{ opacity: 0, y: -20 }}
       className="flex h-full"
     >
-      <div className="w-72 bg-slate-800 border-r border-slate-700 flex flex-col">
+      <div className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-white">Events</h2>
@@ -1458,59 +856,159 @@ function EventsManager() {
               Add
             </button>
           </div>
+          <input
+            type="text"
+            placeholder="Search events..."
+            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 text-sm border border-slate-600 mb-3"
+          />
         </div>
         
         <div className="flex-1 overflow-y-auto p-2">
-          {events.length === 0 ? (
+          {Object.values(events).length === 0 ? (
             <div className="text-center text-gray-500 py-8">
-              No events yet
+              No events yet. Add your first event!
             </div>
           ) : (
-            events.map((event) => (
-              <button
-                key={event.id}
-                onClick={() => setSelectedEventId(event.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors mb-1 ${
-                  selectedEventId === event.id
-                    ? 'bg-amber-500/20 border border-amber-500/50'
-                    : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${event.isActive ? 'bg-green-600' : 'bg-gray-600'}`}>
-                  <Calendar size={20} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white truncate">{event.name}</div>
-                  <div className="text-xs text-gray-400">{event.isActive ? 'Active' : 'Inactive'}</div>
-                </div>
-              </button>
-            ))
+            <div className="space-y-1">
+              {Object.values(events).map((event) => (
+                <button
+                  key={event.id}
+                  onClick={() => setSelectedEventId(event.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                    selectedEventId === event.id
+                      ? 'bg-amber-500/20 border border-amber-500/50'
+                      : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500">
+                    <Calendar size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-white truncate">{event.name}</div>
+                    <div className="text-xs text-gray-400">{event.type}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
-        {showNewEventForm || selectedEvent ? (
-          <EventForm
-            event={selectedEvent || undefined}
-            onSave={(event) => {
-              if (selectedEvent) {
-                updateEvent(selectedEvent.id, event);
-              } else {
-                addEvent(event as AdminEvent);
-                setShowNewEventForm(false);
-              }
-            }}
-            onCancel={() => {
-              setShowNewEventForm(false);
-              setSelectedEventId(null);
-            }}
-            onDelete={selectedEvent ? () => {
-              removeEvent(selectedEvent.id);
-              setSelectedEventId(null);
-            } : undefined}
-            isNew={showNewEventForm}
-          />
+        {showNewEventForm ? (
+          <div className="max-w-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Create New Event</h2>
+              <button
+                onClick={() => setShowNewEventForm(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">ID</label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    placeholder="event-id"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    placeholder="Event Name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                <select className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600">
+                  <option value="seasonal">Seasonal</option>
+                  <option value="limited">Limited Time</option>
+                  <option value="achievement">Achievement</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
+                >
+                  Create Event
+                </button>
+                <button
+                  onClick={() => setShowNewEventForm(false)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : selectedEvent ? (
+          <div className="max-w-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Edit Event: {selectedEvent.name}</h2>
+              <button
+                onClick={() => {
+                  removeEvent(selectedEvent.id);
+                  setSelectedEventId(null);
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">ID</label>
+                  <input
+                    type="text"
+                    value={selectedEvent.id}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={selectedEvent.name}
+                    className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                <select
+                  value={selectedEvent.type}
+                  className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
+                >
+                  <option value="seasonal">Seasonal</option>
+                  <option value="limited">Limited Time</option>
+                  <option value="achievement">Achievement</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => setSelectedEventId(null)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
             Select an event to edit or create a new one
@@ -1518,216 +1016,5 @@ function EventsManager() {
         )}
       </div>
     </motion.div>
-  );
-}
-
-interface EventFormProps {
-  event?: AdminEvent;
-  onSave: (event: Partial<AdminEvent>) => void;
-  onCancel: () => void;
-  onDelete?: () => void;
-  isNew: boolean;
-}
-
-function EventForm({ event, onSave, onCancel, onDelete, isNew }: EventFormProps) {
-  const [formData, setFormData] = useState<Partial<AdminEvent>>(event || {
-    id: '',
-    name: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    isActive: false,
-    rewards: [],
-    tasks: [],
-    bannerColor: '#f59e0b',
-  });
-
-  const addTask = () => {
-    setFormData({
-      ...formData,
-      tasks: [...(formData.tasks || []), { id: `task_${Date.now()}`, title: '', description: '', requiredItem: '', quantity: 1, points: 10 }],
-    });
-  };
-
-  const updateTask = (index: number, updates: Partial<EventTask>) => {
-    const newTasks = [...(formData.tasks || [])];
-    newTasks[index] = { ...newTasks[index], ...updates };
-    setFormData({ ...formData, tasks: newTasks });
-  };
-
-  const removeTask = (index: number) => {
-    setFormData({
-      ...formData,
-      tasks: (formData.tasks || []).filter((_, i) => i !== index),
-    });
-  };
-
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">{isNew ? 'Create New Event' : `Edit: ${event?.name}`}</h2>
-        {onDelete && (
-          <button onClick={onDelete} className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">
-            <Trash2 size={16} />
-            Delete
-          </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Event ID</label>
-          <input
-            type="text"
-            value={formData.id || ''}
-            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-            disabled={!isNew}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-          <input
-            type="text"
-            value={formData.name || ''}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-        <textarea
-          value={formData.description || ''}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600 h-20 resize-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
-          <input
-            type="datetime-local"
-            value={formData.startDate || ''}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
-          <input
-            type="datetime-local"
-            value={formData.endDate || ''}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2 border border-slate-600"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={formData.isActive || false}
-            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="w-5 h-5 rounded"
-          />
-          <label className="text-gray-300">Active</label>
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="text-gray-300">Banner Color:</label>
-          <input
-            type="color"
-            value={formData.bannerColor || '#f59e0b'}
-            onChange={(e) => setFormData({ ...formData, bannerColor: e.target.value })}
-            className="w-10 h-10 rounded cursor-pointer"
-          />
-        </div>
-      </div>
-
-      <div className="border-t border-slate-700 pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-white">Event Tasks</h3>
-          <button
-            onClick={addTask}
-            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
-          >
-            <Plus size={16} />
-            Add Task
-          </button>
-        </div>
-        <div className="space-y-3">
-          {(formData.tasks || []).map((task, index) => (
-            <div key={index} className="bg-slate-700/50 p-3 rounded-lg">
-              <div className="grid grid-cols-2 gap-3 mb-2">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={task.title}
-                    onChange={(e) => updateTask(index, { title: e.target.value })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Required Item</label>
-                  <input
-                    type="text"
-                    value={task.requiredItem}
-                    onChange={(e) => updateTask(index, { requiredItem: e.target.value })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    value={task.quantity}
-                    onChange={(e) => updateTask(index, { quantity: parseInt(e.target.value) })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Points</label>
-                  <input
-                    type="number"
-                    value={task.points}
-                    onChange={(e) => updateTask(index, { points: parseInt(e.target.value) })}
-                    className="w-full bg-slate-600 text-white rounded px-2 py-1.5 border border-slate-500 text-sm"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => removeTask(index)}
-                    className="p-2 text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={() => onSave(formData)}
-          className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
-        >
-          {isNew ? 'Create Event' : 'Save Changes'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
   );
 }

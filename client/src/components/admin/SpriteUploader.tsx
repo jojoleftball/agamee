@@ -5,6 +5,8 @@ interface SpriteUploaderProps {
   currentSprite?: string;
   onSpriteChange: (spritePath: string) => void;
   label?: string;
+  autoResize?: boolean;
+  targetSize?: { width: number; height: number };
 }
 
 interface UploadedImage {
@@ -12,7 +14,13 @@ interface UploadedImage {
   path: string;
 }
 
-export default function SpriteUploader({ currentSprite, onSpriteChange, label = 'Sprite Image' }: SpriteUploaderProps) {
+export default function SpriteUploader({ 
+  currentSprite, 
+  onSpriteChange, 
+  label = 'Sprite Image',
+  autoResize = true,
+  targetSize = { width: 128, height: 128 }
+}: SpriteUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -29,6 +37,48 @@ export default function SpriteUploader({ currentSprite, onSpriteChange, label = 
     }
   };
 
+  const resizeImage = (file: File, targetWidth: number, targetHeight: number): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new window.Image();
+
+      img.onload = () => {
+        // Calculate dimensions to maintain aspect ratio
+        const aspectRatio = img.width / img.height;
+        let newWidth = targetWidth;
+        let newHeight = targetHeight;
+
+        if (aspectRatio > 1) {
+          // Image is wider than tall
+          newHeight = targetWidth / aspectRatio;
+        } else {
+          // Image is taller than wide
+          newWidth = targetHeight * aspectRatio;
+        }
+
+        // Center the image
+        const x = (targetWidth - newWidth) / 2;
+        const y = (targetHeight - newHeight) / 2;
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        // Fill with transparent background
+        ctx.clearRect(0, 0, targetWidth, targetHeight);
+
+        // Draw the resized image
+        ctx.drawImage(img, x, y, newWidth, newHeight);
+
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, file.type, 0.9);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -36,10 +86,17 @@ export default function SpriteUploader({ currentSprite, onSpriteChange, label = 
     setIsUploading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('sprite', file);
-
     try {
+      let processedFile = file;
+
+      if (autoResize) {
+        const resizedBlob = await resizeImage(file, targetSize.width, targetSize.height);
+        processedFile = new File([resizedBlob], file.name, { type: file.type });
+      }
+
+      const formData = new FormData();
+      formData.append('sprite', processedFile);
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,

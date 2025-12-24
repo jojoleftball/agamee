@@ -21,8 +21,6 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
   const { initializeBoard } = useBoardStore();
   const { notifications, removeNotification } = useNotificationStore();
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [settingsClickCount, setSettingsClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
   
   // Initialize board on mount
   useEffect(() => {
@@ -30,20 +28,7 @@ export default function NewGameScreen({ onBackToMenu, onShowDialogue }: NewGameS
   }, [initializeBoard]);
 
   const handleSettingsClick = () => {
-    const now = Date.now();
-    
-    if (now - lastClickTime > 1000) {
-      setSettingsClickCount(1);
-    } else {
-      setSettingsClickCount(prev => prev + 1);
-    }
-    
-    setLastClickTime(now);
-
-    if (settingsClickCount >= 2) {
-      setShowAdminPanel(true);
-      setSettingsClickCount(0);
-    }
+    setShowAdminPanel(true);
   };
 
   return (

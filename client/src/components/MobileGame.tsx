@@ -4,6 +4,7 @@ import MergeBoard from './MergeBoard';
 import GameHUD from './GameHUD';
 import TasksPanel from './TasksPanel';
 import ShopModal from './ShopModal';
+import ChestPanel from './ChestPanel';
 import GardenWorldMap from './GardenWorldMap';
 import PlantingGround from './PlantingGround';
 import { Map, Grid3x3, Sprout } from 'lucide-react';
@@ -23,6 +24,7 @@ export default function MobileGame() {
   const { currentBiome, switchBiome } = useMergeGameStore();
   const [showTasks, setShowTasks] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [showChests, setShowChests] = useState(false);
   const [currentView, setCurrentView] = useState<GameView>('merge');
 
   const backgroundImage = BACKGROUND_MAP[currentBiome] || BACKGROUND_MAP.basic;
@@ -87,6 +89,7 @@ export default function MobileGame() {
                 onOpenTasks={() => setShowTasks(true)}
                 onOpenShop={() => setShowShop(true)}
                 onOpenBiomes={handleOpenMap}
+                onOpenChests={() => setShowChests(true)}
               />
               
               <div className="flex-1 overflow-hidden relative">
@@ -182,6 +185,18 @@ export default function MobileGame() {
                   transition={{ duration: 0.2 }}
                 >
                   <ShopModal onClose={() => setShowShop(false)} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {showChests && (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChestPanel onClose={() => setShowChests(false)} />
                 </motion.div>
               )}
             </AnimatePresence>

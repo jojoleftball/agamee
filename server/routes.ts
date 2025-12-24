@@ -79,6 +79,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin config save/load
+  const adminConfigPath = path.join(process.cwd(), "admin-config.json");
+
+  app.get("/api/admin-config", (req, res) => {
+    try {
+      if (fs.existsSync(adminConfigPath)) {
+        const config = JSON.parse(fs.readFileSync(adminConfigPath, "utf-8"));
+        res.json(config);
+      } else {
+        res.json({});
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to load config" });
+    }
+  });
+
+  app.post("/api/admin-config", (req, res) => {
+    try {
+      fs.writeFileSync(adminConfigPath, JSON.stringify(req.body, null, 2));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save config" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
